@@ -2,7 +2,7 @@
 
 > 本文档记录项目的技术架构、实现细节和开发指南。每次更新都会同步更新此文档。
 
-**最后更新**: 2026-01-25 (新增 17 种 AI 工具路径支持，修复 UI 布局问题，初始化 Git 仓库)
+**最后更新**: 2026-01-25 (新增 Claude Code Plugins 支持，前端集成 Plugins Tab 显示和同步)
 
 ---
 
@@ -49,6 +49,7 @@ SkillsHub/
 │   │       ├── registry.rs      # 注册表
 │   │       ├── scanner.rs       # 安全扫描
 │   │       ├── sync.rs          # 同步引擎
+│   │       ├── plugins.rs       # Claude Plugins 扫描器
 │   │       ├── models/          # 数据模型
 │   │       │   ├── mod.rs
 │   │       │   ├── skill.rs     # Skill, SkillSource, SkillVersion
@@ -317,6 +318,11 @@ invoke<ScanResult>("scan_skill", { skillId })
 // 工具
 invoke<ToolInfo[]>("list_tools")
 invoke<ToolInfo[]>("detect_tools")
+
+// Claude Plugins (新增)
+invoke<PluginSkillInfo[]>("scan_claude_plugins")
+invoke<MarketplaceInfo[]>("list_claude_marketplaces")
+invoke<SyncResult[]>("sync_plugin_skill", { skillPath, skillId, tools })
 ```
 
 ---

@@ -6,6 +6,7 @@
 pub mod adapters;
 pub mod error;
 pub mod models;
+pub mod plugins;
 pub mod registry;
 pub mod scanner;
 pub mod store;
@@ -13,3 +14,5 @@ pub mod sync;
 
 pub use error::{Error, Result};
 pub use models::*;
+pub use plugins::{PluginScanner, PluginSkill};
+

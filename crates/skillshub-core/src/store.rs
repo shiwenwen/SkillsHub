@@ -170,7 +170,7 @@ impl LocalStore {
         for entry in fs::read_dir(metadata_dir)? {
             let entry = entry?;
             let path = entry.path();
-            if path.extension().map_or(false, |e| e == "json") {
+            if path.extension().is_some_and(|e| e == "json") {
                 if let Ok(content) = fs::read_to_string(&path) {
                     if let Ok(record) = serde_json::from_str::<InstallRecord>(&content) {
                         self.records.insert(record.skill_id.clone(), record);

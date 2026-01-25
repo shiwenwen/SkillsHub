@@ -256,7 +256,7 @@ impl SyncEngine {
     pub fn check_drift(&self) -> Vec<(String, ToolType, DriftInfo)> {
         let mut drifts = Vec::new();
 
-        for (_tool_name, tool_state) in &self.state.tools {
+        for tool_state in self.state.tools.values() {
             for (skill_id, status) in &tool_state.skills {
                 if let Some(drift) = self.detect_drift(skill_id, &status.target_path) {
                     drifts.push((
@@ -368,6 +368,64 @@ impl SyncEngine {
         tool_state.skills.insert(skill_id.to_string(), status);
         tool_state.last_sync = Some(timestamp_now());
         self.state.last_sync = Some(timestamp_now());
+    }
+
+    /// Sync a plugin skill from Claude plugins to another tool
+    /// 
+    /// This allows syncing skills installed via Claude's plugin marketplace
+    /// to other tools that support skills.
+    pub fn sync_plugin_skill(
+        &mut self,
+        source_path: &Path,
+        skill_id: &str,
+        tool: ToolType,
+        strategy: SyncStrategy,
+    ) -> Result<()> {
+        if !source_path.exists() {
+            return Err(Error::SkillNotFound(format!(
+                "Plugin skill not found: {}",
+                source_path.display()
+            )));
+        }
+
+        let adapter = self.get_adapter(tool)?;
+        let target_dir = adapter.skills_dir()?;
+        let target_path = target_dir.join(skill_id);
+
+        // Determine actual strategy to use
+        let actual_strategy = match strategy {
+            SyncStrategy::Auto => {
+                // Try link first
+                if self.try_link(source_path, &target_path).is_ok() {
+                    SyncStrategy::Link
+                } else {
+                    SyncStrategy::Copy
+                }
+            }
+            SyncStrategy::Link => {
+                self.create_link(source_path, &target_path)?;
+                SyncStrategy::Link
+            }
+            SyncStrategy::Copy => {
+                self.copy_skill(source_path, &target_path)?;
+                SyncStrategy::Copy
+            }
+        };
+
+        // Create a minimal version for plugin skills
+        let version = crate::models::SkillVersion::new("plugin", "from-claude-plugins");
+
+        let status = SkillSyncStatus {
+            skill_id: skill_id.to_string(),
+            version,
+            strategy: actual_strategy,
+            target_path,
+            drift: None,
+        };
+
+        self.update_state(tool, skill_id, status);
+
+        Ok(())
     }
 }
 

@@ -43,7 +43,7 @@ impl GitRegistry {
     /// Ensure the repository is cloned and up to date
     async fn sync_repo(&self) -> Result<()> {
         if !self.cache_dir.exists() {
-            fs::create_dir_all(&self.cache_dir).await.map_err(|e| Error::Io(e))?;
+            fs::create_dir_all(&self.cache_dir).await.map_err(Error::Io)?;
             
             // Clone
             let mut cmd = Command::new("git");
@@ -151,7 +151,7 @@ impl RegistryProvider for GitRegistry {
             };
             
             // Apply query filter
-            let matches = query.query.as_ref().map_or(true, |q| {
+            let matches = query.query.as_ref().is_none_or(|q| {
                 listing.id.contains(q) || listing.name.contains(q)
             });
             
@@ -203,7 +203,7 @@ impl RegistryProvider for GitRegistry {
         })
     }
 
-    async fn fetch(&self, skill_id: &str, dest: &PathBuf) -> Result<PathBuf> {
+    async fn fetch(&self, skill_id: &str, dest: &std::path::Path) -> Result<PathBuf> {
         let skill_path = self.cache_dir.join(skill_id);
         if !skill_path.exists() {
             return Err(Error::SkillNotFound(skill_id.to_string()));
@@ -211,12 +211,12 @@ impl RegistryProvider for GitRegistry {
         
         // Copy directory
         if dest.exists() {
-            fs::remove_dir_all(dest).await.map_err(|e| Error::Io(e))?;
+            fs::remove_dir_all(dest).await.map_err(Error::Io)?;
         }
         
         // Recursive copy using walkdir and fs
         let src = skill_path.clone();
-        let dst = dest.clone();
+        let dst = dest.to_path_buf();
         
         tokio::task::spawn_blocking(move || -> Result<()> {
             for entry in WalkDir::new(&src) {
@@ -233,7 +233,7 @@ impl RegistryProvider for GitRegistry {
             Ok(())
         }).await.map_err(|e| Error::System(e.to_string()))??;
         
-        Ok(dest.clone())
+        Ok(dest.to_path_buf())
     }
 
     async fn versions(&self, skill_id: &str) -> Result<Vec<SkillVersion>> {

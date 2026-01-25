@@ -56,4 +56,9 @@ impl ToolAdapter for ClaudeAdapter {
     fn config_dir(&self) -> Option<PathBuf> {
         dirs::home_dir().map(|h| h.join(".claude"))
     }
+
+    fn plugins_dir(&self) -> Option<PathBuf> {
+        dirs::home_dir().map(|h| h.join(".claude").join("plugins"))
+    }
 }
+

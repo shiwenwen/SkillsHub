@@ -27,6 +27,10 @@ pub fn run() {
             list_registries,
             add_registry,
             remove_registry,
+            // Plugin commands
+            scan_claude_plugins,
+            list_claude_marketplaces,
+            sync_plugin_skill,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

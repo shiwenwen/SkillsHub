@@ -5,9 +5,11 @@ use skillshub_core::adapters::create_default_adapters;
 use skillshub_core::models::{SyncStrategy, ToolType};
 use skillshub_core::scanner::SecurityScanner;
 use skillshub_core::store::LocalStore;
+use skillshub_core::plugins::{PluginScanner, PluginSkill};
 
 use skillshub_core::sync::SyncEngine;
 use skillshub_core::registry::{RegistryManager, RegistryConfig, SkillQuery, AggregatedRegistry};
+use std::path::PathBuf;
 
 // Response types
 
@@ -289,3 +291,151 @@ pub async fn remove_registry(name: String) -> Result<(), String> {
     let mut manager = RegistryManager::new().map_err(|e| e.to_string())?;
     manager.remove(&name).map_err(|e| e.to_string())
 }
+
+// Plugin commands
+
+#[derive(Debug, Serialize)]
+pub struct PluginSkillInfo {
+    pub id: String,
+    pub plugin_name: String,
+    pub marketplace: String,
+    pub skill_name: String,
+    pub skill_path: String,
+    pub version: String,
+    pub commit_sha: Option<String>,
+    pub installed_at: String,
+}
+
+impl From<PluginSkill> for PluginSkillInfo {
+    fn from(skill: PluginSkill) -> Self {
+        Self {
+            id: skill.id(),
+            plugin_name: skill.plugin_name,
+            marketplace: skill.marketplace,
+            skill_name: skill.skill_name,
+            skill_path: skill.skill_path.display().to_string(),
+            version: skill.version,
+            commit_sha: skill.commit_sha,
+            installed_at: skill.installed_at,
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub struct MarketplaceInfo {
+    pub name: String,
+    pub source_type: String,
+    pub source_repo: String,
+    pub install_location: String,
+    pub last_updated: String,
+}
+
+/// Scan Claude plugins directory for installed skills
+#[tauri::command]
+pub async fn scan_claude_plugins() -> Result<Vec<PluginSkillInfo>, String> {
+    let scanner = PluginScanner::new_default()
+        .ok_or_else(|| "Cannot determine home directory".to_string())?;
+
+    if !scanner.exists() {
+        return Ok(Vec::new());
+    }
+
+    let skills = scanner
+        .scan_installed_skills()
+        .map_err(|e| e.to_string())?;
+
+    Ok(skills.into_iter().map(PluginSkillInfo::from).collect())
+}
+
+/// List known marketplaces
+#[tauri::command]
+pub async fn list_claude_marketplaces() -> Result<Vec<MarketplaceInfo>, String> {
+    let scanner = PluginScanner::new_default()
+        .ok_or_else(|| "Cannot determine home directory".to_string())?;
+
+    if !scanner.exists() {
+        return Ok(Vec::new());
+    }
+
+    let marketplaces = scanner
+        .list_marketplaces()
+        .map_err(|e| e.to_string())?;
+
+    Ok(marketplaces
+        .into_iter()
+        .map(|(name, config)| {
+            let (source_type, source_repo) = match config.source {
+                skillshub_core::plugins::MarketplaceSource::Github { repo } => {
+                    ("github".to_string(), repo)
+                }
+                skillshub_core::plugins::MarketplaceSource::Git { url } => {
+                    ("git".to_string(), url)
+                }
+            };
+            MarketplaceInfo {
+                name,
+                source_type,
+                source_repo,
+                install_location: config.install_location.display().to_string(),
+                last_updated: config.last_updated,
+            }
+        })
+        .collect())
+}
+
+/// Sync a plugin skill to other tools
+#[tauri::command]
+pub async fn sync_plugin_skill(
+    skill_path: String,
+    skill_id: String,
+    tools: Vec<String>,
+) -> Result<Vec<SyncResult>, String> {
+    let store = LocalStore::default_store().map_err(|e| e.to_string())?;
+    let mut engine = SyncEngine::new(store);
+
+    for adapter in create_default_adapters() {
+        engine.register_adapter(adapter);
+    }
+
+    let source = PathBuf::from(&skill_path);
+    let mut results = Vec::new();
+
+    for tool_str in &tools {
+        let tool = match tool_str.to_lowercase().as_str() {
+            "amp" => ToolType::Amp,
+            "antigravity" => ToolType::Antigravity,
+            "claude" => ToolType::Claude,
+            "codebuddy" => ToolType::CodeBuddy,
+            "codex" => ToolType::Codex,
+            "copilot" => ToolType::Copilot,
+            "cursor" => ToolType::Cursor,
+            "factory" => ToolType::Factory,
+            "gemini" => ToolType::Gemini,
+            "goose" => ToolType::Goose,
+            "kilocode" => ToolType::KiloCode,
+            "kimi" => ToolType::Kimi,
+            "opencode" => ToolType::OpenCode,
+            "qwen" => ToolType::Qwen,
+            "roocode" => ToolType::RooCode,
+            "trae" => ToolType::Trae,
+            "windsurf" => ToolType::Windsurf,
+            _ => continue,
+        };
+
+        // Skip syncing to Claude itself (source tool)
+        if tool == ToolType::Claude {
+            continue;
+        }
+
+        let result = engine.sync_plugin_skill(&source, &skill_id, tool, SyncStrategy::Auto);
+        results.push(SyncResult {
+            skill_id: skill_id.clone(),
+            tool: tool_str.clone(),
+            success: result.is_ok(),
+            error: result.err().map(|e| e.to_string()),
+        });
+    }
+
+    Ok(results)
+}
+

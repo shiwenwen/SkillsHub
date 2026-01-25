@@ -83,7 +83,7 @@ pub trait RegistryProvider: Send + Sync {
     async fn get_skill(&self, skill_id: &str) -> Result<Skill>;
 
     /// Fetch skill to a local path
-    async fn fetch(&self, skill_id: &str, dest: &PathBuf) -> Result<PathBuf>;
+    async fn fetch(&self, skill_id: &str, dest: &std::path::Path) -> Result<PathBuf>;
 
     /// Get available versions
     async fn versions(&self, skill_id: &str) -> Result<Vec<SkillVersion>>;
@@ -287,8 +287,8 @@ impl RegistryProvider for LocalRegistry {
                     let metadata = parse_skill_md(&skill_md)?;
                     
                     // Apply query filter
-                    let matches = query.query.as_ref().map_or(true, |q| {
-                        id.contains(q) || metadata.name.as_ref().map_or(false, |n| n.contains(q))
+                    let matches = query.query.as_ref().is_none_or(|q| {
+                        id.contains(q) || metadata.name.as_ref().is_some_and(|n| n.contains(q))
                     });
                     
                     if matches {
@@ -340,7 +340,7 @@ impl RegistryProvider for LocalRegistry {
         })
     }
 
-    async fn fetch(&self, skill_id: &str, _dest: &PathBuf) -> Result<PathBuf> {
+    async fn fetch(&self, skill_id: &str, _dest: &std::path::Path) -> Result<PathBuf> {
         let skill_path = self.path.join(skill_id);
         if !skill_path.exists() {
             return Err(crate::error::Error::SkillNotFound(skill_id.to_string()));
@@ -361,9 +361,9 @@ pub fn parse_skill_md(path: &PathBuf) -> Result<SkillMetadata> {
     let content = std::fs::read_to_string(path)?;
     
     // Simple YAML frontmatter parsing
-    if content.starts_with("---") {
-        if let Some(end) = content[3..].find("---") {
-            let yaml_str = &content[3..end + 3];
+    if let Some(stripped) = content.strip_prefix("---") {
+        if let Some(end) = stripped.find("---") {
+            let yaml_str = &stripped[..end];
             if let Ok(metadata) = serde_yaml::from_str(yaml_str) {
                 return Ok(metadata);
             }
@@ -374,8 +374,8 @@ pub fn parse_skill_md(path: &PathBuf) -> Result<SkillMetadata> {
     let mut metadata = SkillMetadata::default();
     
     for line in content.lines() {
-        if line.starts_with("# ") {
-            metadata.name = Some(line[2..].trim().to_string());
+        if let Some(stripped) = line.strip_prefix("# ") {
+            metadata.name = Some(stripped.trim().to_string());
             break;
         }
     }

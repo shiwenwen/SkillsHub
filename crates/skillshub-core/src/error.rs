@@ -32,6 +32,9 @@ pub enum Error {
     #[error("Security policy violation: {0}")]
     PolicyViolation(String),
 
+    #[error("Config not found: {0}")]
+    ConfigNotFound(String),
+
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
 

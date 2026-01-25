@@ -57,6 +57,11 @@ pub trait ToolAdapter: Send + Sync {
         None
     }
 
+    /// Get plugins directory for tools that support plugin marketplaces
+    fn plugins_dir(&self) -> Option<PathBuf> {
+        None
+    }
+
     /// Check if this tool supports symlinks
     fn supports_symlinks(&self) -> bool {
         true
