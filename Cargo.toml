@@ -1,0 +1,50 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/skillshub-core",
+    "crates/skillshub-cli",
+    "src-tauri",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["SkillsHub Contributors"]
+license = "MIT"
+repository = "https://github.com/skillshub/skillshub"
+description = "A unified Agent Skills management and sharing platform"
+
+[workspace.dependencies]
+# Core dependencies
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+anyhow = "1.0"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+async-trait = "0.1"
+
+# CLI dependencies
+clap = { version = "4.5", features = ["derive", "env"] }
+colored = "2.1"
+indicatif = "0.17"
+dialoguer = "0.11"
+
+# File system
+walkdir = "2.5"
+glob = "0.3"
+dirs = "5.0"
+
+# Security scanning
+regex = "1.10"
+sha2 = "0.10"
+hex = "0.4"
+
+# HTTP/Registry
+reqwest = { version = "0.12", features = ["json"] }
+url = "2.5"
+
+# Tauri
+tauri = "2.2"
+tauri-build = "2.0"

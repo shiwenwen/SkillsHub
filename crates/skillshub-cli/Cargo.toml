@@ -1,0 +1,25 @@
+[package]
+name = "skillshub-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "CLI tool for SkillsHub - Agent Skills management"
+
+[[bin]]
+name = "skillshub"
+path = "src/main.rs"
+
+[dependencies]
+skillshub-core = { path = "../skillshub-core" }
+clap.workspace = true
+colored.workspace = true
+indicatif.workspace = true
+dialoguer.workspace = true
+tokio.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+dirs.workspace = true

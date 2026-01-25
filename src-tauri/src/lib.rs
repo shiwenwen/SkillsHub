@@ -1,0 +1,33 @@
+//! SkillsHub Tauri Application
+
+mod commands;
+
+use commands::*;
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![
+            // Skill commands
+            list_installed_skills,
+            get_skill_info,
+            install_skill,
+            uninstall_skill,
+            update_skill,
+            // Sync commands
+            sync_skills,
+            check_drift,
+            // Scan commands
+            scan_skill,
+            // Tool commands
+            list_tools,
+            detect_tools,
+            // Registry commands
+            search_skills,
+            list_registries,
+            add_registry,
+            remove_registry,
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}

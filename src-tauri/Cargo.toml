@@ -1,0 +1,21 @@
+[package]
+name = "skillshub-app"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "SkillsHub Desktop Application"
+
+[lib]
+name = "skillshub_app_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[build-dependencies]
+tauri-build.workspace = true
+
+[dependencies]
+skillshub-core = { path = "../crates/skillshub-core" }
+tauri.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
