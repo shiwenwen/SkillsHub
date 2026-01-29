@@ -1,20 +1,34 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
-import { Package, MoreVertical, RefreshCw, Trash2, ExternalLink, Puzzle, ArrowRight } from "lucide-react";
+import { Package, RefreshCw, Puzzle, Database, FolderSync, Link2 } from "lucide-react";
 import { useTranslation } from "../i18n";
 
-interface SkillInfo {
+// 扫描到的 skill 信息
+interface ScannedSkillInfo {
     id: string;
-    name: string;
-    version: string;
-    description: string;
-    source: string;
-    installed_at: string;
-    scan_passed: boolean;
-    synced_tools: string[];
+    path: string;
+    tool: string;
+    in_hub: boolean;
+    is_link: boolean;
 }
 
+// Hub 状态信息
+interface HubStatusInfo {
+    skill_id: string;
+    hub_path: string;
+    synced_to: string[];
+    missing_in: string[];
+}
+
+// 完整同步响应
+interface FullSyncResponse {
+    collected_count: number;
+    collected_skills: string[];
+    distributed_count: number;
+    distributed: { skill_id: string; tool: string; success: boolean }[];
+}
+
+// Claude Plugin Skill
 interface PluginSkillInfo {
     id: string;
     plugin_name: string;
@@ -28,75 +42,107 @@ interface PluginSkillInfo {
 
 export default function Installed() {
     const t = useTranslation();
-    const [skills, setSkills] = useState<SkillInfo[]>([]);
+    const [scannedSkills, setScannedSkills] = useState<ScannedSkillInfo[]>([]);
+    const [hubStatus, setHubStatus] = useState<HubStatusInfo[]>([]);
     const [pluginSkills, setPluginSkills] = useState<PluginSkillInfo[]>([]);
     const [loading, setLoading] = useState(true);
-    const [pluginsLoading, setPluginsLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<"local" | "plugins">("local");
+    const [syncing, setSyncing] = useState(false);
+    const [activeTab, setActiveTab] = useState<"hub" | "scanned" | "plugins">("hub");
+    const [toast, setToast] = useState<{ type: "success" | "error" | "info"; message: string } | null>(null);
+
+    const showToast = (type: "success" | "error" | "info", message: string) => {
+        setToast({ type, message });
+        setTimeout(() => setToast(null), 4000);
+    };
 
     useEffect(() => {
-        loadSkills();
-        loadPluginSkills();
+        loadAll();
     }, []);
 
-    async function loadSkills() {
+    async function loadAll() {
         setLoading(true);
         try {
-            const result = await invoke<SkillInfo[]>("list_installed_skills");
-            setSkills(result);
+            const [scanned, status, plugins] = await Promise.all([
+                invoke<ScannedSkillInfo[]>("scan_all_skills"),
+                invoke<HubStatusInfo[]>("get_hub_status"),
+                invoke<PluginSkillInfo[]>("scan_claude_plugins"),
+            ]);
+            setScannedSkills(scanned);
+            setHubStatus(status);
+            setPluginSkills(plugins);
         } catch (error) {
-            console.error("Failed to load skills:", error);
+            console.error("Failed to load:", error);
+            showToast("error", `加载失败: ${error}`);
         }
         setLoading(false);
     }
 
-    async function loadPluginSkills() {
-        setPluginsLoading(true);
+    async function handleFullSync() {
+        setSyncing(true);
+        showToast("info", "正在执行完整同步...");
         try {
-            const result = await invoke<PluginSkillInfo[]>("scan_claude_plugins");
-            setPluginSkills(result);
+            const result = await invoke<FullSyncResponse>("full_sync_skills");
+            showToast(
+                "success",
+                `✓ 同步完成: 收集 ${result.collected_count} 个, 分发 ${result.distributed_count} 次`
+            );
+            await loadAll();
         } catch (error) {
-            console.error("Failed to load plugin skills:", error);
+            console.error("Full sync failed:", error);
+            showToast("error", `同步失败: ${error}`);
         }
-        setPluginsLoading(false);
+        setSyncing(false);
     }
 
-    async function syncPluginToTools(skill: PluginSkillInfo) {
-        try {
-            await invoke("sync_plugin_skill", {
-                skillPath: skill.skill_path,
-                skillId: skill.skill_name,
-                tools: ["cursor", "gemini", "antigravity"]
-            });
-            alert(`已同步 ${skill.skill_name} 到其他工具`);
-        } catch (error) {
-            console.error("Failed to sync plugin skill:", error);
-            alert(`同步失败: ${error}`);
+    // 按 skill ID 分组扫描结果
+    const groupedScanned = scannedSkills.reduce((acc, skill) => {
+        if (!acc[skill.id]) {
+            acc[skill.id] = { id: skill.id, tools: [], in_hub: skill.in_hub };
         }
-    }
+        acc[skill.id].tools.push({ tool: skill.tool, is_link: skill.is_link, path: skill.path });
+        return acc;
+    }, {} as Record<string, { id: string; tools: { tool: string; is_link: boolean; path: string }[]; in_hub: boolean }>);
+
+    const uniqueScannedSkills = Object.values(groupedScanned);
 
     return (
         <div className="space-y-6">
+            {/* Toast */}
+            {toast && (
+                <div className="toast toast-top toast-end z-50">
+                    <div className={`alert ${toast.type === "success" ? "alert-success" :
+                        toast.type === "error" ? "alert-error" : "alert-info"
+                        }`}>
+                        <span>{toast.message}</span>
+                    </div>
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold">{t.installed.title}</h1>
                     <p className="text-base-content/60 mt-1">
-                        {t.installed.description}
+                        管理 SkillsHub 中央仓库和各工具的 Skills
                     </p>
                 </div>
                 <div className="flex gap-3">
                     <button
-                        onClick={() => { loadSkills(); loadPluginSkills(); }}
+                        onClick={loadAll}
+                        disabled={loading}
                         className="btn btn-ghost btn-sm gap-2"
                     >
-                        <RefreshCw className="w-4 h-4" />
+                        <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
                         {t.common.refresh}
                     </button>
-                    <Link to="/discover" className="btn btn-primary btn-sm gap-2">
-                        <Package className="w-4 h-4" />
-                        {t.installed.installNew}
-                    </Link>
+                    <button
+                        onClick={handleFullSync}
+                        disabled={syncing}
+                        className="btn btn-primary btn-sm gap-2"
+                    >
+                        <FolderSync className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
+                        {syncing ? "同步中..." : "完整同步"}
+                    </button>
                 </div>
             </div>
 
@@ -104,39 +150,42 @@ export default function Installed() {
             <div className="stats shadow bg-base-200 w-full">
                 <div className="stat">
                     <div className="stat-figure text-primary">
-                        <Package className="w-8 h-8" />
+                        <Database className="w-8 h-8" />
                     </div>
-                    <div className="stat-title">{t.installed.totalSkills}</div>
-                    <div className="stat-value text-primary">{skills.length}</div>
+                    <div className="stat-title">Hub 中的 Skills</div>
+                    <div className="stat-value text-primary">{hubStatus.length}</div>
                 </div>
                 <div className="stat">
                     <div className="stat-figure text-secondary">
+                        <Package className="w-8 h-8" />
+                    </div>
+                    <div className="stat-title">扫描到的 Skills</div>
+                    <div className="stat-value text-secondary">{uniqueScannedSkills.length}</div>
+                </div>
+                <div className="stat">
+                    <div className="stat-figure text-accent">
                         <Puzzle className="w-8 h-8" />
                     </div>
                     <div className="stat-title">Claude Plugins</div>
-                    <div className="stat-value text-secondary">{pluginSkills.length}</div>
-                </div>
-                <div className="stat">
-                    <div className="stat-figure text-success">
-                        <div className="w-8 h-8 rounded-full bg-success/20 flex items-center justify-center">
-                            ✓
-                        </div>
-                    </div>
-                    <div className="stat-title">{t.installed.scanPassed}</div>
-                    <div className="stat-value text-success">
-                        {skills.filter((s) => s.scan_passed).length}
-                    </div>
+                    <div className="stat-value text-accent">{pluginSkills.length}</div>
                 </div>
             </div>
 
             {/* Tabs */}
             <div className="tabs tabs-boxed bg-base-200 p-1">
                 <button
-                    className={`tab ${activeTab === "local" ? "tab-active" : ""}`}
-                    onClick={() => setActiveTab("local")}
+                    className={`tab ${activeTab === "hub" ? "tab-active" : ""}`}
+                    onClick={() => setActiveTab("hub")}
+                >
+                    <Database className="w-4 h-4 mr-2" />
+                    Hub 仓库 ({hubStatus.length})
+                </button>
+                <button
+                    className={`tab ${activeTab === "scanned" ? "tab-active" : ""}`}
+                    onClick={() => setActiveTab("scanned")}
                 >
                     <Package className="w-4 h-4 mr-2" />
-                    本地 Skills ({skills.length})
+                    已扫描 ({uniqueScannedSkills.length})
                 </button>
                 <button
                     className={`tab ${activeTab === "plugins" ? "tab-active" : ""}`}
@@ -147,167 +196,172 @@ export default function Installed() {
                 </button>
             </div>
 
-            {/* Local Skills Grid */}
-            {activeTab === "local" && (
+            {loading ? (
+                <div className="flex justify-center py-12">
+                    <span className="loading loading-spinner loading-lg"></span>
+                </div>
+            ) : (
                 <>
-                    {loading ? (
-                        <div className="flex justify-center py-12">
-                            <span className="loading loading-spinner loading-lg text-primary"></span>
-                        </div>
-                    ) : skills.length === 0 ? (
-                        <div className="card bg-base-200">
-                            <div className="card-body items-center text-center py-12">
-                                <Package className="w-16 h-16 text-base-content/30" />
-                                <h2 className="card-title mt-4">{t.installed.noSkills}</h2>
-                                <p className="text-base-content/60">
-                                    {t.installed.noSkillsHint}
-                                </p>
-                                <Link to="/discover" className="btn btn-primary mt-4">
-                                    {t.installed.discoverSkills}
-                                </Link>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {skills.map((skill) => (
-                                <div
-                                    key={skill.id}
-                                    className="card bg-base-200 hover:bg-base-300 transition-colors"
-                                >
-                                    <div className="card-body">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                                                    <Package className="w-6 h-6 text-primary" />
-                                                </div>
-                                                <div>
-                                                    <h3 className="font-bold">{skill.name}</h3>
-                                                    <p className="text-sm text-base-content/60">
-                                                        v{skill.version}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="dropdown dropdown-end">
-                                                <label tabIndex={0} className="btn btn-ghost btn-sm btn-circle">
-                                                    <MoreVertical className="w-4 h-4" />
-                                                </label>
-                                                <ul
-                                                    tabIndex={0}
-                                                    className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52"
-                                                >
-                                                    <li>
-                                                        <Link to={`/skill/${skill.id}`}>
-                                                            <ExternalLink className="w-4 h-4" /> {t.installed.viewDetails}
-                                                        </Link>
-                                                    </li>
-                                                    <li>
-                                                        <a>
-                                                            <RefreshCw className="w-4 h-4" /> {t.common.sync}
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a className="text-error">
-                                                            <Trash2 className="w-4 h-4" /> {t.common.uninstall}
-                                                        </a>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-
-                                        <p className="text-sm text-base-content/60 mt-2 line-clamp-2">
-                                            {skill.description || t.common.noDescription}
+                    {/* Hub Tab */}
+                    {activeTab === "hub" && (
+                        <>
+                            {hubStatus.length === 0 ? (
+                                <div className="card bg-base-200">
+                                    <div className="card-body items-center text-center py-12">
+                                        <Database className="w-16 h-16 text-base-content/30" />
+                                        <h2 className="card-title mt-4">Hub 仓库为空</h2>
+                                        <p className="text-base-content/60">
+                                            点击"完整同步"从各工具收集 Skills 到 Hub
                                         </p>
-
-                                        <div className="flex flex-wrap gap-2 mt-3">
-                                            {skill.scan_passed ? (
-                                                <span className="badge badge-success badge-sm gap-1">
-                                                    ✓ {t.installed.secure}
-                                                </span>
-                                            ) : (
-                                                <span className="badge badge-error badge-sm gap-1">
-                                                    ⚠ {t.installed.issues}
-                                                </span>
-                                            )}
-                                            {skill.synced_tools.map((tool) => (
-                                                <span key={tool} className="badge badge-outline badge-sm">
-                                                    {tool}
-                                                </span>
-                                            ))}
-                                        </div>
+                                        <button onClick={handleFullSync} className="btn btn-primary mt-4">
+                                            <FolderSync className="w-4 h-4 mr-2" />
+                                            完整同步
+                                        </button>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-                    )}
-                </>
-            )}
-
-            {/* Plugin Skills Grid */}
-            {activeTab === "plugins" && (
-                <>
-                    {pluginsLoading ? (
-                        <div className="flex justify-center py-12">
-                            <span className="loading loading-spinner loading-lg text-secondary"></span>
-                        </div>
-                    ) : pluginSkills.length === 0 ? (
-                        <div className="card bg-base-200">
-                            <div className="card-body items-center text-center py-12">
-                                <Puzzle className="w-16 h-16 text-base-content/30" />
-                                <h2 className="card-title mt-4">无 Claude Plugins</h2>
-                                <p className="text-base-content/60">
-                                    在 Claude Code 中安装 plugins 后会显示在这里
-                                </p>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {pluginSkills.map((skill) => (
-                                <div
-                                    key={skill.id}
-                                    className="card bg-base-200 hover:bg-base-300 transition-colors"
-                                >
-                                    <div className="card-body">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary/20 to-accent/20 flex items-center justify-center">
-                                                    <Puzzle className="w-6 h-6 text-secondary" />
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {hubStatus.map((skill) => (
+                                        <div key={skill.skill_id} className="card bg-base-200 hover:bg-base-300 transition-colors">
+                                            <div className="card-body">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                                                        <Database className="w-6 h-6 text-primary" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <h3 className="font-bold truncate">{skill.skill_id}</h3>
+                                                        <p className="text-xs text-base-content/50 truncate">{skill.hub_path}</p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <h3 className="font-bold">{skill.skill_name}</h3>
-                                                    <p className="text-sm text-base-content/60">
-                                                        {skill.plugin_name}
-                                                    </p>
+
+                                                <div className="mt-3">
+                                                    <p className="text-xs text-base-content/60 mb-1">已同步到:</p>
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {skill.synced_to.map((tool) => (
+                                                            <span key={tool} className="badge badge-success badge-sm">{tool}</span>
+                                                        ))}
+                                                        {skill.synced_to.length === 0 && (
+                                                            <span className="text-xs text-base-content/40">无</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {skill.missing_in.length > 0 && (
+                                                    <div className="mt-2">
+                                                        <p className="text-xs text-base-content/60 mb-1">缺失于:</p>
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {skill.missing_in.map((tool) => (
+                                                                <span key={tool} className="badge badge-warning badge-sm badge-outline">{tool}</span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                    {/* Scanned Tab */}
+                    {activeTab === "scanned" && (
+                        <>
+                            {uniqueScannedSkills.length === 0 ? (
+                                <div className="card bg-base-200">
+                                    <div className="card-body items-center text-center py-12">
+                                        <Package className="w-16 h-16 text-base-content/30" />
+                                        <h2 className="card-title mt-4">未扫描到任何 Skills</h2>
+                                        <p className="text-base-content/60">
+                                            各工具的 skills 目录为空
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {uniqueScannedSkills.map((skill) => (
+                                        <div key={skill.id} className="card bg-base-200 hover:bg-base-300 transition-colors">
+                                            <div className="card-body">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary/20 to-accent/20 flex items-center justify-center">
+                                                        <Package className="w-6 h-6 text-secondary" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <h3 className="font-bold truncate">{skill.id}</h3>
+                                                        <p className="text-xs text-base-content/50">
+                                                            {skill.in_hub ? (
+                                                                <span className="text-success">✓ 在 Hub 中</span>
+                                                            ) : (
+                                                                <span className="text-warning">⚠ 不在 Hub 中</span>
+                                                            )}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="mt-3">
+                                                    <p className="text-xs text-base-content/60 mb-1">存在于:</p>
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {skill.tools.map((t, idx) => (
+                                                            <span key={idx} className="badge badge-outline badge-sm gap-1">
+                                                                {t.is_link && <Link2 className="w-3 h-3" />}
+                                                                {t.tool}
+                                                            </span>
+                                                        ))}
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <button
-                                                onClick={() => syncPluginToTools(skill)}
-                                                className="btn btn-ghost btn-sm btn-circle"
-                                                title="同步到其他工具"
-                                            >
-                                                <ArrowRight className="w-4 h-4" />
-                                            </button>
                                         </div>
+                                    ))}
+                                </div>
+                            )}
+                        </>
+                    )}
 
-                                        <div className="text-xs text-base-content/50 mt-2 truncate">
-                                            {skill.skill_path}
-                                        </div>
-
-                                        <div className="flex flex-wrap gap-2 mt-3">
-                                            <span className="badge badge-secondary badge-sm">
-                                                {skill.marketplace}
-                                            </span>
-                                            <span className="badge badge-outline badge-sm">
-                                                v{skill.version.substring(0, 7)}
-                                            </span>
-                                        </div>
+                    {/* Plugins Tab */}
+                    {activeTab === "plugins" && (
+                        <>
+                            {pluginSkills.length === 0 ? (
+                                <div className="card bg-base-200">
+                                    <div className="card-body items-center text-center py-12">
+                                        <Puzzle className="w-16 h-16 text-base-content/30" />
+                                        <h2 className="card-title mt-4">无 Claude Plugins</h2>
+                                        <p className="text-base-content/60">
+                                            在 Claude Code 中安装 plugins 后会显示在这里
+                                        </p>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {pluginSkills.map((skill) => (
+                                        <div key={skill.id} className="card bg-base-200 hover:bg-base-300 transition-colors">
+                                            <div className="card-body">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center">
+                                                        <Puzzle className="w-6 h-6 text-accent" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <h3 className="font-bold truncate">{skill.skill_name}</h3>
+                                                        <p className="text-sm text-base-content/60 truncate">{skill.plugin_name}</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="text-xs text-base-content/50 mt-2 truncate">
+                                                    {skill.skill_path}
+                                                </div>
+
+                                                <div className="flex flex-wrap gap-2 mt-3">
+                                                    <span className="badge badge-accent badge-sm">{skill.marketplace}</span>
+                                                    <span className="badge badge-outline badge-sm">v{skill.version.substring(0, 7)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </>
                     )}
                 </>
             )}
         </div>
     );
 }
-

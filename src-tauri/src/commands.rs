@@ -385,20 +385,22 @@ pub async fn list_claude_marketplaces() -> Result<Vec<MarketplaceInfo>, String> 
 
 /// Sync a plugin skill to other tools
 #[tauri::command]
+#[allow(non_snake_case)]
 pub async fn sync_plugin_skill(
-    skill_path: String,
-    skill_id: String,
+    skillPath: String,
+    skillId: String,
     tools: Vec<String>,
 ) -> Result<Vec<SyncResult>, String> {
-    let store = LocalStore::default_store().map_err(|e| e.to_string())?;
-    let mut engine = SyncEngine::new(store);
+    let engine_store = LocalStore::default_store().map_err(|e| e.to_string())?;
+    let mut engine = SyncEngine::new(engine_store);
 
     for adapter in create_default_adapters() {
         engine.register_adapter(adapter);
     }
 
-    let source = PathBuf::from(&skill_path);
+    let source = PathBuf::from(&skillPath);
     let mut results = Vec::new();
+    let mut synced_tools = Vec::new();
 
     for tool_str in &tools {
         let tool = match tool_str.to_lowercase().as_str() {
@@ -427,15 +429,127 @@ pub async fn sync_plugin_skill(
             continue;
         }
 
-        let result = engine.sync_plugin_skill(&source, &skill_id, tool, SyncStrategy::Auto);
+        let result = engine.sync_plugin_skill(&source, &skillId, tool, SyncStrategy::Auto);
+        let success = result.is_ok();
+        if success {
+            synced_tools.push(tool_str.clone());
+        }
         results.push(SyncResult {
-            skill_id: skill_id.clone(),
+            skill_id: skillId.clone(),
             tool: tool_str.clone(),
-            success: result.is_ok(),
+            success,
             error: result.err().map(|e| e.to_string()),
         });
     }
 
+    // Register the skill in LocalStore so it appears in the "Local Skills" list
+    if !synced_tools.is_empty() {
+        if let Ok(mut register_store) = LocalStore::default_store() {
+            let _ = register_store.register_plugin_skill(&skillId, &source, synced_tools);
+        }
+    }
+
     Ok(results)
+}
+
+/// Scan all tool directories for skills
+#[tauri::command]
+pub async fn scan_all_skills() -> Result<Vec<ScannedSkillInfo>, String> {
+    let store = LocalStore::default_store().map_err(|e| e.to_string())?;
+    let mut engine = SyncEngine::new(store);
+
+    for adapter in create_default_adapters() {
+        engine.register_adapter(adapter);
+    }
+
+    let scanned = engine.scan_all_tools();
+    
+    Ok(scanned.into_iter().map(|s| ScannedSkillInfo {
+        id: s.id,
+        path: s.path.to_string_lossy().to_string(),
+        tool: format!("{:?}", s.tool),
+        in_hub: s.in_hub,
+        is_link: s.is_link,
+    }).collect())
+}
+
+/// Full sync: collect from tools to hub, then distribute to all tools
+#[tauri::command]
+pub async fn full_sync_skills() -> Result<FullSyncResponse, String> {
+    let store = LocalStore::default_store().map_err(|e| e.to_string())?;
+    let mut engine = SyncEngine::new(store);
+
+    for adapter in create_default_adapters() {
+        engine.register_adapter(adapter);
+    }
+
+    let result = engine.full_sync().map_err(|e| e.to_string())?;
+    
+    Ok(FullSyncResponse {
+        collected_count: result.collected_count,
+        collected_skills: result.collected_skills,
+        distributed_count: result.distributed.len(),
+        distributed: result.distributed.into_iter().map(|(skill, tool, success)| {
+            DistributedSkill {
+                skill_id: skill,
+                tool: format!("{:?}", tool),
+                success,
+            }
+        }).collect(),
+    })
+}
+
+/// Get hub status - skills in hub and their sync status
+#[tauri::command]
+pub async fn get_hub_status() -> Result<Vec<HubStatusInfo>, String> {
+    let store = LocalStore::default_store().map_err(|e| e.to_string())?;
+    let mut engine = SyncEngine::new(store);
+
+    for adapter in create_default_adapters() {
+        engine.register_adapter(adapter);
+    }
+
+    let status = engine.get_hub_status();
+    
+    Ok(status.into_iter().map(|s| HubStatusInfo {
+        skill_id: s.skill_id,
+        hub_path: s.hub_path.to_string_lossy().to_string(),
+        synced_to: s.synced_to.into_iter().map(|t| format!("{:?}", t)).collect(),
+        missing_in: s.missing_in.into_iter().map(|t| format!("{:?}", t)).collect(),
+    }).collect())
+}
+
+// New response types for scan/sync
+
+#[derive(Debug, Serialize)]
+pub struct ScannedSkillInfo {
+    pub id: String,
+    pub path: String,
+    pub tool: String,
+    pub in_hub: bool,
+    pub is_link: bool,
+}
+
+#[derive(Debug, Serialize)]
+pub struct FullSyncResponse {
+    pub collected_count: usize,
+    pub collected_skills: Vec<String>,
+    pub distributed_count: usize,
+    pub distributed: Vec<DistributedSkill>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct DistributedSkill {
+    pub skill_id: String,
+    pub tool: String,
+    pub success: bool,
+}
+
+#[derive(Debug, Serialize)]
+pub struct HubStatusInfo {
+    pub skill_id: String,
+    pub hub_path: String,
+    pub synced_to: Vec<String>,
+    pub missing_in: Vec<String>,
 }
 

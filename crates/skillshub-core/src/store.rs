@@ -130,6 +130,41 @@ impl LocalStore {
         Ok(())
     }
 
+    /// Register a plugin skill that was synced from Claude plugins
+    /// This records the skill in the store without copying files
+    pub fn register_plugin_skill(
+        &mut self,
+        skill_id: &str,
+        source_path: &Path,
+        tools: Vec<String>,
+    ) -> Result<InstallRecord> {
+        use crate::models::{SkillSource, SkillVersion};
+
+        let record = InstallRecord {
+            skill_id: skill_id.to_string(),
+            version: SkillVersion::new("plugin", "from-claude-plugins"),
+            installed_at: timestamp_now(),
+            source: SkillSource::Local { path: source_path.to_path_buf() },
+            projected_tools: tools,
+            scan_passed: true,
+        };
+
+        self.save_record(&record)?;
+        self.records.insert(skill_id.to_string(), record.clone());
+
+        Ok(record)
+    }
+
+    /// Update projected tools for a skill
+    pub fn update_projected_tools(&mut self, skill_id: &str, tools: Vec<String>) -> Result<()> {
+        if let Some(record) = self.records.get_mut(skill_id) {
+            record.projected_tools = tools;
+            let record_clone = record.clone();
+            self.save_record(&record_clone)?;
+        }
+        Ok(())
+    }
+
     /// Calculate content hash for a skill directory
     pub fn calculate_hash(&self, skill_id: &str) -> Result<String> {
         let skill_dir = self.skill_path(skill_id);

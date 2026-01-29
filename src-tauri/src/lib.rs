@@ -31,6 +31,10 @@ pub fn run() {
             scan_claude_plugins,
             list_claude_marketplaces,
             sync_plugin_skill,
+            // Hub sync commands
+            scan_all_skills,
+            full_sync_skills,
+            get_hub_status,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

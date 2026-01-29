@@ -3,10 +3,12 @@
 use std::fs;
 use std::path::Path;
 
+use serde::{Deserialize, Serialize};
+
 use crate::adapters::ToolAdapter;
 use crate::error::{Error, Result};
 use crate::models::{
-    DriftInfo, DriftType, SkillSyncStatus, SyncAction, SyncActionType, SyncPlan,
+    DriftInfo, DriftType, HubSyncStatus, ScannedSkill, SkillSyncStatus, SyncAction, SyncActionType, SyncPlan,
     SyncState, SyncStrategy, ToolProfile, ToolSyncState, ToolType,
 };
 use crate::store::LocalStore;
@@ -427,6 +429,191 @@ impl SyncEngine {
 
         Ok(())
     }
+
+    /// Scan all tool directories for skills
+    /// Returns a list of all skills found across all tools
+    pub fn scan_all_tools(&self) -> Vec<ScannedSkill> {
+        let mut all_skills = Vec::new();
+        let hub_skills = self.get_hub_skill_ids();
+
+        for adapter in &self.adapters {
+            if let Ok(skills_dir) = adapter.skills_dir() {
+                if skills_dir.exists() {
+                    if let Ok(entries) = fs::read_dir(&skills_dir) {
+                        for entry in entries.flatten() {
+                            let path = entry.path();
+                            if path.is_dir() || path.is_symlink() {
+                                if let Some(name) = path.file_name() {
+                                    let skill_id = name.to_string_lossy().to_string();
+                                    // Skip hidden directories
+                                    if skill_id.starts_with('.') {
+                                        continue;
+                                    }
+                                    all_skills.push(ScannedSkill {
+                                        id: skill_id.clone(),
+                                        path: path.clone(),
+                                        tool: adapter.tool_type(),
+                                        in_hub: hub_skills.contains(&skill_id),
+                                        is_link: path.is_symlink(),
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        all_skills
+    }
+
+    /// Get list of skill IDs in the hub
+    fn get_hub_skill_ids(&self) -> Vec<String> {
+        let skills_dir = self.store.skills_dir();
+        let mut ids = Vec::new();
+        if skills_dir.exists() {
+            if let Ok(entries) = fs::read_dir(&skills_dir) {
+                for entry in entries.flatten() {
+                    if entry.path().is_dir() {
+                        if let Some(name) = entry.path().file_name() {
+                            let id = name.to_string_lossy().to_string();
+                            if !id.starts_with('.') {
+                                ids.push(id);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ids
+    }
+
+    /// Collect skills from tools into the hub
+    /// Copies skills that exist in tools but not in the hub
+    pub fn collect_to_hub(&mut self) -> Result<Vec<String>> {
+        let scanned = self.scan_all_tools();
+        let mut collected = Vec::new();
+
+        for skill in scanned {
+            if !skill.in_hub {
+                // Check if we already collected this skill
+                let hub_path = self.store.skills_dir().join(&skill.id);
+                if hub_path.exists() {
+                    continue;
+                }
+
+                // Copy skill to hub
+                if skill.is_link {
+                    // Resolve the symlink and copy the actual content
+                    if let Ok(resolved) = fs::read_link(&skill.path) {
+                        let real_path = if resolved.is_absolute() {
+                            resolved
+                        } else {
+                            skill.path.parent().unwrap_or(Path::new("/")).join(&resolved)
+                        };
+                        if real_path.exists() {
+                            copy_dir_all(&real_path, &hub_path)?;
+                            collected.push(skill.id.clone());
+                        }
+                    }
+                } else if skill.path.is_dir() {
+                    copy_dir_all(&skill.path, &hub_path)?;
+                    collected.push(skill.id.clone());
+                }
+            }
+        }
+
+        Ok(collected)
+    }
+
+    /// Distribute skills from hub to all tools
+    /// Creates symlinks (or copies if symlinks fail) in each tool's skills directory
+    pub fn distribute_from_hub(&mut self) -> Result<Vec<(String, ToolType, bool)>> {
+        let hub_skill_ids = self.get_hub_skill_ids();
+        let mut results = Vec::new();
+
+        for skill_id in hub_skill_ids {
+            let source = self.store.skills_dir().join(&skill_id);
+            if !source.exists() {
+                continue;
+            }
+
+            for adapter in &self.adapters {
+                if let Ok(target_dir) = adapter.skills_dir() {
+                    let target = target_dir.join(&skill_id);
+
+                    // Skip if already exists
+                    if target.exists() || target.is_symlink() {
+                        continue;
+                    }
+
+                    // Create target directory's parent if needed
+                    if let Some(parent) = target.parent() {
+                        let _ = fs::create_dir_all(parent);
+                    }
+
+                    // Try symlink first
+                    let success = if self.try_link(&source, &target).is_ok() {
+                        true
+                    } else if copy_dir_all(&source, &target).is_ok() {
+                        true
+                    } else {
+                        false
+                    };
+
+                    results.push((skill_id.clone(), adapter.tool_type(), success));
+                }
+            }
+        }
+
+        Ok(results)
+    }
+
+    /// Full sync: collect from tools, then distribute to all tools
+    pub fn full_sync(&mut self) -> Result<FullSyncResult> {
+        let collected = self.collect_to_hub()?;
+        let distributed = self.distribute_from_hub()?;
+
+        Ok(FullSyncResult {
+            collected_count: collected.len(),
+            collected_skills: collected,
+            distributed: distributed,
+        })
+    }
+
+    /// Get hub sync status - which skills are in hub and where they're synced
+    pub fn get_hub_status(&self) -> Vec<HubSyncStatus> {
+        let hub_skill_ids = self.get_hub_skill_ids();
+        let scanned = self.scan_all_tools();
+        let all_tools: Vec<ToolType> = self.adapters.iter().map(|a| a.tool_type()).collect();
+
+        hub_skill_ids.iter().map(|skill_id| {
+            let synced_to: Vec<ToolType> = scanned.iter()
+                .filter(|s| &s.id == skill_id)
+                .map(|s| s.tool)
+                .collect();
+            
+            let missing_in: Vec<ToolType> = all_tools.iter()
+                .filter(|t| !synced_to.contains(t))
+                .cloned()
+                .collect();
+
+            HubSyncStatus {
+                skill_id: skill_id.clone(),
+                hub_path: self.store.skills_dir().join(skill_id),
+                synced_to,
+                missing_in,
+            }
+        }).collect()
+    }
+}
+
+/// Result of a full sync operation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FullSyncResult {
+    pub collected_count: usize,
+    pub collected_skills: Vec<String>,
+    pub distributed: Vec<(String, ToolType, bool)>,
 }
 
 /// Result of a sync operation

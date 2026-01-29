@@ -139,3 +139,31 @@ pub enum SyncActionType {
     Remove,
     Repair,
 }
+
+/// A skill scanned from a tool's skills directory
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScannedSkill {
+    /// Skill ID (directory name)
+    pub id: String,
+    /// Full path to the skill
+    pub path: PathBuf,
+    /// Which tool this skill was found in
+    pub tool: ToolType,
+    /// Whether this skill exists in SkillsHub central repository
+    pub in_hub: bool,
+    /// Whether this is a symlink
+    pub is_link: bool,
+}
+
+/// Sync status for the Hub's central view
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HubSyncStatus {
+    /// Skill ID
+    pub skill_id: String,
+    /// Path in SkillsHub repository
+    pub hub_path: PathBuf,
+    /// Tools that have this skill
+    pub synced_to: Vec<ToolType>,
+    /// Tools missing this skill
+    pub missing_in: Vec<ToolType>,
+}
