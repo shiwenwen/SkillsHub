@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- 修复中文翻译中 "Skills" 被错误翻译为 "技能" 的问题，Skills 作为专有名词保持不变
+
+### Added
+- 新增 7 种语言支持：日本語 (ja)、한국어 (ko)、Français (fr)、Deutsch (de)、Español (es)、Português (pt)、Русский (ru)
+- 浏览器语言自动检测支持所有 9 种语言
+
 ### Changed
 - 重构同步机制：SkillsHub 作为中央仓库，支持双向同步
   - `scan_all_skills`: 扫描所有工具目录中的 skills
