@@ -13,6 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - 修复中文翻译中 "Skills" 被错误翻译为 "技能" 的问题，Skills 作为专有名词保持不变
+- 修复设置页面注册源管理仅显示硬编码假数据的问题，现已连接后端真实数据
+
+### Added
+- 实现完整的注册源管理功能：
+  - 从后端加载真实注册源列表（默认包含 anthropics、obra、ComposioHQ、vercel-labs）
+  - 支持启用/禁用注册源切换
+  - 支持添加新的 Git 注册源
+  - 支持删除注册源
+  - 显示注册源的名称、URL、描述和标签
 
 ### Added
 - 新增 7 种语言支持：日本語 (ja)、한국어 (ko)、Français (fr)、Deutsch (de)、Español (es)、Português (pt)、Русский (ru)

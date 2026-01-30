@@ -56,6 +56,17 @@ const BUILTIN_TOOLS: ToolConfig[] = [
     { id: "windsurf", name: "Windsurf", globalPath: "~/.codeium/windsurf/skills/", projectPath: ".windsurf/skills/", detected: false, hasGlobalPath: true },
 ];
 
+// 注册源配置类型
+interface RegistryConfig {
+    name: string;
+    url: string;
+    branch: string | null;
+    description: string | null;
+    enabled: boolean;
+    registry_type: string;
+    tags: string[];
+}
+
 export default function Settings() {
     const t = useTranslation();
     const { language, setLanguage } = useLanguage();
@@ -68,6 +79,15 @@ export default function Settings() {
     const [newToolGlobalPath, setNewToolGlobalPath] = useState("");
     const [newToolProjectPath, setNewToolProjectPath] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+
+    // 注册源状态
+    const [registries, setRegistries] = useState<RegistryConfig[]>([]);
+    const [showAddRegistryModal, setShowAddRegistryModal] = useState(false);
+    const [newRegistryName, setNewRegistryName] = useState("");
+    const [newRegistryUrl, setNewRegistryUrl] = useState("");
+    const [newRegistryBranch, setNewRegistryBranch] = useState("");
+    const [newRegistryDescription, setNewRegistryDescription] = useState("");
+    const [isRegistryLoading, setIsRegistryLoading] = useState(false);
 
     // 加载已保存的自定义工具
     useEffect(() => {
@@ -90,6 +110,75 @@ export default function Settings() {
         };
         loadCustomTools();
     }, []);
+
+    // 加载注册源
+    useEffect(() => {
+        loadRegistries();
+    }, []);
+
+    const loadRegistries = async () => {
+        try {
+            const list = await invoke<RegistryConfig[]>("list_registries");
+            setRegistries(list);
+        } catch (error) {
+            console.error("Failed to load registries:", error);
+        }
+    };
+
+    // 添加注册源
+    const addRegistry = async () => {
+        if (!newRegistryName.trim() || !newRegistryUrl.trim()) return;
+        setIsRegistryLoading(true);
+
+        try {
+            await invoke("add_registry", {
+                config: {
+                    name: newRegistryName.trim(),
+                    url: newRegistryUrl.trim(),
+                    branch: newRegistryBranch.trim() || null,
+                    description: newRegistryDescription.trim() || null,
+                    enabled: true,
+                    registry_type: "git",
+                    tags: [],
+                },
+            });
+            await loadRegistries();
+            setNewRegistryName("");
+            setNewRegistryUrl("");
+            setNewRegistryBranch("");
+            setNewRegistryDescription("");
+            setShowAddRegistryModal(false);
+        } catch (error) {
+            console.error("Failed to add registry:", error);
+        } finally {
+            setIsRegistryLoading(false);
+        }
+    };
+
+    // 删除注册源
+    const removeRegistry = async (name: string) => {
+        try {
+            await invoke("remove_registry", { name });
+            await loadRegistries();
+        } catch (error) {
+            console.error("Failed to remove registry:", error);
+        }
+    };
+
+    // 切换注册源启用状态
+    const toggleRegistry = async (registry: RegistryConfig) => {
+        try {
+            await invoke("add_registry", {
+                config: {
+                    ...registry,
+                    enabled: !registry.enabled,
+                },
+            });
+            await loadRegistries();
+        } catch (error) {
+            console.error("Failed to toggle registry:", error);
+        }
+    };
 
     // 选择目录
     const selectDirectory = async (setter: (path: string) => void) => {
@@ -394,39 +483,56 @@ export default function Settings() {
                             <Globe className="w-5 h-5" />
                             {t.settings.registries}
                         </h3>
-                        <button className="btn btn-primary btn-sm gap-2">
+                        <button
+                            className="btn btn-primary btn-sm gap-2"
+                            onClick={() => setShowAddRegistryModal(true)}
+                        >
                             <Plus className="w-4 h-4" />
                             {t.settings.addRegistry}
                         </button>
                     </div>
                     <div className="space-y-3 mt-4">
-                        {[
-                            { name: "Official", url: "https://registry.skillshub.io", enabled: true },
-                            { name: "Community", url: "https://community.skillshub.io", enabled: true },
-                            { name: "Local", url: "~/.skillshub/local-registry", enabled: true },
-                        ].map((registry) => (
-                            <div
-                                key={registry.name}
-                                className="flex items-center justify-between p-4 bg-base-300 rounded-lg"
-                            >
-                                <div className="flex items-center gap-4">
+                        {registries.length === 0 ? (
+                            <div className="text-center py-4 text-base-content/60">
+                                {t.common.loading}
+                            </div>
+                        ) : (
+                            registries.map((registry) => (
+                                <div
+                                    key={registry.name}
+                                    className="flex items-start gap-4 p-4 bg-base-300 rounded-lg"
+                                >
                                     <input
                                         type="checkbox"
-                                        className="toggle toggle-sm toggle-success"
-                                        defaultChecked={registry.enabled}
+                                        className="toggle toggle-sm toggle-success mt-1"
+                                        checked={registry.enabled}
+                                        onChange={() => toggleRegistry(registry)}
                                     />
-                                    <div>
-                                        <p className="font-medium">{registry.name}</p>
-                                        <p className="text-sm text-base-content/60 font-mono">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-medium">{registry.name}</span>
+                                            {registry.tags.map(tag => (
+                                                <span key={tag} className="badge badge-outline badge-sm">{tag}</span>
+                                            ))}
+                                        </div>
+                                        <p className="text-sm text-base-content/60 font-mono mt-0.5">
                                             {registry.url}
                                         </p>
+                                        {registry.description && (
+                                            <p className="text-xs text-base-content/50 mt-1">
+                                                {registry.description}
+                                            </p>
+                                        )}
                                     </div>
+                                    <button
+                                        className="btn btn-ghost btn-sm text-error"
+                                        onClick={() => removeRegistry(registry.name)}
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
                                 </div>
-                                <button className="btn btn-ghost btn-sm text-error">
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                            </div>
-                        ))}
+                            ))
+                        )}
                     </div>
                 </div>
             </div>
@@ -584,6 +690,81 @@ export default function Settings() {
                         </div>
                     </div>
                     <div className="modal-backdrop" onClick={() => setShowAddToolModal(false)} />
+                </div>
+            )}
+
+            {/* Add Registry Modal */}
+            {showAddRegistryModal && (
+                <div className="modal modal-open">
+                    <div className="modal-box">
+                        <h3 className="font-bold text-lg">{t.settings.addRegistry}</h3>
+                        <div className="py-4 space-y-4">
+                            <div className="form-control">
+                                <label className="label">
+                                    <span className="label-text">名称</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    className="input input-bordered"
+                                    placeholder="my-registry"
+                                    value={newRegistryName}
+                                    onChange={(e) => setNewRegistryName(e.target.value)}
+                                />
+                            </div>
+                            <div className="form-control">
+                                <label className="label">
+                                    <span className="label-text">Git URL</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    className="input input-bordered font-mono text-sm"
+                                    placeholder="https://github.com/user/repo"
+                                    value={newRegistryUrl}
+                                    onChange={(e) => setNewRegistryUrl(e.target.value)}
+                                />
+                            </div>
+                            <div className="form-control">
+                                <label className="label">
+                                    <span className="label-text">分支（可选）</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    className="input input-bordered font-mono text-sm"
+                                    placeholder="main"
+                                    value={newRegistryBranch}
+                                    onChange={(e) => setNewRegistryBranch(e.target.value)}
+                                />
+                            </div>
+                            <div className="form-control">
+                                <label className="label">
+                                    <span className="label-text">描述（可选）</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    className="input input-bordered"
+                                    placeholder="描述这个注册源"
+                                    value={newRegistryDescription}
+                                    onChange={(e) => setNewRegistryDescription(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                        <div className="modal-action">
+                            <button
+                                className="btn btn-ghost"
+                                onClick={() => setShowAddRegistryModal(false)}
+                            >
+                                {t.common.cancel}
+                            </button>
+                            <button
+                                className="btn btn-primary"
+                                onClick={addRegistry}
+                                disabled={!newRegistryName.trim() || !newRegistryUrl.trim() || isRegistryLoading}
+                            >
+                                {isRegistryLoading ? <span className="loading loading-spinner loading-sm"></span> : t.settings.addRegistry}
+                            </button>
+                        </div>
+                    </div>
+                    <div className="modal-backdrop" onClick={() => setShowAddRegistryModal(false)} />
                 </div>
             )}
         </div>
