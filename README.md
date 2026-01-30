@@ -31,6 +31,9 @@ SkillsHub 是一个统一的 Agent Skills 管理平台，让您可以用同一�
 - 🖥️ **可视化界面** - Tauri 桌面应用，美观易用
 - ⌨️ **CLI 支持** - 完整的命令行工具，适合自动化和脚本化
 - 🔄 **漂移检测** - 自动检测不一致并修复
+- 🧩 **Claude Plugins 支持** - 扫描、同步 Claude 插件技能
+- 🧰 **自定义工具** - 支持添加自定义 AI 编码工具与路径
+- 🌍 **多语言界面** - 内置 9 种语言（中/英/日/韩/法/德/西/葡/俄）
 
 ### 🏗️ 架构
 
@@ -158,11 +161,24 @@ SkillsHub/
 
 | 工具 | 技能目录 | 状态 |
 |------|----------|------|
+| Amp | `~/.config/agents/skills` | ✅ 支持 |
+| Antigravity | `~/.gemini/antigravity/skills` | ✅ 支持 |
 | Claude Code | `~/.claude/skills` | ✅ 支持 |
+| Codex | `~/.codex/skills` | ✅ 支持 |
+| CodeBuddy | `~/.codebuddy/skills` | ✅ 支持 |
 | Cursor | `~/.cursor/skills` | ✅ 支持 |
+| Droid/Factory | `~/.factory/skills` | ✅ 支持 |
 | Gemini CLI | `~/.gemini/skills` | ✅ 支持 |
-| OpenCode | `~/.opencode/skills` | ✅ 支持 |
-| Codex CLI | `~/.codex/skills` | 🔜 计划中 |
+| GitHub Copilot | `~/.copilot/skills` | ✅ 支持 |
+| Goose | `~/.config/goose/skills` | ✅ 支持 |
+| Kilo Code | `~/.kilocode/skills` | ✅ 支持 |
+| Kimi CLI | `~/.kimi/skills` | ✅ 支持 |
+| OpenCode | `~/.config/opencode/skills` | ✅ 支持 |
+| Qwen Code | `~/.qwen/skills` | ✅ 支持 |
+| Roo Code | `~/.roo/skills` | ✅ 支持 |
+| Trae | `.trae/skills` | ✅ 支持 |
+| Windsurf | `~/.codeium/windsurf/skills` | ✅ 支持 |
+| 自定义工具 | 用户自定义 | ✅ 支持 |
 
 ### 🛡️ 安全扫描规则
 
@@ -213,6 +229,9 @@ SkillsHub is a unified Agent Skills management platform that allows you to use t
 - 🖥️ **Visual Interface** - Beautiful Tauri desktop application
 - ⌨️ **CLI Support** - Full command-line tool for automation
 - 🔄 **Drift Detection** - Automatically detect and repair inconsistencies
+- 🧩 **Claude Plugins Support** - Scan and sync Claude plugin skills
+- 🧰 **Custom Tools** - Add custom AI coding tools and paths
+- 🌍 **Multilingual UI** - Built-in 9 languages
 
 ### 🚀 Quick Start
 
@@ -231,7 +250,14 @@ skillshub sync
 
 # List installed skills
 skillshub list
+
+# Scan a skill for security risks
+skillshub scan my-skill
 ```
+
+### 🔧 Supported Tools
+
+Amp, Antigravity, Claude Code, Codex, CodeBuddy, Cursor, Droid/Factory, Gemini CLI, GitHub Copilot, Goose, Kilo Code, Kimi CLI, OpenCode, Qwen Code, Roo Code, Trae, Windsurf, plus custom tools.
 
 ### 📄 License
 

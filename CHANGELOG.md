@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 集成 `tauri-plugin-dialog` 实现原生目录选择对话框
 
 ### Changed
+- 更新 README 与技术文档，补充最新特性与支持工具说明
 - 重构同步机制：SkillsHub 作为中央仓库，支持双向同步
   - `scan_all_skills`: 扫描所有工具目录中的 skills
   - `full_sync_skills`: 完整同步（收集 + 分发）
