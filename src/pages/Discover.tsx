@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Search, Package, Download, Star } from "lucide-react";
+import { Search, Package, Download, Star, Loader2 } from "lucide-react";
 import { useTranslation } from "../i18n";
 
 interface SkillListing {
@@ -18,22 +18,85 @@ export default function Discover() {
     const t = useTranslation();
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<SkillListing[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const [page, setPage] = useState(0);
+    const loaderRef = useRef<HTMLDivElement>(null);
 
-    async function handleSearch() {
-        setLoading(true);
+    const PAGE_SIZE = 20;
+
+    // 加载 Skills
+    const loadSkills = useCallback(async (searchQuery: string, pageNum: number, append: boolean = false) => {
+        if (pageNum === 0) {
+            setLoading(true);
+        } else {
+            setLoadingMore(true);
+        }
+
         try {
             const result = await invoke<SkillListing[]>("search_skills", {
-                query,
+                query: searchQuery,
             });
-            setResults(result);
+
+            // 模拟分页（后端暂不支持分页，前端处理）
+            const startIndex = pageNum * PAGE_SIZE;
+            const endIndex = startIndex + PAGE_SIZE;
+            const pageResults = result.slice(startIndex, endIndex);
+
+            if (append) {
+                setResults(prev => [...prev, ...pageResults]);
+            } else {
+                setResults(pageResults);
+            }
+
+            setHasMore(endIndex < result.length);
         } catch (error) {
             console.error("Search failed:", error);
+        } finally {
+            setLoading(false);
+            setLoadingMore(false);
         }
-        setLoading(false);
+    }, []);
+
+    // 初始加载
+    useEffect(() => {
+        loadSkills("", 0, false);
+    }, [loadSkills]);
+
+    // 搜索处理
+    async function handleSearch() {
+        setPage(0);
+        setHasMore(true);
+        await loadSkills(query, 0, false);
     }
 
+    // 加载更多
+    const loadMore = useCallback(() => {
+        if (!loadingMore && hasMore) {
+            const nextPage = page + 1;
+            setPage(nextPage);
+            loadSkills(query, nextPage, true);
+        }
+    }, [loadingMore, hasMore, page, query, loadSkills]);
 
+    // 无限滚动 IntersectionObserver
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMore && !loading && !loadingMore) {
+                    loadMore();
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (loaderRef.current) {
+            observer.observe(loaderRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, [hasMore, loading, loadingMore, loadMore]);
 
     return (
         <div className="space-y-6">
@@ -60,13 +123,12 @@ export default function Discover() {
                         <button
                             onClick={handleSearch}
                             className="btn btn-primary join-item"
+                            disabled={loading}
                         >
                             <Search className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
-
-
             </div>
 
             {/* Results */}
@@ -77,7 +139,7 @@ export default function Discover() {
             ) : results.length === 0 ? (
                 <div className="card bg-base-200">
                     <div className="card-body items-center text-center py-12">
-                        <Search className="w-16 h-16 text-base-content/30" />
+                        <Package className="w-16 h-16 text-base-content/30" />
                         <h2 className="card-title mt-4">{t.discover.searchForSkills}</h2>
                         <p className="text-base-content/60">
                             {t.discover.searchHint}
@@ -98,7 +160,7 @@ export default function Discover() {
                                             <Package className="w-7 h-7 text-secondary" />
                                         </div>
                                         <div>
-                                            <h3 className="text-lg font-bold">{skill.name}</h3>
+                                            <h3 className="text-lg font-bold">{skill.name || skill.id}</h3>
                                             <p className="text-sm text-base-content/60">
                                                 {t.discover.by} {skill.author || t.discover.unknown} • v{skill.version}
                                             </p>
@@ -134,10 +196,18 @@ export default function Discover() {
                             </div>
                         </div>
                     ))}
+
+                    {/* 加载更多触发器 */}
+                    <div ref={loaderRef} className="flex justify-center py-4">
+                        {loadingMore && (
+                            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                        )}
+                        {!hasMore && results.length > 0 && (
+                            <p className="text-base-content/50 text-sm">已加载全部</p>
+                        )}
+                    </div>
                 </div>
             )}
-
-
         </div>
     );
 }

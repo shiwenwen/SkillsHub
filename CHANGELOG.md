@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 支持添加新的 Git 注册源
   - 支持删除注册源
   - 显示注册源的名称、URL、描述和标签
+- 优化发现 Skills 面板：
+  - 进入页面时自动加载所有注册源中的 Skills
+  - 支持滚动加载（无限滚动），逐步加载更多内容
 
 ### Added
 - 新增 7 种语言支持：日本語 (ja)、한국어 (ko)、Français (fr)、Deutsch (de)、Español (es)、Português (pt)、Русский (ru)
