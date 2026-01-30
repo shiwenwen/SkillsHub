@@ -13,7 +13,7 @@ SkillsHub 是一个统一的 Agent Skills 管理与共享平台，支持：
 - 安全扫描
 - 可视化管理（Tauri 桌面应用）
 - CLI 命令行工具
-- **多语言界面（中文/英文）**
+- **多语言界面（中文/英文/日本語/한국어/Français/Deutsch/Español/Português/Русский）**
 
 ---
 
@@ -107,9 +107,16 @@ SkillsHub/
     ├── App.tsx             # 路由配置
     ├── index.css           # 全局样式
     ├── i18n.tsx            # 国际化上下文和 Hooks
-    ├── locales/            # 语言文件
-    │   ├── en.ts           # 英文翻译
-    │   └── zh.ts           # 中文翻译
+    ├── locales/            # 语言文件 (9种语言)
+    │   ├── en.ts           # English
+    │   ├── zh.ts           # 中文
+    │   ├── ja.ts           # 日本語
+    │   ├── ko.ts           # 한국어
+    │   ├── fr.ts           # Français
+    │   ├── de.ts           # Deutsch
+    │   ├── es.ts           # Español
+    │   ├── pt.ts           # Português
+    │   └── ru.ts           # Русский
     ├── components/
     │   └── Layout.tsx      # 布局组件（侧边栏）
     └── pages/
@@ -350,8 +357,15 @@ invoke<SyncResult[]>("sync_plugin_skill", { skillPath, skillId, tools })
 src/
 ├── i18n.tsx          # LanguageProvider, useLanguage, useTranslation
 └── locales/
-    ├── en.ts         # 英文翻译
-    └── zh.ts         # 中文翻译
+    ├── en.ts         # English
+    ├── zh.ts         # 中文
+    ├── ja.ts         # 日本語
+    ├── ko.ts         # 한국어
+    ├── fr.ts         # Français
+    ├── de.ts         # Deutsch
+    ├── es.ts         # Español
+    ├── pt.ts         # Português
+    └── ru.ts         # Русский
 ```
 
 ### 8.2 使用方式
@@ -383,10 +397,14 @@ function LanguageSwitcher() {
 }
 ```
 
-### 8.3 添加新翻译
+### 8.3 翻译规则
+
+- **Skills** 作为专有名词，在所有语言中保持不变，不进行翻译
+
+### 8.4 添加新翻译
 
 1. 在 `locales/en.ts` 添加新的翻译键值
-2. 在 `locales/zh.ts` 添加对应的中文翻译
+2. 在所有其他语言文件中添加对应翻译（zh, ja, ko, fr, de, es, pt, ru）
 3. 在组件中使用 `t.xxx.yyy` 访问
 
 ```typescript
@@ -400,8 +418,9 @@ export const en = {
 };
 ```
 
-### 8.4 特性
+### 8.5 特性
 
+- **9 种语言支持**：English、中文、日本語、한국어、Français、Deutsch、Español、Português、Русский
 - **自动检测**：根据 `navigator.language` 自动选择语言
 - **持久化**：语言偏好存储在 `localStorage`
 - **实时切换**：切换语言后界面立即更新

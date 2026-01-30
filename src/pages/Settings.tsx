@@ -229,6 +229,13 @@ export default function Settings() {
                         >
                             <option value="zh">{t.settings.chinese}</option>
                             <option value="en">{t.settings.english}</option>
+                            <option value="ja">日本語</option>
+                            <option value="ko">한국어</option>
+                            <option value="fr">Français</option>
+                            <option value="de">Deutsch</option>
+                            <option value="es">Español</option>
+                            <option value="pt">Português</option>
+                            <option value="ru">Русский</option>
                         </select>
                     </div>
                 </div>

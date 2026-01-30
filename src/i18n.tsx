@@ -1,28 +1,55 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { en, type Translations } from "./locales/en";
 import { zh } from "./locales/zh";
+import { ja } from "./locales/ja";
+import { ko } from "./locales/ko";
+import { fr } from "./locales/fr";
+import { de } from "./locales/de";
+import { es } from "./locales/es";
+import { pt } from "./locales/pt";
+import { ru } from "./locales/ru";
 
 // 支持的语言
-export type Language = "en" | "zh";
+export type Language = "en" | "zh" | "ja" | "ko" | "fr" | "de" | "es" | "pt" | "ru";
 
 // 语言配置
 const translations: Record<Language, Translations> = {
     en,
     zh,
+    ja,
+    ko,
+    fr,
+    de,
+    es,
+    pt,
+    ru,
 };
 
 // 获取本机默认语言
 function getDefaultLanguage(): Language {
     // 优先从 localStorage 读取
     const stored = localStorage.getItem("skillshub-language");
-    if (stored === "en" || stored === "zh") {
-        return stored;
+    const supportedLanguages: Language[] = ["en", "zh", "ja", "ko", "fr", "de", "es", "pt", "ru"];
+    if (stored && supportedLanguages.includes(stored as Language)) {
+        return stored as Language;
     }
 
     // 检测浏览器语言
     const browserLang = navigator.language.toLowerCase();
-    if (browserLang.startsWith("zh")) {
-        return "zh";
+    const langMap: [string, Language][] = [
+        ["zh", "zh"],
+        ["ja", "ja"],
+        ["ko", "ko"],
+        ["fr", "fr"],
+        ["de", "de"],
+        ["es", "es"],
+        ["pt", "pt"],
+        ["ru", "ru"],
+    ];
+    for (const [prefix, lang] of langMap) {
+        if (browserLang.startsWith(prefix)) {
+            return lang;
+        }
     }
     return "en";
 }
