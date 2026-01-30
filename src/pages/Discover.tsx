@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Search, Package, Download, Star, Tag } from "lucide-react";
+import { Search, Package, Download, Star } from "lucide-react";
 import { useTranslation } from "../i18n";
 
 interface SkillListing {
@@ -19,16 +19,6 @@ export default function Discover() {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<SkillListing[]>([]);
     const [loading, setLoading] = useState(false);
-    const [selectedTags, setSelectedTags] = useState<string[]>([]);
-
-    const popularTags = [
-        "coding",
-        "testing",
-        "documentation",
-        "devops",
-        "security",
-        "database",
-    ];
 
     async function handleSearch() {
         setLoading(true);
@@ -43,11 +33,7 @@ export default function Discover() {
         setLoading(false);
     }
 
-    function toggleTag(tag: string) {
-        setSelectedTags((prev) =>
-            prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-        );
-    }
+
 
     return (
         <div className="space-y-6">
@@ -80,22 +66,7 @@ export default function Discover() {
                     </div>
                 </div>
 
-                {/* Tag Filters */}
-                <div className="flex flex-wrap gap-2 mt-4">
-                    {popularTags.map((tag) => (
-                        <button
-                            key={tag}
-                            onClick={() => toggleTag(tag)}
-                            className={`badge badge-lg gap-1 cursor-pointer transition-colors ${selectedTags.includes(tag)
-                                ? "badge-primary"
-                                : "badge-outline hover:badge-primary"
-                                }`}
-                        >
-                            <Tag className="w-3 h-3" />
-                            {tag}
-                        </button>
-                    ))}
-                </div>
+
             </div>
 
             {/* Results */}
@@ -166,33 +137,7 @@ export default function Discover() {
                 </div>
             )}
 
-            {/* Featured Section */}
-            <div className="card bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20">
-                <div className="card-body">
-                    <h2 className="card-title">
-                        <Star className="w-5 h-5 text-warning" />
-                        {t.discover.featuredSkills}
-                    </h2>
-                    <p className="text-base-content/60">
-                        {t.discover.curatedSkills}
-                    </p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                        {["Code Review", "API Testing", "Documentation"].map((name) => (
-                            <div key={name} className="glass-card p-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                                        <Package className="w-5 h-5 text-primary" />
-                                    </div>
-                                    <div>
-                                        <p className="font-medium">{name}</p>
-                                        <p className="text-xs text-base-content/60">{t.common.popular}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
+
         </div>
     );
 }

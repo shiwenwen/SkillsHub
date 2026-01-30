@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- 移除发现页面中无实际作用的热门标签过滤器（未连接到后端搜索逻辑）
+- 移除发现页面中无实际作用的精选 Skills 区块（硬编码且无交互功能）
+
 ### Fixed
 - 修复中文翻译中 "Skills" 被错误翻译为 "技能" 的问题，Skills 作为专有名词保持不变
 
