@@ -2,7 +2,7 @@
 
 > 本文档记录项目的技术架构、实现细节和开发指南。每次更新都会同步更新此文档。
 
-**最后更新**: 2026-01-30 (重构同步机制: Hub 中央仓库 + 双向同步)
+**最后更新**: 2026-01-30 (新增自定义工具功能)
 
 ---
 
@@ -330,6 +330,11 @@ invoke<ToolInfo[]>("detect_tools")
 invoke<PluginSkillInfo[]>("scan_claude_plugins")
 invoke<MarketplaceInfo[]>("list_claude_marketplaces")
 invoke<SyncResult[]>("sync_plugin_skill", { skillPath, skillId, tools })
+
+// 自定义工具管理
+invoke<CustomToolConfig[]>("list_custom_tools")
+invoke<CustomToolConfig>("add_custom_tool", { name, globalPath, projectPath })
+invoke("remove_custom_tool", { id })
 ```
 
 ---

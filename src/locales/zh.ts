@@ -168,6 +168,7 @@ export const zh: Translations = {
         globalPathHint: "如果此工具仅支持项目级别的 skills，可留空",
         projectPathHint: "相对于项目根目录的路径",
         addTool: "添加工具",
+        selectDirectory: "选择目录",
         security: "安全",
         scanBeforeInstall: "安装前扫描",
         scanBeforeUpdate: "更新前扫描",

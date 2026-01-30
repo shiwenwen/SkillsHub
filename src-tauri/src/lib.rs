@@ -7,6 +7,7 @@ use commands::*;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             // Skill commands
             list_installed_skills,
@@ -22,6 +23,10 @@ pub fn run() {
             // Tool commands
             list_tools,
             detect_tools,
+            // Custom tool commands
+            list_custom_tools,
+            add_custom_tool,
+            remove_custom_tool,
             // Registry commands
             search_skills,
             list_registries,

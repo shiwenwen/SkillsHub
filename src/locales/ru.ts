@@ -161,6 +161,7 @@ export const ru: Translations = {
         globalPathHint: "Оставьте пустым, если инструмент поддерживает только Skills на уровне проекта",
         projectPathHint: "Относительный путь от корня проекта",
         addTool: "Добавить инструмент",
+        selectDirectory: "Выбрать каталог",
         security: "Безопасность",
         scanBeforeInstall: "Сканировать перед установкой",
         scanBeforeUpdate: "Сканировать перед обновлением",

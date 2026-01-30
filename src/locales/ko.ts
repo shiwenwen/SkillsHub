@@ -161,6 +161,7 @@ export const ko: Translations = {
         globalPathHint: "프로젝트 수준 Skills만 지원하는 경우 비워두세요",
         projectPathHint: "프로젝트 루트로부터의 상대 경로",
         addTool: "도구 추가",
+        selectDirectory: "디렉토리 선택",
         security: "보안",
         scanBeforeInstall: "설치 전 스캔",
         scanBeforeUpdate: "업데이트 전 스캔",

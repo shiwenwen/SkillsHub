@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - 新增 7 种语言支持：日本語 (ja)、한국어 (ko)、Français (fr)、Deutsch (de)、Español (es)、Português (pt)、Русский (ru)
 - 浏览器语言自动检测支持所有 9 种语言
+- 新增自定义工具功能：可在设置页面添加自定义 AI 编码工具，支持目录选择和配置持久化
+  - `list_custom_tools`: 获取所有自定义工具
+  - `add_custom_tool`: 添加新的自定义工具
+  - `remove_custom_tool`: 删除自定义工具
+- 同步面板支持添加自定义工具：工具卡片区域添加"添加自定义工具"入口
+- 集成 `tauri-plugin-dialog` 实现原生目录选择对话框
 
 ### Changed
 - 重构同步机制：SkillsHub 作为中央仓库，支持双向同步

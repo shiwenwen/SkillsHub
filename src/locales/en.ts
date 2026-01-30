@@ -166,6 +166,7 @@ export const en = {
         globalPathHint: "Leave empty if this tool only supports project-level skills",
         projectPathHint: "Relative path from project root",
         addTool: "Add Tool",
+        selectDirectory: "Select Directory",
         security: "Security",
         scanBeforeInstall: "Scan before install",
         scanBeforeUpdate: "Scan before update",

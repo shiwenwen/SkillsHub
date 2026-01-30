@@ -48,3 +48,4 @@ url = "2.5"
 # Tauri
 tauri = "2.2"
 tauri-build = "2.0"
+tauri-plugin-dialog = "2"

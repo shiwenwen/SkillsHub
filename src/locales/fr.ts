@@ -161,6 +161,7 @@ export const fr: Translations = {
         globalPathHint: "Laisser vide si l'outil ne supporte que les Skills au niveau projet",
         projectPathHint: "Chemin relatif depuis la racine du projet",
         addTool: "Ajouter l'outil",
+        selectDirectory: "Sélectionner le répertoire",
         security: "Sécurité",
         scanBeforeInstall: "Scanner avant l'installation",
         scanBeforeUpdate: "Scanner avant la mise à jour",

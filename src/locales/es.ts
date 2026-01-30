@@ -161,6 +161,7 @@ export const es: Translations = {
         globalPathHint: "Dejar vacío si la herramienta solo soporta Skills a nivel de proyecto",
         projectPathHint: "Ruta relativa desde la raíz del proyecto",
         addTool: "Añadir herramienta",
+        selectDirectory: "Seleccionar directorio",
         security: "Seguridad",
         scanBeforeInstall: "Escanear antes de instalar",
         scanBeforeUpdate: "Escanear antes de actualizar",

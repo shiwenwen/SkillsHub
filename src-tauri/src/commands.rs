@@ -553,3 +553,93 @@ pub struct HubStatusInfo {
     pub missing_in: Vec<String>,
 }
 
+// Custom tool management
+
+use serde::Deserialize;
+
+/// Custom tool configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CustomToolConfig {
+    pub id: String,
+    pub name: String,
+    pub global_path: Option<String>,
+    pub project_path: Option<String>,
+}
+
+/// Get the path to custom tools config file
+fn custom_tools_config_path() -> Result<PathBuf, String> {
+    let data_dir = dirs::data_local_dir()
+        .or_else(|| dirs::home_dir().map(|h| h.join(".local").join("share")))
+        .ok_or("Cannot determine data directory")?;
+    Ok(data_dir.join("skillshub").join("custom_tools.json"))
+}
+
+/// Load custom tools from config file
+fn load_custom_tools_from_file() -> Result<Vec<CustomToolConfig>, String> {
+    let path = custom_tools_config_path()?;
+    if !path.exists() {
+        return Ok(Vec::new());
+    }
+    let content = std::fs::read_to_string(&path)
+        .map_err(|e| format!("Failed to read custom tools config: {}", e))?;
+    serde_json::from_str(&content)
+        .map_err(|e| format!("Failed to parse custom tools config: {}", e))
+}
+
+/// Save custom tools to config file
+fn save_custom_tools_to_file(tools: &[CustomToolConfig]) -> Result<(), String> {
+    let path = custom_tools_config_path()?;
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create config directory: {}", e))?;
+    }
+    let content = serde_json::to_string_pretty(tools)
+        .map_err(|e| format!("Failed to serialize custom tools: {}", e))?;
+    std::fs::write(&path, content)
+        .map_err(|e| format!("Failed to write custom tools config: {}", e))
+}
+
+/// List all custom tools
+#[tauri::command]
+pub async fn list_custom_tools() -> Result<Vec<CustomToolConfig>, String> {
+    load_custom_tools_from_file()
+}
+
+/// Add a new custom tool
+#[tauri::command]
+pub async fn add_custom_tool(
+    name: String,
+    global_path: Option<String>,
+    project_path: Option<String>,
+) -> Result<CustomToolConfig, String> {
+    let mut tools = load_custom_tools_from_file()?;
+    
+    let new_tool = CustomToolConfig {
+        id: format!("custom-{}", std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis()),
+        name,
+        global_path,
+        project_path,
+    };
+    
+    tools.push(new_tool.clone());
+    save_custom_tools_to_file(&tools)?;
+    
+    Ok(new_tool)
+}
+
+/// Remove a custom tool by ID
+#[tauri::command]
+pub async fn remove_custom_tool(id: String) -> Result<(), String> {
+    let mut tools = load_custom_tools_from_file()?;
+    let original_len = tools.len();
+    tools.retain(|t| t.id != id);
+    
+    if tools.len() == original_len {
+        return Err(format!("Custom tool with id '{}' not found", id));
+    }
+    
+    save_custom_tools_to_file(&tools)
+}

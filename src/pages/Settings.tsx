@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Settings as SettingsIcon,
     FolderOpen,
@@ -13,6 +13,16 @@ import {
     ChevronUp,
 } from "lucide-react";
 import { useTranslation, useLanguage, type Language } from "../i18n";
+import { invoke } from "@tauri-apps/api/core";
+import { open } from "@tauri-apps/plugin-dialog";
+
+// 后端自定义工具配置类型
+interface CustomToolBackend {
+    id: string;
+    name: string;
+    global_path: string | null;
+    project_path: string | null;
+}
 
 // 工具配置类型
 interface ToolConfig {
@@ -57,6 +67,45 @@ export default function Settings() {
     const [newToolName, setNewToolName] = useState("");
     const [newToolGlobalPath, setNewToolGlobalPath] = useState("");
     const [newToolProjectPath, setNewToolProjectPath] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+
+    // 加载已保存的自定义工具
+    useEffect(() => {
+        const loadCustomTools = async () => {
+            try {
+                const savedTools = await invoke<CustomToolBackend[]>("list_custom_tools");
+                const converted: ToolConfig[] = savedTools.map(t => ({
+                    id: t.id,
+                    name: t.name,
+                    globalPath: t.global_path || "",
+                    projectPath: t.project_path || "",
+                    detected: true,
+                    isCustom: true,
+                    hasGlobalPath: !!t.global_path,
+                }));
+                setCustomTools(converted);
+            } catch (error) {
+                console.error("Failed to load custom tools:", error);
+            }
+        };
+        loadCustomTools();
+    }, []);
+
+    // 选择目录
+    const selectDirectory = async (setter: (path: string) => void) => {
+        try {
+            const selected = await open({
+                directory: true,
+                multiple: false,
+                title: t.settings.selectDirectory || "选择目录",
+            });
+            if (selected && typeof selected === "string") {
+                setter(selected);
+            }
+        } catch (error) {
+            console.error("Failed to select directory:", error);
+        }
+    };
 
     // 切换工具展开状态
     const toggleToolExpand = (toolId: string) => {
@@ -82,29 +131,47 @@ export default function Settings() {
     };
 
     // 添加自定义工具
-    const addCustomTool = () => {
+    const addCustomTool = async () => {
         if (!newToolName.trim()) return;
+        setIsLoading(true);
 
-        const newTool: ToolConfig = {
-            id: `custom-${Date.now()}`,
-            name: newToolName,
-            globalPath: newToolGlobalPath,
-            projectPath: newToolProjectPath,
-            detected: true,
-            isCustom: true,
-            hasGlobalPath: newToolGlobalPath.trim().length > 0,
-        };
+        try {
+            const result = await invoke<CustomToolBackend>("add_custom_tool", {
+                name: newToolName,
+                globalPath: newToolGlobalPath.trim() || null,
+                projectPath: newToolProjectPath.trim() || null,
+            });
 
-        setCustomTools(prev => [...prev, newTool]);
-        setNewToolName("");
-        setNewToolGlobalPath("");
-        setNewToolProjectPath("");
-        setShowAddToolModal(false);
+            const newTool: ToolConfig = {
+                id: result.id,
+                name: result.name,
+                globalPath: result.global_path || "",
+                projectPath: result.project_path || "",
+                detected: true,
+                isCustom: true,
+                hasGlobalPath: !!result.global_path,
+            };
+
+            setCustomTools(prev => [...prev, newTool]);
+            setNewToolName("");
+            setNewToolGlobalPath("");
+            setNewToolProjectPath("");
+            setShowAddToolModal(false);
+        } catch (error) {
+            console.error("Failed to add custom tool:", error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     // 删除自定义工具
-    const deleteCustomTool = (toolId: string) => {
-        setCustomTools(prev => prev.filter(tool => tool.id !== toolId));
+    const deleteCustomTool = async (toolId: string) => {
+        try {
+            await invoke("remove_custom_tool", { id: toolId });
+            setCustomTools(prev => prev.filter(tool => tool.id !== toolId));
+        } catch (error) {
+            console.error("Failed to delete custom tool:", error);
+        }
     };
 
     // 渲染工具配置项
@@ -168,7 +235,13 @@ export default function Settings() {
                                         onChange={(e) => updateToolPath(tool.id, 'globalPath', e.target.value)}
                                         placeholder={t.settings.noGlobalPath}
                                     />
-                                    <button className="btn btn-ghost btn-sm join-item">
+                                    <button
+                                        className="btn btn-ghost btn-sm join-item"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            selectDirectory((path) => updateToolPath(tool.id, 'globalPath', path));
+                                        }}
+                                    >
                                         <FolderOpen className="w-4 h-4" />
                                     </button>
                                 </div>
@@ -454,13 +527,22 @@ export default function Settings() {
                                 <label className="label">
                                     <span className="label-text">{t.settings.globalPath}</span>
                                 </label>
-                                <input
-                                    type="text"
-                                    className="input input-bordered font-mono text-sm"
-                                    placeholder="~/.tool/skills/"
-                                    value={newToolGlobalPath}
-                                    onChange={(e) => setNewToolGlobalPath(e.target.value)}
-                                />
+                                <div className="join w-full">
+                                    <input
+                                        type="text"
+                                        className="input input-bordered font-mono text-sm join-item flex-1"
+                                        placeholder="~/.tool/skills/"
+                                        value={newToolGlobalPath}
+                                        onChange={(e) => setNewToolGlobalPath(e.target.value)}
+                                    />
+                                    <button
+                                        className="btn btn-ghost join-item"
+                                        onClick={() => selectDirectory(setNewToolGlobalPath)}
+                                        type="button"
+                                    >
+                                        <FolderOpen className="w-4 h-4" />
+                                    </button>
+                                </div>
                                 <label className="label">
                                     <span className="label-text-alt text-base-content/50">
                                         {t.settings.globalPathHint}
@@ -495,9 +577,9 @@ export default function Settings() {
                             <button
                                 className="btn btn-primary"
                                 onClick={addCustomTool}
-                                disabled={!newToolName.trim()}
+                                disabled={!newToolName.trim() || isLoading}
                             >
-                                {t.settings.addTool}
+                                {isLoading ? <span className="loading loading-spinner loading-sm"></span> : t.settings.addTool}
                             </button>
                         </div>
                     </div>

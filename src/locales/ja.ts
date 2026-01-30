@@ -161,6 +161,7 @@ export const ja: Translations = {
         globalPathHint: "プロジェクトレベルの Skills のみ対応の場合は空欄",
         projectPathHint: "プロジェクトルートからの相対パス",
         addTool: "ツールを追加",
+        selectDirectory: "ディレクトリを選択",
         security: "セキュリティ",
         scanBeforeInstall: "インストール前にスキャン",
         scanBeforeUpdate: "更新前にスキャン",

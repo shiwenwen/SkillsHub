@@ -161,6 +161,7 @@ export const de: Translations = {
         globalPathHint: "Leer lassen, wenn das Tool nur Skills auf Projektebene unterstützt",
         projectPathHint: "Relativer Pfad vom Projektstamm",
         addTool: "Tool hinzufügen",
+        selectDirectory: "Verzeichnis auswählen",
         security: "Sicherheit",
         scanBeforeInstall: "Vor Installation scannen",
         scanBeforeUpdate: "Vor Update scannen",
