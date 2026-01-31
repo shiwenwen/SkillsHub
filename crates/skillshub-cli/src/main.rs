@@ -154,7 +154,10 @@ async fn main() -> anyhow::Result<()> {
 
     // Print banner
     println!("{}", "╔═══════════════════════════════════════════╗".cyan());
-    println!("{}", "║      SkillsHub - Agent Skills Manager      ║".cyan());
+    println!(
+        "{}",
+        "║      SkillsHub - Agent Skills Manager      ║".cyan()
+    );
     println!("{}", "╚═══════════════════════════════════════════╝".cyan());
     println!();
 
@@ -163,7 +166,12 @@ async fn main() -> anyhow::Result<()> {
         Commands::Discover { query, tags, limit } => {
             discover::run(query, tags, limit).await?;
         }
-        Commands::Install { skill, tools, sync, skip_scan } => {
+        Commands::Install {
+            skill,
+            tools,
+            sync,
+            skip_scan,
+        } => {
             install::run(&skill, tools.as_deref(), &sync, skip_scan).await?;
         }
         Commands::Update { skill } => {
@@ -172,7 +180,11 @@ async fn main() -> anyhow::Result<()> {
         Commands::Uninstall { skill, tools } => {
             uninstall::run(&skill, tools.as_deref()).await?;
         }
-        Commands::Sync { skill, tools, reconcile } => {
+        Commands::Sync {
+            skill,
+            tools,
+            reconcile,
+        } => {
             sync::run(skill.as_deref(), tools.as_deref(), reconcile).await?;
         }
         Commands::Scan { target, policy } => {

@@ -18,7 +18,9 @@ impl TraeAdapter {
     }
 
     pub fn with_path(path: PathBuf) -> Self {
-        Self { custom_path: Some(path) }
+        Self {
+            custom_path: Some(path),
+        }
     }
 }
 
@@ -44,7 +46,9 @@ impl ToolAdapter for TraeAdapter {
             std::fs::create_dir_all(path)?;
             return Ok(path.clone());
         }
-        Err(crate::error::Error::ToolNotFound("Trae (no global path available)".to_string()))
+        Err(crate::error::Error::ToolNotFound(
+            "Trae (no global path available)".to_string(),
+        ))
     }
 
     fn config_dir(&self) -> Option<PathBuf> {

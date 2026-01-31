@@ -22,7 +22,10 @@ pub async fn list() -> anyhow::Result<()> {
     }
 
     println!();
-    println!("{}", "Run 'skillshub tools detect' to check which are installed.".dimmed());
+    println!(
+        "{}",
+        "Run 'skillshub tools detect' to check which are installed.".dimmed()
+    );
 
     Ok(())
 }
@@ -43,7 +46,8 @@ pub async fn detect() -> anyhow::Result<()> {
             "✗ Not found".dimmed()
         };
 
-        let skills_dir = adapter.skills_dir()
+        let skills_dir = adapter
+            .skills_dir()
             .map(|p| p.display().to_string())
             .unwrap_or_else(|_| "N/A".to_string());
 
@@ -75,7 +79,7 @@ pub async fn status() -> anyhow::Result<()> {
         let tool_type = adapter.tool_type();
         let tool_name = tool_type.display_name();
         let skills_dir = adapter.skills_dir()?;
-        
+
         // Count skills in directory
         let skill_count = if skills_dir.exists() {
             std::fs::read_dir(&skills_dir)?
@@ -91,7 +95,11 @@ pub async fn status() -> anyhow::Result<()> {
         println!("    Skills installed: {}", skill_count);
         println!(
             "    Symlinks supported: {}",
-            if adapter.supports_symlinks() { "Yes".green() } else { "No".yellow() }
+            if adapter.supports_symlinks() {
+                "Yes".green()
+            } else {
+                "No".yellow()
+            }
         );
         println!();
     }

@@ -5,7 +5,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 use walkdir::WalkDir;
 
 use crate::error::{Error, Result};
@@ -86,9 +86,13 @@ impl LocalStore {
     }
 
     /// Import a skill to the store
-    pub async fn import_skill(&mut self, skill: &Skill, source_path: &Path) -> Result<InstallRecord> {
+    pub async fn import_skill(
+        &mut self,
+        skill: &Skill,
+        source_path: &Path,
+    ) -> Result<InstallRecord> {
         let skill_dir = self.skill_path(&skill.id);
-        
+
         // Copy skill files
         if source_path.is_dir() {
             copy_dir_all(source_path, &skill_dir)?;
@@ -144,7 +148,9 @@ impl LocalStore {
             skill_id: skill_id.to_string(),
             version: SkillVersion::new("plugin", "from-claude-plugins"),
             installed_at: timestamp_now(),
-            source: SkillSource::Local { path: source_path.to_path_buf() },
+            source: SkillSource::Local {
+                path: source_path.to_path_buf(),
+            },
             projected_tools: tools,
             scan_passed: true,
         };
@@ -173,7 +179,7 @@ impl LocalStore {
         }
 
         let mut hasher = Sha256::new();
-        
+
         for entry in WalkDir::new(&skill_dir).sort_by_file_name() {
             let entry = entry.map_err(|e| Error::Io(e.into()))?;
             if entry.file_type().is_file() {
@@ -186,7 +192,10 @@ impl LocalStore {
     }
 
     fn metadata_path(&self, skill_id: &str) -> PathBuf {
-        self.config.root_dir.join("metadata").join(format!("{}.json", skill_id))
+        self.config
+            .root_dir
+            .join("metadata")
+            .join(format!("{}.json", skill_id))
     }
 
     fn save_record(&self, record: &InstallRecord) -> Result<()> {
@@ -226,7 +235,7 @@ fn copy_dir_all(src: &Path, dst: &Path) -> Result<()> {
         let ty = entry.file_type()?;
         let src_path = entry.path();
         let dst_path = dst.join(entry.file_name());
-        
+
         if ty.is_dir() {
             copy_dir_all(&src_path, &dst_path)?;
         } else {

@@ -43,14 +43,8 @@ pub async fn run(target: &str, policy: &str) -> anyhow::Result<()> {
     println!("{}", "═".repeat(50).dimmed());
     println!();
 
-    println!(
-        "Skill: {}",
-        target.bold()
-    );
-    println!(
-        "Overall Risk: {}",
-        format_risk_level(report.overall_risk)
-    );
+    println!("Skill: {}", target.bold());
+    println!("Overall Risk: {}", format_risk_level(report.overall_risk));
     println!(
         "Status: {}",
         if report.passed {
@@ -71,7 +65,10 @@ pub async fn run(target: &str, policy: &str) -> anyhow::Result<()> {
         println!("  {} HIGH", format!("  {}", report.summary.high).red());
     }
     if report.summary.medium > 0 {
-        println!("  {} MEDIUM", format!("  {}", report.summary.medium).yellow());
+        println!(
+            "  {} MEDIUM",
+            format!("  {}", report.summary.medium).yellow()
+        );
     }
     if report.summary.low > 0 {
         println!("  {} LOW", format!("  {}", report.summary.low).dimmed());
@@ -82,7 +79,7 @@ pub async fn run(target: &str, policy: &str) -> anyhow::Result<()> {
     if !report.findings.is_empty() {
         println!("{}", "Findings:".bold());
         println!();
-        
+
         for finding in &report.findings {
             let risk_str = format_risk_level(finding.risk_level);
             println!(

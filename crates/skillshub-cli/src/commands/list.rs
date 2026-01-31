@@ -14,7 +14,10 @@ pub async fn run(detailed: bool) -> anyhow::Result<()> {
     if installed.is_empty() {
         println!("{}", "No skills installed.".dimmed());
         println!();
-        println!("{}", "Install skills with: skillshub install <skill>".dimmed());
+        println!(
+            "{}",
+            "Install skills with: skillshub install <skill>".dimmed()
+        );
         return Ok(());
     }
 
@@ -28,7 +31,14 @@ pub async fn run(detailed: bool) -> anyhow::Result<()> {
             if !record.projected_tools.is_empty() {
                 println!("    Tools: {}", record.projected_tools.join(", "));
             }
-            println!("    Scan: {}", if record.scan_passed { "✓ Passed".green() } else { "✗ Failed".red() });
+            println!(
+                "    Scan: {}",
+                if record.scan_passed {
+                    "✓ Passed".green()
+                } else {
+                    "✗ Failed".red()
+                }
+            );
             println!();
         } else {
             println!(

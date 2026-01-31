@@ -18,7 +18,9 @@ impl RooCodeAdapter {
     }
 
     pub fn with_path(path: PathBuf) -> Self {
-        Self { custom_path: Some(path) }
+        Self {
+            custom_path: Some(path),
+        }
     }
 
     fn default_path() -> Option<PathBuf> {
@@ -44,10 +46,12 @@ impl ToolAdapter for RooCodeAdapter {
     }
 
     fn skills_dir(&self) -> Result<PathBuf> {
-        let path = self.custom_path.clone()
+        let path = self
+            .custom_path
+            .clone()
             .or_else(Self::default_path)
             .ok_or_else(|| crate::error::Error::ToolNotFound("Roo Code".to_string()))?;
-        
+
         std::fs::create_dir_all(&path)?;
         Ok(path)
     }

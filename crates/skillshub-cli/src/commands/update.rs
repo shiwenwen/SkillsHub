@@ -19,7 +19,10 @@ pub async fn run(skill: Option<&str>) -> anyhow::Result<()> {
     let skills_to_update: Vec<_> = if target == "all" {
         installed
     } else {
-        installed.into_iter().filter(|r| r.skill_id == target).collect()
+        installed
+            .into_iter()
+            .filter(|r| r.skill_id == target)
+            .collect()
     };
 
     if skills_to_update.is_empty() {

@@ -16,4 +16,3 @@ pub mod update;
 pub use error::{Error, Result};
 pub use models::*;
 pub use plugins::{PluginScanner, PluginSkill};
-

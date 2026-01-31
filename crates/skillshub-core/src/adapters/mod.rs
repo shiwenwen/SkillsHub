@@ -12,6 +12,7 @@ mod gemini;
 mod goose;
 mod kilocode;
 mod kimi;
+mod openclaw;
 mod opencode;
 mod qwen;
 mod roocode;
@@ -35,6 +36,7 @@ pub use gemini::GeminiAdapter;
 pub use goose::GooseAdapter;
 pub use kilocode::KiloCodeAdapter;
 pub use kimi::KimiAdapter;
+pub use openclaw::OpenClawAdapter;
 pub use opencode::OpenCodeAdapter;
 pub use qwen::QwenAdapter;
 pub use roocode::RooCodeAdapter;
@@ -100,6 +102,7 @@ pub fn create_default_adapters() -> Vec<Box<dyn ToolAdapter>> {
         Box::new(KiloCodeAdapter::new()),
         Box::new(KimiAdapter::new()),
         Box::new(OpenCodeAdapter::new()),
+        Box::new(OpenClawAdapter::new()),
         Box::new(QwenAdapter::new()),
         Box::new(RooCodeAdapter::new()),
         Box::new(TraeAdapter::new()),

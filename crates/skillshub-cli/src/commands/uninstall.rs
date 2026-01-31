@@ -27,9 +27,12 @@ pub async fn run(skill: &str, tools: Option<&str>) -> anyhow::Result<()> {
     });
 
     let store = LocalStore::default_store()?;
-    
+
     if !store.is_installed(skill) {
-        println!("{}", format!("Skill '{}' is not installed.", skill).yellow());
+        println!(
+            "{}",
+            format!("Skill '{}' is not installed.", skill).yellow()
+        );
         return Ok(());
     }
 

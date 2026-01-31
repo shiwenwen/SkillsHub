@@ -7,11 +7,7 @@ use skillshub_core::models::{SyncStrategy, ToolType};
 use skillshub_core::store::LocalStore;
 use skillshub_core::sync::SyncEngine;
 
-pub async fn run(
-    skill: Option<&str>,
-    tools: Option<&str>,
-    reconcile: bool,
-) -> anyhow::Result<()> {
+pub async fn run(skill: Option<&str>, tools: Option<&str>, reconcile: bool) -> anyhow::Result<()> {
     println!("{} Syncing skills...", "🔄".cyan());
     println!();
 
@@ -35,13 +31,18 @@ pub async fn run(
             })
             .collect()
     } else {
-        vec![ToolType::Claude, ToolType::Cursor, ToolType::Gemini, ToolType::OpenCode]
+        vec![
+            ToolType::Claude,
+            ToolType::Cursor,
+            ToolType::Gemini,
+            ToolType::OpenCode,
+        ]
     };
 
     if reconcile {
         println!("{}", "Checking for drift...".dimmed());
         let drifts = engine.check_drift();
-        
+
         if drifts.is_empty() {
             println!("  {} No drift detected", "✓".green());
         } else {
@@ -57,10 +58,15 @@ pub async fn run(
             }
             println!();
             println!("{}", "Repairing drifts...".dimmed());
-            
+
             for (skill_id, tool, _) in drifts {
                 match engine.sync_skill(&skill_id, tool, SyncStrategy::Auto) {
-                    Ok(_) => println!("  {} Repaired {} in {}", "✓".green(), skill_id, tool.display_name()),
+                    Ok(_) => println!(
+                        "  {} Repaired {} in {}",
+                        "✓".green(),
+                        skill_id,
+                        tool.display_name()
+                    ),
                     Err(e) => println!("  {} Failed {}: {}", "✗".red(), skill_id, e),
                 }
             }
@@ -68,9 +74,17 @@ pub async fn run(
     }
 
     // Get skills to sync
-    let installed: Vec<_> = engine.store().list_installed().into_iter().cloned().collect();
+    let installed: Vec<_> = engine
+        .store()
+        .list_installed()
+        .into_iter()
+        .cloned()
+        .collect();
     let skills_to_sync = if let Some(skill_id) = skill {
-        installed.into_iter().filter(|r| r.skill_id == skill_id).collect()
+        installed
+            .into_iter()
+            .filter(|r| r.skill_id == skill_id)
+            .collect()
     } else {
         installed
     };
@@ -81,8 +95,9 @@ pub async fn run(
     }
 
     println!();
-    println!("{} Syncing {} skills to {} tools...", 
-        "📦".green(), 
+    println!(
+        "{} Syncing {} skills to {} tools...",
+        "📦".green(),
         skills_to_sync.len(),
         target_tools.len()
     );

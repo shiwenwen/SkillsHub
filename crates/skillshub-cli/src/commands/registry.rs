@@ -1,7 +1,7 @@
 //! Registry command - manage skill registries
 
 use colored::Colorize;
-use skillshub_core::registry::{RegistryManager, RegistryConfig, RegistryType};
+use skillshub_core::registry::{RegistryConfig, RegistryManager, RegistryType};
 
 pub async fn list() -> anyhow::Result<()> {
     println!("{} Configured Registries:", "📦".cyan());
@@ -13,7 +13,10 @@ pub async fn list() -> anyhow::Result<()> {
     if configs.is_empty() {
         println!("{}", "No registries configured.".dimmed());
         println!();
-        println!("{}", "Add one with: skillshub registry add <name> <url>".dimmed());
+        println!(
+            "{}",
+            "Add one with: skillshub registry add <name> <url>".dimmed()
+        );
         return Ok(());
     }
 
@@ -57,7 +60,9 @@ pub async fn add(name: &str, url: &str) -> anyhow::Result<()> {
         tags: Vec::new(),
     };
 
-    manager.add(config).map_err(|e| anyhow::anyhow!(e.to_string()))?;
+    manager
+        .add(config)
+        .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
     println!("{} Registry '{}' added successfully!", "✓".green(), name);
 
@@ -68,10 +73,11 @@ pub async fn remove(name: &str) -> anyhow::Result<()> {
     println!("{} Removing registry: {}", "➖".red(), name.bold());
 
     let mut manager = RegistryManager::new().map_err(|e| anyhow::anyhow!(e.to_string()))?;
-    manager.remove(name).map_err(|e| anyhow::anyhow!(e.to_string()))?;
+    manager
+        .remove(name)
+        .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
     println!("{} Registry '{}' removed successfully!", "✓".green(), name);
 
     Ok(())
 }
-

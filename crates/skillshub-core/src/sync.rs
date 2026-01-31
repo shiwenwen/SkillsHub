@@ -8,8 +8,8 @@ use serde::{Deserialize, Serialize};
 use crate::adapters::ToolAdapter;
 use crate::error::{Error, Result};
 use crate::models::{
-    DriftInfo, DriftType, HubSyncStatus, ScannedSkill, SkillSyncStatus, SyncAction, SyncActionType, SyncPlan,
-    SyncState, SyncStrategy, ToolProfile, ToolSyncState, ToolType,
+    DriftInfo, DriftType, HubSyncStatus, ScannedSkill, SkillSyncStatus, SyncAction, SyncActionType,
+    SyncPlan, SyncState, SyncStrategy, ToolProfile, ToolSyncState, ToolType,
 };
 use crate::store::LocalStore;
 
@@ -53,13 +53,13 @@ impl SyncEngine {
     /// Detect which tools are available
     pub fn detect_tools(&self) -> Vec<ToolProfile> {
         let mut profiles = Vec::new();
-        
+
         for adapter in &self.adapters {
             let mut profile = ToolProfile::new(adapter.tool_type());
             profile.detected = adapter.detect();
             profiles.push(profile);
         }
-        
+
         profiles
     }
 
@@ -71,7 +71,7 @@ impl SyncEngine {
         strategy: SyncStrategy,
     ) -> Result<SyncPlan> {
         let mut plan = SyncPlan::new();
-        
+
         // Check if skill exists in store
         if !self.store.is_installed(skill_id) {
             return Err(Error::SkillNotFound(skill_id.to_string()));
@@ -79,13 +79,16 @@ impl SyncEngine {
 
         for tool in tools {
             let adapter = self.get_adapter(*tool)?;
-            
+
             if !adapter.detect() {
                 continue;
             }
 
             // Check current state
-            let current = self.state.tools.get(&tool.to_string())
+            let current = self
+                .state
+                .tools
+                .get(&tool.to_string())
                 .and_then(|ts| ts.skills.get(skill_id));
 
             let action = match current {
@@ -216,7 +219,9 @@ impl SyncEngine {
         };
 
         // Update state
-        let record = self.store.get_record(skill_id)
+        let record = self
+            .store
+            .get_record(skill_id)
             .ok_or_else(|| Error::SkillNotFound(skill_id.to_string()))?;
 
         let status = SkillSyncStatus {
@@ -261,11 +266,7 @@ impl SyncEngine {
         for tool_state in self.state.tools.values() {
             for (skill_id, status) in &tool_state.skills {
                 if let Some(drift) = self.detect_drift(skill_id, &status.target_path) {
-                    drifts.push((
-                        skill_id.clone(),
-                        tool_state.tool,
-                        drift,
-                    ));
+                    drifts.push((skill_id.clone(), tool_state.tool, drift));
                 }
             }
         }
@@ -301,7 +302,7 @@ impl SyncEngine {
         if let Some(parent) = target.parent() {
             fs::create_dir_all(parent)?;
         }
-        
+
         #[cfg(unix)]
         {
             std::os::unix::fs::symlink(source, target)?;
@@ -310,7 +311,7 @@ impl SyncEngine {
         {
             std::os::windows::fs::symlink_dir(source, target)?;
         }
-        
+
         Ok(())
     }
 
@@ -337,11 +338,14 @@ impl SyncEngine {
         if target_path.is_symlink() {
             let link_target = fs::read_link(target_path).ok()?;
             let expected = self.store.skill_path(skill_id);
-            
+
             if link_target != expected {
                 return Some(DriftInfo {
                     drift_type: DriftType::WrongTarget,
-                    description: format!("Link points to {:?} instead of {:?}", link_target, expected),
+                    description: format!(
+                        "Link points to {:?} instead of {:?}",
+                        link_target, expected
+                    ),
                     detected_at: timestamp_now(),
                 });
             }
@@ -359,21 +363,23 @@ impl SyncEngine {
     }
 
     fn update_state(&mut self, tool: ToolType, skill_id: &str, status: SkillSyncStatus) {
-        let tool_state = self.state.tools
-            .entry(tool.to_string())
-            .or_insert_with(|| ToolSyncState {
-                tool,
-                skills: std::collections::HashMap::new(),
-                last_sync: None,
-            });
-        
+        let tool_state =
+            self.state
+                .tools
+                .entry(tool.to_string())
+                .or_insert_with(|| ToolSyncState {
+                    tool,
+                    skills: std::collections::HashMap::new(),
+                    last_sync: None,
+                });
+
         tool_state.skills.insert(skill_id.to_string(), status);
         tool_state.last_sync = Some(timestamp_now());
         self.state.last_sync = Some(timestamp_now());
     }
 
     /// Sync a plugin skill from Claude plugins to another tool
-    /// 
+    ///
     /// This allows syncing skills installed via Claude's plugin marketplace
     /// to other tools that support skills.
     pub fn sync_plugin_skill(
@@ -509,7 +515,11 @@ impl SyncEngine {
                         let real_path = if resolved.is_absolute() {
                             resolved
                         } else {
-                            skill.path.parent().unwrap_or(Path::new("/")).join(&resolved)
+                            skill
+                                .path
+                                .parent()
+                                .unwrap_or(Path::new("/"))
+                                .join(&resolved)
                         };
                         if real_path.exists() {
                             copy_dir_all(&real_path, &hub_path)?;
@@ -552,14 +562,9 @@ impl SyncEngine {
                         let _ = fs::create_dir_all(parent);
                     }
 
-                    // Try symlink first
-                    let success = if self.try_link(&source, &target).is_ok() {
-                        true
-                    } else if copy_dir_all(&source, &target).is_ok() {
-                        true
-                    } else {
-                        false
-                    };
+                    // Try symlink first, fall back to copy
+                    let success = self.try_link(&source, &target).is_ok()
+                        || copy_dir_all(&source, &target).is_ok();
 
                     results.push((skill_id.clone(), adapter.tool_type(), success));
                 }
@@ -577,7 +582,7 @@ impl SyncEngine {
         Ok(FullSyncResult {
             collected_count: collected.len(),
             collected_skills: collected,
-            distributed: distributed,
+            distributed,
         })
     }
 
@@ -587,24 +592,29 @@ impl SyncEngine {
         let scanned = self.scan_all_tools();
         let all_tools: Vec<ToolType> = self.adapters.iter().map(|a| a.tool_type()).collect();
 
-        hub_skill_ids.iter().map(|skill_id| {
-            let synced_to: Vec<ToolType> = scanned.iter()
-                .filter(|s| &s.id == skill_id)
-                .map(|s| s.tool)
-                .collect();
-            
-            let missing_in: Vec<ToolType> = all_tools.iter()
-                .filter(|t| !synced_to.contains(t))
-                .cloned()
-                .collect();
+        hub_skill_ids
+            .iter()
+            .map(|skill_id| {
+                let synced_to: Vec<ToolType> = scanned
+                    .iter()
+                    .filter(|s| &s.id == skill_id)
+                    .map(|s| s.tool)
+                    .collect();
 
-            HubSyncStatus {
-                skill_id: skill_id.clone(),
-                hub_path: self.store.skills_dir().join(skill_id),
-                synced_to,
-                missing_in,
-            }
-        }).collect()
+                let missing_in: Vec<ToolType> = all_tools
+                    .iter()
+                    .filter(|t| !synced_to.contains(t))
+                    .cloned()
+                    .collect();
+
+                HubSyncStatus {
+                    skill_id: skill_id.clone(),
+                    hub_path: self.store.skills_dir().join(skill_id),
+                    synced_to,
+                    missing_in,
+                }
+            })
+            .collect()
     }
 }
 
@@ -633,7 +643,7 @@ fn copy_dir_all(src: &Path, dst: &Path) -> Result<()> {
         let ty = entry.file_type()?;
         let src_path = entry.path();
         let dst_path = dst.join(entry.file_name());
-        
+
         if ty.is_dir() {
             copy_dir_all(&src_path, &dst_path)?;
         } else {

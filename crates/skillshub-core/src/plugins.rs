@@ -134,7 +134,10 @@ pub struct PluginSkill {
 impl PluginSkill {
     /// Get a unique identifier for this plugin skill
     pub fn id(&self) -> String {
-        format!("{}@{}:{}", self.plugin_name, self.marketplace, self.skill_name)
+        format!(
+            "{}@{}:{}",
+            self.plugin_name, self.marketplace, self.skill_name
+        )
     }
 
     /// Convert to a Skill model
@@ -340,7 +343,10 @@ impl PluginScanner {
     }
 
     /// Get all plugins in a marketplace
-    pub fn list_marketplace_plugins(&self, marketplace_name: &str) -> Result<Vec<MarketplacePlugin>> {
+    pub fn list_marketplace_plugins(
+        &self,
+        marketplace_name: &str,
+    ) -> Result<Vec<MarketplacePlugin>> {
         let config = self.load_marketplace_config(marketplace_name)?;
         Ok(config.plugins)
     }

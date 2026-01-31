@@ -20,6 +20,7 @@ pub enum ToolType {
     KiloCode,
     Kimi,
     OpenCode,
+    OpenClaw,
     Qwen,
     RooCode,
     Trae,
@@ -44,6 +45,7 @@ impl ToolType {
             ToolType::KiloCode,
             ToolType::Kimi,
             ToolType::OpenCode,
+            ToolType::OpenClaw,
             ToolType::Qwen,
             ToolType::RooCode,
             ToolType::Trae,
@@ -68,6 +70,7 @@ impl ToolType {
             ToolType::KiloCode => Some(home.join(".kilocode").join("skills")),
             ToolType::Kimi => Some(home.join(".kimi").join("skills")),
             ToolType::OpenCode => Some(home.join(".config").join("opencode").join("skills")),
+            ToolType::OpenClaw => None, // OpenClaw path depends on Node.js installation (e.g., ~/.nvm/versions/node/v22.22.0/lib/node_modules/openclaw/skills/)
             ToolType::Qwen => Some(home.join(".qwen").join("skills")),
             ToolType::RooCode => Some(home.join(".roo").join("skills")),
             ToolType::Trae => None, // Trae has no global path
@@ -92,6 +95,7 @@ impl ToolType {
             ToolType::KiloCode => Some(".kilocode/skills/"),
             ToolType::Kimi => Some(".kimi/skills/"),
             ToolType::OpenCode => Some(".opencode/skills/"),
+            ToolType::OpenClaw => Some(".openclaw/skills/"),
             ToolType::Qwen => Some(".qwen/skills/"),
             ToolType::RooCode => Some(".roo/skills/"),
             ToolType::Trae => Some(".trae/skills/"),
@@ -116,6 +120,7 @@ impl ToolType {
             ToolType::KiloCode => "Kilo Code",
             ToolType::Kimi => "Kimi CLI",
             ToolType::OpenCode => "OpenCode",
+            ToolType::OpenClaw => "OpenClaw",
             ToolType::Qwen => "Qwen Code",
             ToolType::RooCode => "Roo Code",
             ToolType::Trae => "Trae",
@@ -165,7 +170,11 @@ impl ToolProfile {
     }
 
     /// Create a custom tool profile
-    pub fn new_custom(name: String, global_path: Option<PathBuf>, project_path: Option<String>) -> Self {
+    pub fn new_custom(
+        name: String,
+        global_path: Option<PathBuf>,
+        project_path: Option<String>,
+    ) -> Self {
         Self {
             tool_type: ToolType::Custom,
             enabled: true,
@@ -179,17 +188,23 @@ impl ToolProfile {
 
     /// Get the effective global skills directory
     pub fn global_skills_dir(&self) -> Option<PathBuf> {
-        self.custom_global_path.clone().or_else(|| self.tool_type.default_skills_dir())
+        self.custom_global_path
+            .clone()
+            .or_else(|| self.tool_type.default_skills_dir())
     }
 
     /// Get the effective project skills directory
     pub fn project_skills_dir(&self) -> Option<String> {
-        self.custom_project_path.clone().or_else(|| self.tool_type.default_project_dir().map(|s| s.to_string()))
+        self.custom_project_path
+            .clone()
+            .or_else(|| self.tool_type.default_project_dir().map(|s| s.to_string()))
     }
 
     /// Get the display name
     pub fn display_name(&self) -> String {
-        self.custom_name.clone().unwrap_or_else(|| self.tool_type.display_name().to_string())
+        self.custom_name
+            .clone()
+            .unwrap_or_else(|| self.tool_type.display_name().to_string())
     }
 }
 

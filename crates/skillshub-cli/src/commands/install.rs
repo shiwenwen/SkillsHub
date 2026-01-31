@@ -39,7 +39,12 @@ pub async fn run(
             })
             .collect()
     } else {
-        vec![ToolType::Claude, ToolType::Cursor, ToolType::Gemini, ToolType::OpenCode]
+        vec![
+            ToolType::Claude,
+            ToolType::Cursor,
+            ToolType::Gemini,
+            ToolType::OpenCode,
+        ]
     };
 
     // Create progress bar
@@ -78,7 +83,7 @@ pub async fn run(
         pb.set_message("Running security scan...");
         let scanner = SecurityScanner::new();
         let report = scanner.scan(skill, &skill_path)?;
-        
+
         if !report.passed {
             pb.finish_with_message("Scan failed!");
             println!();
@@ -93,7 +98,7 @@ pub async fn run(
             }
             return Err(anyhow::anyhow!("Security policy violation"));
         }
-        
+
         if report.summary.high > 0 || report.summary.medium > 0 {
             println!();
             println!("{} Security warnings:", "⚠️".yellow());
@@ -139,7 +144,11 @@ pub async fn run(
     let available_tools = engine.detect_tools();
     let tools_to_sync: Vec<ToolType> = target_tools
         .into_iter()
-        .filter(|t| available_tools.iter().any(|p| p.tool_type == *t && p.detected))
+        .filter(|t| {
+            available_tools
+                .iter()
+                .any(|p| p.tool_type == *t && p.detected)
+        })
         .collect();
 
     pb.set_position(90);
@@ -150,7 +159,12 @@ pub async fn run(
                 println!("  {} Synced to {}", "✓".green(), tool.display_name());
             }
             Err(e) => {
-                println!("  {} Failed to sync to {}: {}", "✗".red(), tool.display_name(), e);
+                println!(
+                    "  {} Failed to sync to {}: {}",
+                    "✗".red(),
+                    tool.display_name(),
+                    e
+                );
             }
         }
     }

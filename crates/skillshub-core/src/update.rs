@@ -126,7 +126,7 @@ mod tests {
     fn test_update_info_no_update() {
         let version = SkillVersion::new("1.0.0", "abc123");
         let info = UpdateInfo::no_update("test-skill", &version);
-        
+
         assert_eq!(info.skill_id, "test-skill");
         assert!(!info.has_update);
         assert_eq!(info.current_version, "1.0.0");
@@ -137,8 +137,13 @@ mod tests {
     fn test_update_info_with_update() {
         let current = SkillVersion::new("1.0.0", "abc123");
         let latest = SkillVersion::new("1.1.0", "def456");
-        let info = UpdateInfo::with_update("test-skill", &current, &latest, Some("test-registry".to_string()));
-        
+        let info = UpdateInfo::with_update(
+            "test-skill",
+            &current,
+            &latest,
+            Some("test-registry".to_string()),
+        );
+
         assert!(info.has_update);
         assert_eq!(info.current_version, "1.0.0");
         assert_eq!(info.latest_version, "1.1.0");

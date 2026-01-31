@@ -70,13 +70,9 @@ pub enum SkillSource {
         skill_id: String,
     },
     /// From an HTTP URL
-    Http {
-        url: String,
-    },
+    Http { url: String },
     /// Local file path
-    Local {
-        path: PathBuf,
-    },
+    Local { path: PathBuf },
 }
 
 impl SkillSource {
@@ -84,7 +80,10 @@ impl SkillSource {
     pub fn display(&self) -> String {
         match self {
             SkillSource::Git { url, .. } => format!("git:{}", url),
-            SkillSource::Registry { registry_url, skill_id } => {
+            SkillSource::Registry {
+                registry_url,
+                skill_id,
+            } => {
                 format!("registry:{}:{}", registry_url, skill_id)
             }
             SkillSource::Http { url } => format!("http:{}", url),

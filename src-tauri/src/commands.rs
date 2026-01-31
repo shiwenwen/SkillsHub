@@ -3,12 +3,12 @@
 use serde::Serialize;
 use skillshub_core::adapters::create_default_adapters;
 use skillshub_core::models::{SyncStrategy, ToolType};
+use skillshub_core::plugins::{PluginScanner, PluginSkill};
 use skillshub_core::scanner::SecurityScanner;
 use skillshub_core::store::LocalStore;
-use skillshub_core::plugins::{PluginScanner, PluginSkill};
 
+use skillshub_core::registry::{AggregatedRegistry, RegistryConfig, RegistryManager, SkillQuery};
 use skillshub_core::sync::SyncEngine;
-use skillshub_core::registry::{RegistryManager, RegistryConfig, SkillQuery, AggregatedRegistry};
 use std::path::PathBuf;
 
 // Response types
@@ -106,7 +106,7 @@ pub async fn install_skill(skill_id: String, _tools: Vec<String>) -> Result<Stri
     // Get the skill from registry and install it
     let manager = RegistryManager::new().map_err(|e| e.to_string())?;
     let mut aggregated = AggregatedRegistry::new();
-    
+
     for config in manager.list() {
         if config.enabled {
             if let Some(provider) = manager.get_provider(&config.name) {
@@ -114,26 +114,30 @@ pub async fn install_skill(skill_id: String, _tools: Vec<String>) -> Result<Stri
             }
         }
     }
-    
+
     // Try to get the skill from registry
     match aggregated.get_skill(&skill_id).await {
         Ok(remote_skill) => {
             let mut store = LocalStore::default_store().map_err(|e| e.to_string())?;
-            
+
             // Check if already installed
             let skill_path = store.skill_path(&skill_id);
             if skill_path.exists() {
                 return Err(format!("Skill '{}' is already installed", skill_id));
             }
-            
+
             // Import the skill
-            store.import_skill(&remote_skill, &remote_skill.skill_md_path)
+            store
+                .import_skill(&remote_skill, &remote_skill.skill_md_path)
                 .await
                 .map_err(|e| e.to_string())?;
-            
-            Ok(format!("Skill '{}' v{} installed successfully", skill_id, remote_skill.version.version))
+
+            Ok(format!(
+                "Skill '{}' v{} installed successfully",
+                skill_id, remote_skill.version.version
+            ))
         }
-        Err(e) => Err(format!("Failed to fetch skill '{}': {}", skill_id, e))
+        Err(e) => Err(format!("Failed to fetch skill '{}': {}", skill_id, e)),
     }
 }
 
@@ -149,7 +153,7 @@ pub async fn update_skill(skill_id: String) -> Result<String, String> {
     // Get the skill from registry and update it
     let manager = RegistryManager::new().map_err(|e| e.to_string())?;
     let mut aggregated = AggregatedRegistry::new();
-    
+
     for config in manager.list() {
         if config.enabled {
             if let Some(provider) = manager.get_provider(&config.name) {
@@ -157,27 +161,31 @@ pub async fn update_skill(skill_id: String) -> Result<String, String> {
             }
         }
     }
-    
+
     // Try to get the latest version from registry
     match aggregated.get_skill(&skill_id).await {
         Ok(remote_skill) => {
             let mut store = LocalStore::default_store().map_err(|e| e.to_string())?;
-            
+
             // Import the updated skill
             let skill_path = store.skill_path(&skill_id);
             if skill_path.exists() {
                 // Remove old version first
                 store.remove_skill(&skill_id).map_err(|e| e.to_string())?;
             }
-            
+
             // Import new version
-            store.import_skill(&remote_skill, &remote_skill.skill_md_path)
+            store
+                .import_skill(&remote_skill, &remote_skill.skill_md_path)
                 .await
                 .map_err(|e| e.to_string())?;
-            
-            Ok(format!("Skill '{}' updated to version {}", skill_id, remote_skill.version.version))
+
+            Ok(format!(
+                "Skill '{}' updated to version {}",
+                skill_id, remote_skill.version.version
+            ))
         }
-        Err(e) => Err(format!("Failed to fetch update for '{}': {}", skill_id, e))
+        Err(e) => Err(format!("Failed to fetch update for '{}': {}", skill_id, e)),
     }
 }
 
@@ -200,7 +208,7 @@ pub async fn check_skill_updates() -> Result<Vec<UpdateCheckInfo>, String> {
     let store = LocalStore::default_store().map_err(|e| e.to_string())?;
     let manager = RegistryManager::new().map_err(|e| e.to_string())?;
     let mut aggregated = AggregatedRegistry::new();
-    
+
     for config in manager.list() {
         if config.enabled {
             if let Some(provider) = manager.get_provider(&config.name) {
@@ -208,10 +216,10 @@ pub async fn check_skill_updates() -> Result<Vec<UpdateCheckInfo>, String> {
             }
         }
     }
-    
+
     let installed = store.list_installed();
     let mut updates = Vec::new();
-    
+
     for record in installed {
         let update_info = match aggregated.get_skill(&record.skill_id).await {
             Ok(remote_skill) => {
@@ -241,14 +249,17 @@ pub async fn check_skill_updates() -> Result<Vec<UpdateCheckInfo>, String> {
         };
         updates.push(update_info);
     }
-    
+
     Ok(updates)
 }
 
 // Sync commands
 
 #[tauri::command]
-pub async fn sync_skills(skill_ids: Vec<String>, tools: Vec<String>) -> Result<Vec<SyncResult>, String> {
+pub async fn sync_skills(
+    skill_ids: Vec<String>,
+    tools: Vec<String>,
+) -> Result<Vec<SyncResult>, String> {
     let store = LocalStore::default_store().map_err(|e| e.to_string())?;
     let mut engine = SyncEngine::new(store);
 
@@ -289,9 +300,7 @@ pub async fn check_drift() -> Result<Vec<(String, String, String)>, String> {
     let drifts = engine.check_drift();
     Ok(drifts
         .into_iter()
-        .map(|(skill, tool, drift)| {
-            (skill, tool.to_string(), drift.drift_type.to_string())
-        })
+        .map(|(skill, tool, drift)| (skill, tool.to_string(), drift.drift_type.to_string()))
         .collect())
 }
 
@@ -307,7 +316,9 @@ pub async fn scan_skill(skill_id: String) -> Result<ScanResult, String> {
     }
 
     let scanner = SecurityScanner::new();
-    let report = scanner.scan(&skill_id, &skill_path).map_err(|e| e.to_string())?;
+    let report = scanner
+        .scan(&skill_id, &skill_path)
+        .map_err(|e| e.to_string())?;
 
     Ok(ScanResult {
         skill_id,
@@ -342,9 +353,12 @@ pub async fn list_tools() -> Result<Vec<ToolInfo>, String> {
             let skill_count = skills_dir
                 .as_ref()
                 .and_then(|dir| {
-                    std::fs::read_dir(dir)
-                        .ok()
-                        .map(|entries| entries.filter_map(|e| e.ok()).filter(|e| e.path().is_dir()).count())
+                    std::fs::read_dir(dir).ok().map(|entries| {
+                        entries
+                            .filter_map(|e| e.ok())
+                            .filter(|e| e.path().is_dir())
+                            .count()
+                    })
                 })
                 .unwrap_or(0);
 
@@ -370,7 +384,7 @@ pub async fn detect_tools() -> Result<Vec<ToolInfo>, String> {
 pub async fn search_skills(query: String) -> Result<Vec<SkillInfo>, String> {
     let manager = RegistryManager::new().map_err(|e| e.to_string())?;
     let mut aggregated = AggregatedRegistry::new();
-    
+
     for config in manager.list() {
         if config.enabled {
             if let Some(provider) = manager.get_provider(&config.name) {
@@ -378,24 +392,27 @@ pub async fn search_skills(query: String) -> Result<Vec<SkillInfo>, String> {
             }
         }
     }
-    
+
     let q = SkillQuery {
         query: Some(query),
         ..Default::default()
     };
-    
+
     let listings = aggregated.search(&q).await.map_err(|e| e.to_string())?;
-    
-    Ok(listings.into_iter().map(|l| SkillInfo {
-        id: l.id,
-        name: l.name,
-        version: l.version,
-        description: l.description,
-        source: l.source.display(),
-        installed_at: String::new(),
-        scan_passed: false,
-        synced_tools: Vec::new(),
-    }).collect())
+
+    Ok(listings
+        .into_iter()
+        .map(|l| SkillInfo {
+            id: l.id,
+            name: l.name,
+            version: l.version,
+            description: l.description,
+            source: l.source.display(),
+            installed_at: String::new(),
+            scan_passed: false,
+            synced_tools: Vec::new(),
+        })
+        .collect())
 }
 
 #[tauri::command]
@@ -464,9 +481,7 @@ pub async fn scan_claude_plugins() -> Result<Vec<PluginSkillInfo>, String> {
         return Ok(Vec::new());
     }
 
-    let skills = scanner
-        .scan_installed_skills()
-        .map_err(|e| e.to_string())?;
+    let skills = scanner.scan_installed_skills().map_err(|e| e.to_string())?;
 
     Ok(skills.into_iter().map(PluginSkillInfo::from).collect())
 }
@@ -481,9 +496,7 @@ pub async fn list_claude_marketplaces() -> Result<Vec<MarketplaceInfo>, String> 
         return Ok(Vec::new());
     }
 
-    let marketplaces = scanner
-        .list_marketplaces()
-        .map_err(|e| e.to_string())?;
+    let marketplaces = scanner.list_marketplaces().map_err(|e| e.to_string())?;
 
     Ok(marketplaces
         .into_iter()
@@ -492,9 +505,7 @@ pub async fn list_claude_marketplaces() -> Result<Vec<MarketplaceInfo>, String> 
                 skillshub_core::plugins::MarketplaceSource::Github { repo } => {
                     ("github".to_string(), repo)
                 }
-                skillshub_core::plugins::MarketplaceSource::Git { url } => {
-                    ("git".to_string(), url)
-                }
+                skillshub_core::plugins::MarketplaceSource::Git { url } => ("git".to_string(), url),
             };
             MarketplaceInfo {
                 name,
@@ -587,14 +598,17 @@ pub async fn scan_all_skills() -> Result<Vec<ScannedSkillInfo>, String> {
     }
 
     let scanned = engine.scan_all_tools();
-    
-    Ok(scanned.into_iter().map(|s| ScannedSkillInfo {
-        id: s.id,
-        path: s.path.to_string_lossy().to_string(),
-        tool: format!("{:?}", s.tool),
-        in_hub: s.in_hub,
-        is_link: s.is_link,
-    }).collect())
+
+    Ok(scanned
+        .into_iter()
+        .map(|s| ScannedSkillInfo {
+            id: s.id,
+            path: s.path.to_string_lossy().to_string(),
+            tool: format!("{:?}", s.tool),
+            in_hub: s.in_hub,
+            is_link: s.is_link,
+        })
+        .collect())
 }
 
 /// Full sync: collect from tools to hub, then distribute to all tools
@@ -608,18 +622,20 @@ pub async fn full_sync_skills() -> Result<FullSyncResponse, String> {
     }
 
     let result = engine.full_sync().map_err(|e| e.to_string())?;
-    
+
     Ok(FullSyncResponse {
         collected_count: result.collected_count,
         collected_skills: result.collected_skills,
         distributed_count: result.distributed.len(),
-        distributed: result.distributed.into_iter().map(|(skill, tool, success)| {
-            DistributedSkill {
+        distributed: result
+            .distributed
+            .into_iter()
+            .map(|(skill, tool, success)| DistributedSkill {
                 skill_id: skill,
                 tool: format!("{:?}", tool),
                 success,
-            }
-        }).collect(),
+            })
+            .collect(),
     })
 }
 
@@ -634,13 +650,24 @@ pub async fn get_hub_status() -> Result<Vec<HubStatusInfo>, String> {
     }
 
     let status = engine.get_hub_status();
-    
-    Ok(status.into_iter().map(|s| HubStatusInfo {
-        skill_id: s.skill_id,
-        hub_path: s.hub_path.to_string_lossy().to_string(),
-        synced_to: s.synced_to.into_iter().map(|t| format!("{:?}", t)).collect(),
-        missing_in: s.missing_in.into_iter().map(|t| format!("{:?}", t)).collect(),
-    }).collect())
+
+    Ok(status
+        .into_iter()
+        .map(|s| HubStatusInfo {
+            skill_id: s.skill_id,
+            hub_path: s.hub_path.to_string_lossy().to_string(),
+            synced_to: s
+                .synced_to
+                .into_iter()
+                .map(|t| format!("{:?}", t))
+                .collect(),
+            missing_in: s
+                .missing_in
+                .into_iter()
+                .map(|t| format!("{:?}", t))
+                .collect(),
+        })
+        .collect())
 }
 
 // New response types for scan/sync
@@ -737,20 +764,23 @@ pub async fn add_custom_tool(
     project_path: Option<String>,
 ) -> Result<CustomToolConfig, String> {
     let mut tools = load_custom_tools_from_file()?;
-    
+
     let new_tool = CustomToolConfig {
-        id: format!("custom-{}", std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_millis()),
+        id: format!(
+            "custom-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_millis()
+        ),
         name,
         global_path,
         project_path,
     };
-    
+
     tools.push(new_tool.clone());
     save_custom_tools_to_file(&tools)?;
-    
+
     Ok(new_tool)
 }
 
@@ -764,7 +794,8 @@ pub async fn update_custom_tool(
 ) -> Result<CustomToolConfig, String> {
     let mut tools = load_custom_tools_from_file()?;
 
-    let tool = tools.iter_mut()
+    let tool = tools
+        .iter_mut()
         .find(|t| t.id == id)
         .ok_or_else(|| format!("Custom tool with id '{}' not found", id))?;
 

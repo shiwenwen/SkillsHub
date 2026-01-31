@@ -8,7 +8,7 @@ pub async fn run(query: Option<String>, tags: Vec<String>, limit: usize) -> anyh
     println!();
 
     let mut registry = AggregatedRegistry::new();
-    
+
     // Add default registries
     if let Some(home) = dirs::home_dir() {
         let local_skills = home.join(".skillshub").join("local-registry");
@@ -31,7 +31,11 @@ pub async fn run(query: Option<String>, tags: Vec<String>, limit: usize) -> anyh
         return Ok(());
     }
 
-    println!("{} {} found:\n", "📦".green(), format!("{} skills", results.len()).bold());
+    println!(
+        "{} {} found:\n",
+        "📦".green(),
+        format!("{} skills", results.len()).bold()
+    );
 
     for skill in results.iter().take(limit) {
         println!(

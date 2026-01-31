@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- 新增内置工具 OpenClaw 支持：
+  - 添加 OpenClaw 适配器，支持动态检测 OpenClaw 安装路径（NPM 全局安装）
+  - 用户可通过设置页面配置自定义 OpenClaw 全局路径
+  - 支持项目级 Skills 目录 (`.openclaw/skills/`)
 - Skills 更新检查功能：
   - 新增 `check_skill_updates` 后端命令，对比本地与远程版本
   - 改进 `update_skill` 命令，支持从注册源获取并更新 skill

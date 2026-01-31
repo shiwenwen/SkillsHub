@@ -12,7 +12,8 @@ pub async fn run(skill: &str) -> anyhow::Result<()> {
         return Err(anyhow::anyhow!("Skill '{}' is not installed", skill));
     }
 
-    let record = store.get_record(skill)
+    let record = store
+        .get_record(skill)
         .ok_or_else(|| anyhow::anyhow!("Skill record not found"))?;
 
     let skill_path = store.skill_path(skill);
@@ -53,17 +54,20 @@ pub async fn run(skill: &str) -> anyhow::Result<()> {
     if skill_md_path.exists() {
         println!("{}", "SKILL.md Preview:".bold());
         println!("{}", "─".repeat(50).dimmed());
-        
+
         let content = fs::read_to_string(&skill_md_path)?;
         let lines: Vec<&str> = content.lines().take(20).collect();
-        
+
         for line in &lines {
             println!("{}", line);
         }
-        
+
         if content.lines().count() > 20 {
             println!();
-            println!("{}", format!("... ({} more lines)", content.lines().count() - 20).dimmed());
+            println!(
+                "{}",
+                format!("... ({} more lines)", content.lines().count() - 20).dimmed()
+            );
         }
         println!("{}", "─".repeat(50).dimmed());
     }
