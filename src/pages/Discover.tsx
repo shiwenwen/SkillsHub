@@ -33,6 +33,28 @@ export default function Discover() {
         setInstallingSkills(prev => new Set(prev).add(skillId));
 
         try {
+            // 检查是否需要安装前扫描
+            const scanBeforeInstall = localStorage.getItem("skillshub_scanBeforeInstall");
+            const blockHighRisk = localStorage.getItem("skillshub_blockHighRisk");
+
+            if (scanBeforeInstall === "true" || scanBeforeInstall === null) {
+                // 执行安全扫描
+                try {
+                    const scanResult = await invoke<{ overall_risk: string; findings: unknown[] }>("scan_skill", {
+                        skillId: skillId,
+                    });
+
+                    // 如果启用了阻止高风险且扫描结果为高风险，则阻止安装
+                    if ((blockHighRisk === "true" || blockHighRisk === null) && scanResult.overall_risk === "high") {
+                        alert(`安装被阻止：Skill "${skillId}" 被检测为高风险。`);
+                        return;
+                    }
+                } catch (scanError) {
+                    console.warn("Security scan failed, proceeding with install:", scanError);
+                    // 扫描失败时继续安装（可以根据需要修改此行为）
+                }
+            }
+
             await invoke<string>("install_skill", {
                 skillId: skillId,
                 tools: [],

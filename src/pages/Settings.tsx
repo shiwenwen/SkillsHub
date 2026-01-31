@@ -101,6 +101,20 @@ export default function Settings() {
         return saved !== null ? saved === "true" : true;
     });
 
+    // 安全设置状态
+    const [scanBeforeInstall, setScanBeforeInstall] = useState(() => {
+        const saved = localStorage.getItem("skillshub_scanBeforeInstall");
+        return saved !== null ? saved === "true" : true;
+    });
+    const [scanBeforeUpdate, setScanBeforeUpdate] = useState(() => {
+        const saved = localStorage.getItem("skillshub_scanBeforeUpdate");
+        return saved !== null ? saved === "true" : true;
+    });
+    const [blockHighRisk, setBlockHighRisk] = useState(() => {
+        const saved = localStorage.getItem("skillshub_blockHighRisk");
+        return saved !== null ? saved === "true" : true;
+    });
+
     // 保存设置到 localStorage
     useEffect(() => {
         localStorage.setItem("skillshub_checkUpdatesOnStartup", String(checkUpdatesOnStartup));
@@ -113,6 +127,19 @@ export default function Settings() {
     useEffect(() => {
         localStorage.setItem("skillshub_defaultStrategy", defaultStrategy);
     }, [defaultStrategy]);
+
+    // 保存安全设置到 localStorage
+    useEffect(() => {
+        localStorage.setItem("skillshub_scanBeforeInstall", String(scanBeforeInstall));
+    }, [scanBeforeInstall]);
+
+    useEffect(() => {
+        localStorage.setItem("skillshub_scanBeforeUpdate", String(scanBeforeUpdate));
+    }, [scanBeforeUpdate]);
+
+    useEffect(() => {
+        localStorage.setItem("skillshub_blockHighRisk", String(blockHighRisk));
+    }, [blockHighRisk]);
 
     // 加载已保存的自定义工具
     useEffect(() => {
@@ -620,19 +647,34 @@ export default function Settings() {
                     <div className="form-control mt-4">
                         <label className="label cursor-pointer">
                             <span className="label-text">{t.settings.scanBeforeInstall}</span>
-                            <input type="checkbox" className="toggle toggle-primary" defaultChecked />
+                            <input
+                                type="checkbox"
+                                className="toggle toggle-primary"
+                                checked={scanBeforeInstall}
+                                onChange={(e) => setScanBeforeInstall(e.target.checked)}
+                            />
                         </label>
                     </div>
                     <div className="form-control">
                         <label className="label cursor-pointer">
                             <span className="label-text">{t.settings.scanBeforeUpdate}</span>
-                            <input type="checkbox" className="toggle toggle-primary" defaultChecked />
+                            <input
+                                type="checkbox"
+                                className="toggle toggle-primary"
+                                checked={scanBeforeUpdate}
+                                onChange={(e) => setScanBeforeUpdate(e.target.checked)}
+                            />
                         </label>
                     </div>
                     <div className="form-control">
                         <label className="label cursor-pointer">
                             <span className="label-text">{t.settings.blockHighRisk}</span>
-                            <input type="checkbox" className="toggle toggle-error" defaultChecked />
+                            <input
+                                type="checkbox"
+                                className="toggle toggle-error"
+                                checked={blockHighRisk}
+                                onChange={(e) => setBlockHighRisk(e.target.checked)}
+                            />
                         </label>
                     </div>
                 </div>

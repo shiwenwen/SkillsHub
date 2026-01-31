@@ -62,6 +62,31 @@ export function useUpdateCheck(): UseUpdateCheckResult {
         setIsUpdating(skillId);
 
         try {
+            // 检查是否需要更新前扫描
+            const scanBeforeUpdate = localStorage.getItem("skillshub_scanBeforeUpdate");
+            const blockHighRisk = localStorage.getItem("skillshub_blockHighRisk");
+
+            if (scanBeforeUpdate === "true" || scanBeforeUpdate === null) {
+                // 执行安全扫描
+                try {
+                    const scanResult = await invoke<{ overall_risk: string; findings: unknown[] }>("scan_skill", {
+                        skillId: skillId,
+                    });
+
+                    // 如果启用了阻止高风险且扫描结果为高风险，则阻止更新
+                    if ((blockHighRisk === "true" || blockHighRisk === null) && scanResult.overall_risk === "high") {
+                        throw new Error(`更新被阻止：Skill "${skillId}" 被检测为高风险。`);
+                    }
+                } catch (scanError) {
+                    // 如果是我们抛出的阻止错误，重新抛出
+                    if (scanError instanceof Error && scanError.message.includes("被阻止")) {
+                        throw scanError;
+                    }
+                    console.warn("Security scan failed, proceeding with update:", scanError);
+                    // 扫描失败时继续更新（可以根据需要修改此行为）
+                }
+            }
+
             const result = await invoke<string>("update_skill", { skillId });
             // 更新后重新检查
             await checkUpdates();
