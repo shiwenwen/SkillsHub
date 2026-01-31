@@ -9,6 +9,8 @@ export const es: Translations = {
         close: "Cerrar",
         delete: "Eliminar",
         install: "Instalar",
+        installed: "Instalado",
+        installing: "Instalando...",
         uninstall: "Desinstalar",
         sync: "Sincronizar",
         refresh: "Actualizar",

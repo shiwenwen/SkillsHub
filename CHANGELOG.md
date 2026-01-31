@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 新增 `useUpdateCheck` React Hook，管理更新检查状态
   - 已安装页面新增"检查更新"按钮和更新提示横幅
   - 设置页面"启动时检查更新"开关现已可用且持久化
+- Skills 安装功能：
+  - 改进 `install_skill` 后端命令，从注册源获取并安装 skill
+  - 发现页面安装按钮现已可用，支持一键安装
+  - 安装时自动同步：安装完成后根据设置自动同步到所有工具
   - 设置页面"安装时自动同步"开关现已可用且持久化
 
 ### Removed

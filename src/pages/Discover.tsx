@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Search, Package, Download, Star, Loader2 } from "lucide-react";
+import { Search, Package, Download, Star, Loader2, Check } from "lucide-react";
 import { useTranslation } from "../i18n";
 
 interface SkillListing {
@@ -23,8 +23,46 @@ export default function Discover() {
     const [hasMore, setHasMore] = useState(true);
     const [page, setPage] = useState(0);
     const loaderRef = useRef<HTMLDivElement>(null);
+    const [installingSkills, setInstallingSkills] = useState<Set<string>>(new Set());
+    const [installedSkills, setInstalledSkills] = useState<Set<string>>(new Set());
 
     const PAGE_SIZE = 20;
+
+    // 安装 Skill
+    const handleInstall = async (skillId: string) => {
+        setInstallingSkills(prev => new Set(prev).add(skillId));
+
+        try {
+            await invoke<string>("install_skill", {
+                skillId: skillId,
+                tools: [],
+            });
+
+            // 标记为已安装
+            setInstalledSkills(prev => new Set(prev).add(skillId));
+
+            // 检查是否需要自动同步
+            const autoSync = localStorage.getItem("skillshub_autoSyncOnInstall");
+            if (autoSync === "true" || autoSync === null) {
+                // 默认开启自动同步
+                try {
+                    await invoke("full_sync_skills");
+                    console.log("Auto sync completed after install");
+                } catch (syncError) {
+                    console.error("Auto sync failed:", syncError);
+                }
+            }
+        } catch (error) {
+            console.error("Install failed:", error);
+            alert(`安装失败: ${error}`);
+        } finally {
+            setInstallingSkills(prev => {
+                const next = new Set(prev);
+                next.delete(skillId);
+                return next;
+            });
+        }
+    };
 
     // 加载 Skills
     const loadSkills = useCallback(async (searchQuery: string, pageNum: number, append: boolean = false) => {
@@ -166,10 +204,27 @@ export default function Discover() {
                                             </p>
                                         </div>
                                     </div>
-                                    <button className="btn btn-primary btn-sm gap-2">
-                                        <Download className="w-4 h-4" />
-                                        {t.common.install}
-                                    </button>
+                                    {installedSkills.has(skill.id) ? (
+                                        <button className="btn btn-success btn-sm gap-2" disabled>
+                                            <Check className="w-4 h-4" />
+                                            {t.common.installed || "已安装"}
+                                        </button>
+                                    ) : (
+                                        <button
+                                            className="btn btn-primary btn-sm gap-2"
+                                            onClick={() => handleInstall(skill.id)}
+                                            disabled={installingSkills.has(skill.id)}
+                                        >
+                                            {installingSkills.has(skill.id) ? (
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                                <Download className="w-4 h-4" />
+                                            )}
+                                            {installingSkills.has(skill.id)
+                                                ? (t.common.installing || "安装中...")
+                                                : t.common.install}
+                                        </button>
+                                    )}
                                 </div>
 
                                 <p className="text-base-content/70 mt-3">{skill.description}</p>

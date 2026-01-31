@@ -102,10 +102,39 @@ pub async fn get_skill_info(skill_id: String) -> Result<SkillInfo, String> {
 }
 
 #[tauri::command]
-pub async fn install_skill(skill_path: String, _tools: Vec<String>) -> Result<String, String> {
-    // This is a simplified version - full implementation would include
-    // fetching from registry, scanning, etc.
-    Ok(format!("Skill installation initiated for: {}", skill_path))
+pub async fn install_skill(skill_id: String, _tools: Vec<String>) -> Result<String, String> {
+    // Get the skill from registry and install it
+    let manager = RegistryManager::new().map_err(|e| e.to_string())?;
+    let mut aggregated = AggregatedRegistry::new();
+    
+    for config in manager.list() {
+        if config.enabled {
+            if let Some(provider) = manager.get_provider(&config.name) {
+                aggregated.add_registry(provider);
+            }
+        }
+    }
+    
+    // Try to get the skill from registry
+    match aggregated.get_skill(&skill_id).await {
+        Ok(remote_skill) => {
+            let mut store = LocalStore::default_store().map_err(|e| e.to_string())?;
+            
+            // Check if already installed
+            let skill_path = store.skill_path(&skill_id);
+            if skill_path.exists() {
+                return Err(format!("Skill '{}' is already installed", skill_id));
+            }
+            
+            // Import the skill
+            store.import_skill(&remote_skill, &remote_skill.skill_md_path)
+                .await
+                .map_err(|e| e.to_string())?;
+            
+            Ok(format!("Skill '{}' v{} installed successfully", skill_id, remote_skill.version.version))
+        }
+        Err(e) => Err(format!("Failed to fetch skill '{}': {}", skill_id, e))
+    }
 }
 
 #[tauri::command]

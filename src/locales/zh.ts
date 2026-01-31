@@ -10,6 +10,8 @@ export const zh: Translations = {
         close: "关闭",
         delete: "删除",
         install: "安装",
+        installed: "已安装",
+        installing: "安装中...",
         uninstall: "卸载",
         sync: "同步",
         refresh: "刷新",

@@ -8,6 +8,8 @@ export const en = {
         close: "Close",
         delete: "Delete",
         install: "Install",
+        installed: "Installed",
+        installing: "Installing...",
         uninstall: "Uninstall",
         sync: "Sync",
         refresh: "Refresh",

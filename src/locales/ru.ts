@@ -9,6 +9,8 @@ export const ru: Translations = {
         close: "Закрыть",
         delete: "Удалить",
         install: "Установить",
+        installed: "Установлено",
+        installing: "Установка...",
         uninstall: "Удалить",
         sync: "Синхронизировать",
         refresh: "Обновить",

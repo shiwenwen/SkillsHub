@@ -9,6 +9,8 @@ export const ja: Translations = {
         close: "閉じる",
         delete: "削除",
         install: "インストール",
+        installed: "インストール済み",
+        installing: "インストール中...",
         uninstall: "アンインストール",
         sync: "同期",
         refresh: "更新",

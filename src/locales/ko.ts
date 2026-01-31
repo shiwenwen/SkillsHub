@@ -9,6 +9,8 @@ export const ko: Translations = {
         close: "닫기",
         delete: "삭제",
         install: "설치",
+        installed: "설치됨",
+        installing: "설치 중...",
         uninstall: "제거",
         sync: "동기화",
         refresh: "새로고침",
