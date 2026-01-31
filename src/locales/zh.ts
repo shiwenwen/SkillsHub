@@ -7,6 +7,7 @@ export const zh: Translations = {
         version: "版本",
         save: "保存",
         cancel: "取消",
+        close: "关闭",
         delete: "删除",
         install: "安装",
         uninstall: "卸载",
@@ -45,6 +46,12 @@ export const zh: Translations = {
         viewDetails: "查看详情",
         secure: "安全",
         issues: "问题",
+        checkUpdates: "检查更新",
+        checkingUpdates: "检查中...",
+        updatesAvailable: "有可用更新",
+        skillsCanUpdate: "个 Skills 可以更新",
+        syncing: "同步中...",
+        fullSync: "完整同步",
     },
 
     // 发现页面

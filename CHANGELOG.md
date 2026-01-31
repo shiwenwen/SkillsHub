@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Skills 更新检查功能：
+  - 新增 `check_skill_updates` 后端命令，对比本地与远程版本
+  - 改进 `update_skill` 命令，支持从注册源获取并更新 skill
+  - 新增 `useUpdateCheck` React Hook，管理更新检查状态
+  - 已安装页面新增"检查更新"按钮和更新提示横幅
+  - 设置页面"启动时检查更新"开关现已可用且持久化
+  - 设置页面"安装时自动同步"开关现已可用且持久化
+
 ### Removed
 - 移除发现页面中无实际作用的热门标签过滤器（未连接到后端搜索逻辑）
 - 移除发现页面中无实际作用的精选 Skills 区块（硬编码且无交互功能）
@@ -32,9 +41,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 新增自定义工具功能：可在设置页面添加自定义 AI 编码工具，支持目录选择和配置持久化
   - `list_custom_tools`: 获取所有自定义工具
   - `add_custom_tool`: 添加新的自定义工具
+  - `update_custom_tool`: 更新自定义工具配置
   - `remove_custom_tool`: 删除自定义工具
+- 自定义工具编辑功能：在同步面板的工具卡片右上角添加编辑按钮，支持修改工具名称和路径
 - 同步面板支持添加自定义工具：工具卡片区域添加"添加自定义工具"入口
+- 工具详情查看功能：点击工具卡片可查看详细信息
+  - 显示工具类型（内置/自定义）、状态、同步 Skills 数量
+  - 显示全局路径和项目路径
+  - 支持点击打开全局路径对应的目录
 - 集成 `tauri-plugin-dialog` 实现原生目录选择对话框
+- 集成 `tauri-plugin-shell` 实现打开系统目录功能
+- 全局路径字段支持通过文件夹图标选择目录（项目路径保持为相对路径输入）
 
 ### Changed
 - 更新 README 与技术文档，补充最新特性与支持工具说明

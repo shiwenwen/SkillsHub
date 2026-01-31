@@ -17,6 +17,7 @@ tauri-build.workspace = true
 skillshub-core = { path = "../crates/skillshub-core" }
 tauri.workspace = true
 tauri-plugin-dialog.workspace = true
+tauri-plugin-shell.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 tokio.workspace = true

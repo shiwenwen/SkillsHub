@@ -117,8 +117,103 @@ pub async fn uninstall_skill(skill_id: String) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn update_skill(skill_id: String) -> Result<String, String> {
-    // Placeholder for update logic
-    Ok(format!("Update check completed for: {}", skill_id))
+    // Get the skill from registry and update it
+    let manager = RegistryManager::new().map_err(|e| e.to_string())?;
+    let mut aggregated = AggregatedRegistry::new();
+    
+    for config in manager.list() {
+        if config.enabled {
+            if let Some(provider) = manager.get_provider(&config.name) {
+                aggregated.add_registry(provider);
+            }
+        }
+    }
+    
+    // Try to get the latest version from registry
+    match aggregated.get_skill(&skill_id) {
+        Ok(remote_skill) => {
+            let mut store = LocalStore::default_store().map_err(|e| e.to_string())?;
+            
+            // Import the updated skill
+            let skill_path = store.skill_path(&skill_id);
+            if skill_path.exists() {
+                // Remove old version first
+                store.remove_skill(&skill_id).map_err(|e| e.to_string())?;
+            }
+            
+            // Import new version
+            store.import_skill(&remote_skill, &remote_skill.skill_md_path)
+                .await
+                .map_err(|e| e.to_string())?;
+            
+            Ok(format!("Skill '{}' updated to version {}", skill_id, remote_skill.version.version))
+        }
+        Err(e) => Err(format!("Failed to fetch update for '{}': {}", skill_id, e))
+    }
+}
+
+// Update check commands
+
+#[derive(Debug, Serialize)]
+pub struct UpdateCheckInfo {
+    pub skill_id: String,
+    pub current_version: String,
+    pub current_hash: String,
+    pub latest_version: String,
+    pub latest_hash: String,
+    pub has_update: bool,
+    pub source_registry: Option<String>,
+}
+
+/// Check for updates for all installed skills
+#[tauri::command]
+pub async fn check_skill_updates() -> Result<Vec<UpdateCheckInfo>, String> {
+    let store = LocalStore::default_store().map_err(|e| e.to_string())?;
+    let manager = RegistryManager::new().map_err(|e| e.to_string())?;
+    let mut aggregated = AggregatedRegistry::new();
+    
+    for config in manager.list() {
+        if config.enabled {
+            if let Some(provider) = manager.get_provider(&config.name) {
+                aggregated.add_registry(provider);
+            }
+        }
+    }
+    
+    let installed = store.list_installed();
+    let mut updates = Vec::new();
+    
+    for record in installed {
+        let update_info = match aggregated.get_skill(&record.skill_id) {
+            Ok(remote_skill) => {
+                let has_update = remote_skill.version.content_hash != record.version.content_hash;
+                UpdateCheckInfo {
+                    skill_id: record.skill_id.clone(),
+                    current_version: record.version.version.clone(),
+                    current_hash: record.version.content_hash.clone(),
+                    latest_version: remote_skill.version.version.clone(),
+                    latest_hash: remote_skill.version.content_hash.clone(),
+                    has_update,
+                    source_registry: None,
+                }
+            }
+            Err(_) => {
+                // Skill not found in registry, no update available
+                UpdateCheckInfo {
+                    skill_id: record.skill_id.clone(),
+                    current_version: record.version.version.clone(),
+                    current_hash: record.version.content_hash.clone(),
+                    latest_version: record.version.version.clone(),
+                    latest_hash: record.version.content_hash.clone(),
+                    has_update: false,
+                    source_registry: None,
+                }
+            }
+        };
+        updates.push(update_info);
+    }
+    
+    Ok(updates)
 }
 
 // Sync commands
@@ -630,16 +725,40 @@ pub async fn add_custom_tool(
     Ok(new_tool)
 }
 
+/// Update a custom tool by ID
+#[tauri::command]
+pub async fn update_custom_tool(
+    id: String,
+    name: String,
+    global_path: Option<String>,
+    project_path: Option<String>,
+) -> Result<CustomToolConfig, String> {
+    let mut tools = load_custom_tools_from_file()?;
+
+    let tool = tools.iter_mut()
+        .find(|t| t.id == id)
+        .ok_or_else(|| format!("Custom tool with id '{}' not found", id))?;
+
+    tool.name = name;
+    tool.global_path = global_path;
+    tool.project_path = project_path;
+
+    let updated_tool = tool.clone();
+    save_custom_tools_to_file(&tools)?;
+
+    Ok(updated_tool)
+}
+
 /// Remove a custom tool by ID
 #[tauri::command]
 pub async fn remove_custom_tool(id: String) -> Result<(), String> {
     let mut tools = load_custom_tools_from_file()?;
     let original_len = tools.len();
     tools.retain(|t| t.id != id);
-    
+
     if tools.len() == original_len {
         return Err(format!("Custom tool with id '{}' not found", id));
     }
-    
+
     save_custom_tools_to_file(&tools)
 }

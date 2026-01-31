@@ -5,6 +5,7 @@ export const en = {
         version: "Version",
         save: "Save",
         cancel: "Cancel",
+        close: "Close",
         delete: "Delete",
         install: "Install",
         uninstall: "Uninstall",
@@ -43,6 +44,12 @@ export const en = {
         viewDetails: "View Details",
         secure: "Secure",
         issues: "Issues",
+        checkUpdates: "Check Updates",
+        checkingUpdates: "Checking...",
+        updatesAvailable: "Updates Available",
+        skillsCanUpdate: "skills can be updated",
+        syncing: "Syncing...",
+        fullSync: "Full Sync",
     },
 
     // 发现页面

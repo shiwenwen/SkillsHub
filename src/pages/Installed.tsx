@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Package, RefreshCw, Puzzle, Database, FolderSync, Link2 } from "lucide-react";
+import { Package, RefreshCw, Puzzle, Database, FolderSync, Link2, ArrowUpCircle, Check } from "lucide-react";
 import { useTranslation } from "../i18n";
+import { useUpdateCheck } from "../hooks/useUpdateCheck";
 
 // 扫描到的 skill 信息
 interface ScannedSkillInfo {
@@ -49,6 +50,15 @@ export default function Installed() {
     const [syncing, setSyncing] = useState(false);
     const [activeTab, setActiveTab] = useState<"hub" | "scanned" | "plugins">("hub");
     const [toast, setToast] = useState<{ type: "success" | "error" | "info"; message: string } | null>(null);
+
+    // 更新检查
+    const {
+        availableUpdates,
+        isChecking,
+        checkUpdates,
+        updateSkill,
+        isUpdating,
+    } = useUpdateCheck();
 
     const showToast = (type: "success" | "error" | "info", message: string) => {
         setToast({ type, message });
@@ -128,6 +138,17 @@ export default function Installed() {
                 </div>
                 <div className="flex gap-3">
                     <button
+                        onClick={checkUpdates}
+                        disabled={isChecking}
+                        className="btn btn-outline btn-sm gap-2"
+                    >
+                        <ArrowUpCircle className={`w-4 h-4 ${isChecking ? "animate-pulse" : ""}`} />
+                        {isChecking ? t.installed.checkingUpdates || "检查中..." : t.installed.checkUpdates || "检查更新"}
+                        {availableUpdates.length > 0 && (
+                            <span className="badge badge-error badge-sm">{availableUpdates.length}</span>
+                        )}
+                    </button>
+                    <button
                         onClick={loadAll}
                         disabled={loading}
                         className="btn btn-ghost btn-sm gap-2"
@@ -141,7 +162,7 @@ export default function Installed() {
                         className="btn btn-primary btn-sm gap-2"
                     >
                         <FolderSync className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
-                        {syncing ? "同步中..." : "完整同步"}
+                        {syncing ? t.installed.syncing || "同步中..." : t.installed.fullSync || "完整同步"}
                     </button>
                 </div>
             </div>
@@ -170,6 +191,39 @@ export default function Installed() {
                     <div className="stat-value text-accent">{pluginSkills.length}</div>
                 </div>
             </div>
+
+            {/* 可用更新提示 */}
+            {availableUpdates.length > 0 && (
+                <div className="alert alert-info shadow-lg">
+                    <ArrowUpCircle className="w-6 h-6" />
+                    <div className="flex-1">
+                        <h3 className="font-bold">{t.installed.updatesAvailable || "有可用更新"}</h3>
+                        <p className="text-sm">
+                            {availableUpdates.length} {t.installed.skillsCanUpdate || "个 Skills 可以更新"}
+                        </p>
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                        {availableUpdates.slice(0, 3).map((u) => (
+                            <button
+                                key={u.skill_id}
+                                onClick={() => updateSkill(u.skill_id)}
+                                disabled={isUpdating === u.skill_id}
+                                className="btn btn-sm btn-primary"
+                            >
+                                {isUpdating === u.skill_id ? (
+                                    <span className="loading loading-spinner loading-xs"></span>
+                                ) : (
+                                    <Check className="w-3 h-3" />
+                                )}
+                                {u.skill_id}
+                            </button>
+                        ))}
+                        {availableUpdates.length > 3 && (
+                            <span className="badge badge-outline">+{availableUpdates.length - 3}</span>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Tabs */}
             <div className="tabs tabs-boxed bg-base-200 p-1">

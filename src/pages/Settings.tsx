@@ -70,7 +70,9 @@ interface RegistryConfig {
 export default function Settings() {
     const t = useTranslation();
     const { language, setLanguage } = useLanguage();
-    const [defaultStrategy, setDefaultStrategy] = useState("auto");
+    const [defaultStrategy, setDefaultStrategy] = useState(() => {
+        return localStorage.getItem("skillshub_defaultStrategy") || "auto";
+    });
     const [tools, setTools] = useState<ToolConfig[]>(BUILTIN_TOOLS);
     const [customTools, setCustomTools] = useState<ToolConfig[]>([]);
     const [expandedTools, setExpandedTools] = useState<Set<string>>(new Set());
@@ -88,6 +90,29 @@ export default function Settings() {
     const [newRegistryBranch, setNewRegistryBranch] = useState("");
     const [newRegistryDescription, setNewRegistryDescription] = useState("");
     const [isRegistryLoading, setIsRegistryLoading] = useState(false);
+
+    // 用户设置状态
+    const [checkUpdatesOnStartup, setCheckUpdatesOnStartup] = useState(() => {
+        const saved = localStorage.getItem("skillshub_checkUpdatesOnStartup");
+        return saved !== null ? saved === "true" : true;
+    });
+    const [autoSyncOnInstall, setAutoSyncOnInstall] = useState(() => {
+        const saved = localStorage.getItem("skillshub_autoSyncOnInstall");
+        return saved !== null ? saved === "true" : true;
+    });
+
+    // 保存设置到 localStorage
+    useEffect(() => {
+        localStorage.setItem("skillshub_checkUpdatesOnStartup", String(checkUpdatesOnStartup));
+    }, [checkUpdatesOnStartup]);
+
+    useEffect(() => {
+        localStorage.setItem("skillshub_autoSyncOnInstall", String(autoSyncOnInstall));
+    }, [autoSyncOnInstall]);
+
+    useEffect(() => {
+        localStorage.setItem("skillshub_defaultStrategy", defaultStrategy);
+    }, [defaultStrategy]);
 
     // 加载已保存的自定义工具
     useEffect(() => {
@@ -427,13 +452,23 @@ export default function Settings() {
                     <div className="form-control mt-4">
                         <label className="label cursor-pointer">
                             <span className="label-text">{t.settings.autoSyncOnInstall}</span>
-                            <input type="checkbox" className="toggle toggle-primary" defaultChecked />
+                            <input
+                                type="checkbox"
+                                className="toggle toggle-primary"
+                                checked={autoSyncOnInstall}
+                                onChange={(e) => setAutoSyncOnInstall(e.target.checked)}
+                            />
                         </label>
                     </div>
                     <div className="form-control">
                         <label className="label cursor-pointer">
                             <span className="label-text">{t.settings.checkUpdatesOnStartup}</span>
-                            <input type="checkbox" className="toggle toggle-primary" defaultChecked />
+                            <input
+                                type="checkbox"
+                                className="toggle toggle-primary"
+                                checked={checkUpdatesOnStartup}
+                                onChange={(e) => setCheckUpdatesOnStartup(e.target.checked)}
+                            />
                         </label>
                     </div>
                 </div>

@@ -6,6 +6,7 @@ export const ja: Translations = {
         version: "バージョン",
         save: "保存",
         cancel: "キャンセル",
+        close: "閉じる",
         delete: "削除",
         install: "インストール",
         uninstall: "アンインストール",
@@ -42,6 +43,12 @@ export const ja: Translations = {
         viewDetails: "詳細を見る",
         secure: "安全",
         issues: "問題",
+        checkUpdates: "アップデートを確認",
+        checkingUpdates: "確認中...",
+        updatesAvailable: "アップデートがあります",
+        skillsCanUpdate: "個の Skills が更新可能",
+        syncing: "同期中...",
+        fullSync: "完全同期",
     },
 
     discover: {

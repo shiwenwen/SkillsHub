@@ -11,6 +11,7 @@ pub mod registry;
 pub mod scanner;
 pub mod store;
 pub mod sync;
+pub mod update;
 
 pub use error::{Error, Result};
 pub use models::*;

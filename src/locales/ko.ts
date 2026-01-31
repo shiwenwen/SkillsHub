@@ -6,6 +6,7 @@ export const ko: Translations = {
         version: "버전",
         save: "저장",
         cancel: "취소",
+        close: "닫기",
         delete: "삭제",
         install: "설치",
         uninstall: "제거",
@@ -42,6 +43,12 @@ export const ko: Translations = {
         viewDetails: "상세 보기",
         secure: "안전",
         issues: "문제",
+        checkUpdates: "업데이트 확인",
+        checkingUpdates: "확인 중...",
+        updatesAvailable: "업데이트 가능",
+        skillsCanUpdate: "개의 Skills 업데이트 가능",
+        syncing: "동기화 중...",
+        fullSync: "전체 동기화",
     },
 
     discover: {

@@ -8,6 +8,7 @@ use commands::*;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
             // Skill commands
             list_installed_skills,
@@ -15,6 +16,7 @@ pub fn run() {
             install_skill,
             uninstall_skill,
             update_skill,
+            check_skill_updates,
             // Sync commands
             sync_skills,
             check_drift,
@@ -26,6 +28,7 @@ pub fn run() {
             // Custom tool commands
             list_custom_tools,
             add_custom_tool,
+            update_custom_tool,
             remove_custom_tool,
             // Registry commands
             search_skills,

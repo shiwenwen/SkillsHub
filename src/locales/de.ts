@@ -6,6 +6,7 @@ export const de: Translations = {
         version: "Version",
         save: "Speichern",
         cancel: "Abbrechen",
+        close: "Schließen",
         delete: "Löschen",
         install: "Installieren",
         uninstall: "Deinstallieren",
@@ -42,6 +43,12 @@ export const de: Translations = {
         viewDetails: "Details anzeigen",
         secure: "Sicher",
         issues: "Probleme",
+        checkUpdates: "Updates prüfen",
+        checkingUpdates: "Prüfe...",
+        updatesAvailable: "Updates verfügbar",
+        skillsCanUpdate: "Skills können aktualisiert werden",
+        syncing: "Synchronisiere...",
+        fullSync: "Vollständige Sync",
     },
 
     discover: {
