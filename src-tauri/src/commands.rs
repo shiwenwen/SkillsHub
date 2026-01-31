@@ -130,7 +130,7 @@ pub async fn update_skill(skill_id: String) -> Result<String, String> {
     }
     
     // Try to get the latest version from registry
-    match aggregated.get_skill(&skill_id) {
+    match aggregated.get_skill(&skill_id).await {
         Ok(remote_skill) => {
             let mut store = LocalStore::default_store().map_err(|e| e.to_string())?;
             
@@ -184,7 +184,7 @@ pub async fn check_skill_updates() -> Result<Vec<UpdateCheckInfo>, String> {
     let mut updates = Vec::new();
     
     for record in installed {
-        let update_info = match aggregated.get_skill(&record.skill_id) {
+        let update_info = match aggregated.get_skill(&record.skill_id).await {
             Ok(remote_skill) => {
                 let has_update = remote_skill.version.content_hash != record.version.content_hash;
                 UpdateCheckInfo {
