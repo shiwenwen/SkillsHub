@@ -4,6 +4,7 @@
 //! Provides skill management, multi-tool sync, security scanning, and registry access.
 
 pub mod adapters;
+pub mod cloud_sync;
 pub mod config;
 pub mod error;
 pub mod models;

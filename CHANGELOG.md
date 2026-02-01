@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- 云端同步功能（iCloud Drive / Google Drive / OneDrive）：
+  - 新增 `CloudSyncProvider` 和 `CloudSyncConfig` 配置模型
+  - 新增 `cloud_sync` 核心模块，支持自动检测系统已安装的云存储驱动器
+  - 支持将本地 Skills 推送到云端、从云端拉取 Skills、双向同步
+  - 设置页面新增"云端同步"配置卡片：启用/禁用、选择提供商、配置同步文件夹、自动同步开关
+  - 新增 Tauri 命令：`detect_cloud_drives`、`cloud_sync_push`、`cloud_sync_pull`、`cloud_sync_full`
+  - 支持自定义文件夹路径作为同步目标
+  - 全部 9 种语言国际化翻译适配
 - 新增内置工具 OpenClaw 支持：
   - 添加 OpenClaw 适配器，支持动态检测 OpenClaw 安装路径（NPM 全局安装）
   - 用户可通过设置页面配置自定义 OpenClaw 全局路径
@@ -40,6 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 后端新增配置管理模块，支持持久化用户设置到配置文件
   - 修改同步引擎 `distribute_from_hub` 和 `full_sync` 方法支持策略参数
   - 添加 `get_app_config` 和 `save_app_config` Tauri 命令
+- 修复云端同步配置保存时序问题，确保配置在执行同步前已持久化
+- 修复云端同步路径中的波浪号（~）未正确展开为用户主目录的问题
   - 前端设置页面改为从后端加载和保存配置
   - 技能同步操作现在会遵循用户设置的默认策略（Auto/Link/Copy）
 

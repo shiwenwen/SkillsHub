@@ -8,6 +8,39 @@ use serde::{Deserialize, Serialize};
 use crate::error::{Error, Result};
 use crate::models::SyncStrategy;
 
+/// Cloud storage provider
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum CloudSyncProvider {
+    ICloud,
+    GoogleDrive,
+    OneDrive,
+    Custom,
+}
+
+/// Cloud sync configuration
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct CloudSyncConfig {
+    /// Whether cloud sync is enabled
+    #[serde(default)]
+    pub enabled: bool,
+
+    /// Cloud storage provider
+    #[serde(default)]
+    pub provider: Option<CloudSyncProvider>,
+
+    /// Resolved absolute path to the cloud sync folder
+    #[serde(default)]
+    pub sync_folder: Option<String>,
+
+    /// Auto-sync to cloud on skill install/update
+    #[serde(default)]
+    pub auto_sync: bool,
+
+    /// Last sync timestamp (ISO 8601)
+    #[serde(default)]
+    pub last_sync: Option<String>,
+}
+
 /// Application configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppConfig {
@@ -34,6 +67,10 @@ pub struct AppConfig {
     /// Block high risk skills
     #[serde(default = "default_true")]
     pub block_high_risk: bool,
+
+    /// Cloud sync configuration
+    #[serde(default)]
+    pub cloud_sync: CloudSyncConfig,
 }
 
 fn default_true() -> bool {
@@ -49,6 +86,7 @@ impl Default for AppConfig {
             scan_before_install: true,
             scan_before_update: true,
             block_high_risk: true,
+            cloud_sync: CloudSyncConfig::default(),
         }
     }
 }
@@ -130,5 +168,14 @@ mod tests {
 
         assert!(matches!(deserialized.default_sync_strategy, SyncStrategy::Auto));
         assert_eq!(deserialized.auto_sync_on_install, config.auto_sync_on_install);
+    }
+
+    #[test]
+    fn test_frontend_config_deserialization() {
+        let json = r#"{"default_sync_strategy":"auto","auto_sync_on_install":true,"check_updates_on_startup":true,"scan_before_install":true,"scan_before_update":true,"block_high_risk":true,"cloud_sync":{"enabled":true,"provider":"ICloud","sync_folder":"~/Documents","auto_sync":false,"last_sync":null}}"#;
+        let config: AppConfig = serde_json::from_str(json).unwrap();
+        assert!(config.cloud_sync.enabled);
+        assert_eq!(config.cloud_sync.provider, Some(CloudSyncProvider::ICloud));
+        assert_eq!(config.cloud_sync.sync_folder, Some("~/Documents".to_string()));
     }
 }

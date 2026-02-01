@@ -46,6 +46,11 @@ pub fn run() {
             // Config commands
             get_app_config,
             save_app_config,
+            // Cloud sync commands
+            detect_cloud_drives,
+            cloud_sync_push,
+            cloud_sync_pull,
+            cloud_sync_full,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

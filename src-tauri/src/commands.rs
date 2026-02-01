@@ -843,3 +843,77 @@ pub async fn get_app_config() -> Result<AppConfig, String> {
 pub async fn save_app_config(config: AppConfig) -> Result<(), String> {
     config.save().map_err(|e| e.to_string())
 }
+
+// ============================================================================
+// Cloud Sync Commands
+// ============================================================================
+
+use skillshub_core::cloud_sync::{
+    CloudSyncEngine, CloudSyncResult as CoreCloudSyncResult, DetectedCloudDrive,
+};
+
+/// Detect available cloud drives on the system
+#[tauri::command]
+pub async fn detect_cloud_drives() -> Result<Vec<DetectedCloudDrive>, String> {
+    Ok(skillshub_core::cloud_sync::detect_cloud_drives())
+}
+
+#[derive(Debug, Serialize)]
+pub struct CloudSyncResponse {
+    pub pushed: Vec<String>,
+    pub pulled: Vec<String>,
+}
+
+impl From<CoreCloudSyncResult> for CloudSyncResponse {
+    fn from(r: CoreCloudSyncResult) -> Self {
+        Self {
+            pushed: r.pushed,
+            pulled: r.pulled,
+        }
+    }
+}
+
+fn create_cloud_engine() -> Result<CloudSyncEngine, String> {
+    let config = AppConfig::load_or_default();
+    let store_dir = dirs::data_local_dir()
+        .unwrap_or_else(|| PathBuf::from("."))
+        .join("skillshub")
+        .join("store");
+    Ok(CloudSyncEngine::new(config.cloud_sync, store_dir))
+}
+
+/// Push local skills to cloud
+#[tauri::command]
+pub async fn cloud_sync_push() -> Result<CloudSyncResponse, String> {
+    let engine = create_cloud_engine()?;
+    let pushed = engine.push_to_cloud().map_err(|e| e.to_string())?;
+    Ok(CloudSyncResponse {
+        pushed,
+        pulled: vec![],
+    })
+}
+
+/// Pull skills from cloud
+#[tauri::command]
+pub async fn cloud_sync_pull() -> Result<CloudSyncResponse, String> {
+    let engine = create_cloud_engine()?;
+    let pulled = engine.pull_from_cloud().map_err(|e| e.to_string())?;
+    Ok(CloudSyncResponse {
+        pushed: vec![],
+        pulled,
+    })
+}
+
+/// Full bidirectional cloud sync
+#[tauri::command]
+pub async fn cloud_sync_full() -> Result<CloudSyncResponse, String> {
+    let engine = create_cloud_engine()?;
+    let result = engine.sync().map_err(|e| e.to_string())?;
+
+    // Update last_sync timestamp in config
+    let mut config = AppConfig::load_or_default();
+    config.cloud_sync.last_sync = Some(CloudSyncEngine::now_timestamp());
+    config.save().map_err(|e| e.to_string())?;
+
+    Ok(result.into())
+}

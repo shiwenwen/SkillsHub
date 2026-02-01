@@ -11,6 +11,7 @@ import {
     Languages,
     ChevronDown,
     ChevronUp,
+    Cloud,
 } from "lucide-react";
 import { useTranslation, useLanguage, type Language } from "../i18n";
 import { invoke } from "@tauri-apps/api/core";
@@ -57,6 +58,22 @@ const BUILTIN_TOOLS: ToolConfig[] = [
     { id: "windsurf", name: "Windsurf", globalPath: "~/.codeium/windsurf/skills/", projectPath: ".windsurf/skills/", detected: false, hasGlobalPath: true },
 ];
 
+// 云端驱动器信息
+interface CloudDriveInfo {
+    provider: string;
+    path: string;
+    display_name: string;
+}
+
+// 云端同步配置
+interface CloudSyncConfig {
+    enabled: boolean;
+    provider: string | null;
+    sync_folder: string | null;
+    auto_sync: boolean;
+    last_sync: string | null;
+}
+
 // 注册源配置类型
 interface RegistryConfig {
     name: string;
@@ -94,6 +111,15 @@ export default function Settings() {
     const [checkUpdatesOnStartup, setCheckUpdatesOnStartup] = useState(true);
     const [autoSyncOnInstall, setAutoSyncOnInstall] = useState(true);
 
+    // 云端同步状态
+    const [cloudSyncEnabled, setCloudSyncEnabled] = useState(false);
+    const [cloudProvider, setCloudProvider] = useState<string | null>(null);
+    const [cloudSyncFolder, setCloudSyncFolder] = useState("~/Documents");
+    const [cloudAutoSync, setCloudAutoSync] = useState(false);
+    const [cloudLastSync, setCloudLastSync] = useState<string | null>(null);
+    const [detectedDrives, setDetectedDrives] = useState<CloudDriveInfo[]>([]);
+    const [cloudSyncing, setCloudSyncing] = useState(false);
+
     // 安全设置状态（将从后端加载）
     const [scanBeforeInstall, setScanBeforeInstall] = useState(true);
     const [scanBeforeUpdate, setScanBeforeUpdate] = useState(true);
@@ -102,12 +128,19 @@ export default function Settings() {
     // 保存所有设置到后端
     const saveAllSettings = async () => {
         const config = {
-            default_sync_strategy: defaultStrategy === "auto" ? "Auto" : defaultStrategy === "link" ? "Link" : "Copy",
+            default_sync_strategy: defaultStrategy,
             auto_sync_on_install: autoSyncOnInstall,
             check_updates_on_startup: checkUpdatesOnStartup,
             scan_before_install: scanBeforeInstall,
             scan_before_update: scanBeforeUpdate,
             block_high_risk: blockHighRisk,
+            cloud_sync: {
+                enabled: cloudSyncEnabled,
+                provider: cloudProvider,
+                sync_folder: cloudSyncFolder || null,
+                auto_sync: cloudAutoSync,
+                last_sync: cloudLastSync,
+            },
         };
 
         try {
@@ -139,6 +172,7 @@ export default function Settings() {
                     scan_before_install: boolean;
                     scan_before_update: boolean;
                     block_high_risk: boolean;
+                    cloud_sync: CloudSyncConfig;
                 }>("get_app_config");
 
                 // 将后端的策略转换为前端格式
@@ -149,6 +183,15 @@ export default function Settings() {
                 setScanBeforeInstall(config.scan_before_install);
                 setScanBeforeUpdate(config.scan_before_update);
                 setBlockHighRisk(config.block_high_risk);
+
+                // 加载云端同步配置
+                if (config.cloud_sync) {
+                    setCloudSyncEnabled(config.cloud_sync.enabled);
+                    setCloudProvider(config.cloud_sync.provider);
+                    setCloudSyncFolder(config.cloud_sync.sync_folder || "~/Documents");
+                    setCloudAutoSync(config.cloud_sync.auto_sync);
+                    setCloudLastSync(config.cloud_sync.last_sync);
+                }
 
                 // 标记为已初始化
                 setInitialized(true);
@@ -169,7 +212,7 @@ export default function Settings() {
 
         saveAllSettings();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [defaultStrategy, checkUpdatesOnStartup, autoSyncOnInstall, scanBeforeInstall, scanBeforeUpdate, blockHighRisk, initialized]);
+    }, [defaultStrategy, checkUpdatesOnStartup, autoSyncOnInstall, scanBeforeInstall, scanBeforeUpdate, blockHighRisk, cloudSyncEnabled, cloudProvider, cloudSyncFolder, cloudAutoSync, initialized]);
 
     // 加载已保存的自定义工具
     useEffect(() => {
@@ -192,6 +235,55 @@ export default function Settings() {
         };
         loadCustomTools();
     }, []);
+
+    // 检测云端驱动器
+    useEffect(() => {
+        const loadCloudDrives = async () => {
+            try {
+                const drives = await invoke<CloudDriveInfo[]>("detect_cloud_drives");
+                setDetectedDrives(drives);
+            } catch (error) {
+                console.error("Failed to detect cloud drives:", error);
+            }
+        };
+        loadCloudDrives();
+    }, []);
+
+    // 云端同步操作
+    const handleCloudSync = async () => {
+        setCloudSyncing(true);
+        try {
+            // 确保配置已保存
+            await saveAllSettings();
+
+            const result = await invoke<{ pushed: string[]; pulled: string[] }>("cloud_sync_full");
+            // 重新加载配置以获取更新的 last_sync
+            const config = await invoke<{ cloud_sync: CloudSyncConfig }>("get_app_config");
+            setCloudLastSync(config.cloud_sync.last_sync);
+            alert(`${t.settings.cloudSyncSuccess}: ${result.pushed.length} ${t.settings.skillsPushed}, ${result.pulled.length} ${t.settings.skillsPulled}`);
+        } catch (error) {
+            console.error("Cloud sync failed:", error);
+            alert(String(error));
+        } finally {
+            setCloudSyncing(false);
+        }
+    };
+
+    // 选择云端同步提供商时自动填充路径
+    const handleCloudProviderChange = (provider: string) => {
+        setCloudProvider(provider);
+        if (provider === "Custom") {
+            setCloudSyncFolder("~/Documents");
+            return;
+        }
+        const drive = detectedDrives.find(d => d.provider === provider);
+        if (drive) {
+            setCloudSyncFolder(drive.path);
+        } else {
+            // 未检测到的供应商，使用默认路径
+            setCloudSyncFolder("~/Documents");
+        }
+    };
 
     // 加载注册源
     useEffect(() => {
@@ -564,6 +656,124 @@ export default function Settings() {
                             <div className="stat-value text-lg">12</div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            {/* Cloud Sync */}
+            <div className="card bg-base-200">
+                <div className="card-body">
+                    <h3 className="card-title">
+                        <Cloud className="w-5 h-5" />
+                        {t.settings.cloudSync}
+                    </h3>
+                    <p className="text-sm text-base-content/60">
+                        {t.settings.cloudSyncDescription}
+                    </p>
+
+                    {/* Enable toggle */}
+                    <div className="form-control mt-4">
+                        <label className="label cursor-pointer">
+                            <span className="label-text">{t.settings.cloudSync}</span>
+                            <input
+                                type="checkbox"
+                                className="toggle toggle-primary"
+                                checked={cloudSyncEnabled}
+                                onChange={(e) => setCloudSyncEnabled(e.target.checked)}
+                            />
+                        </label>
+                    </div>
+
+                    {cloudSyncEnabled && (
+                        <div className="space-y-4 mt-2">
+                            {/* Provider selector */}
+                            <div className="form-control">
+                                <label className="label">
+                                    <span className="label-text">{t.settings.cloudProvider}</span>
+                                </label>
+                                <select
+                                    className="select select-bordered w-full max-w-xs"
+                                    value={cloudProvider || ""}
+                                    onChange={(e) => handleCloudProviderChange(e.target.value)}
+                                >
+                                    <option value="" disabled>{t.settings.selectProvider}</option>
+                                    {(() => {
+                                        const providers = [
+                                            { value: "ICloud", label: "iCloud Drive" },
+                                            { value: "GoogleDrive", label: "Google Drive" },
+                                            { value: "OneDrive", label: "OneDrive" },
+                                        ];
+                                        return providers.map((p) => {
+                                            const detected = detectedDrives.find(d => d.provider === p.value);
+                                            return (
+                                                <option key={p.value} value={p.value}>
+                                                    {detected ? detected.display_name : p.label}
+                                                </option>
+                                            );
+                                        });
+                                    })()}
+                                    <option value="Custom">{t.settings.customFolder}</option>
+                                </select>
+                            </div>
+
+                            {/* Sync folder path */}
+                            <div className="form-control">
+                                <label className="label">
+                                    <span className="label-text">{t.settings.cloudSyncFolder}</span>
+                                </label>
+                                <div className="flex gap-2 w-full">
+                                    <input
+                                        type="text"
+                                        className="input input-bordered flex-1 font-mono text-sm"
+                                        value={cloudSyncFolder}
+                                        onChange={(e) => setCloudSyncFolder(e.target.value)}
+                                        readOnly={!!detectedDrives.find(d => d.provider === cloudProvider)}
+                                    />
+                                    {!detectedDrives.find(d => d.provider === cloudProvider) && (
+                                        <button
+                                            className="btn btn-ghost btn-square"
+                                            onClick={() => selectDirectory(setCloudSyncFolder)}
+                                        >
+                                            <FolderOpen className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Auto-sync toggle */}
+                            <div className="form-control">
+                                <label className="label cursor-pointer">
+                                    <span className="label-text">{t.settings.cloudAutoSync}</span>
+                                    <input
+                                        type="checkbox"
+                                        className="toggle toggle-primary"
+                                        checked={cloudAutoSync}
+                                        onChange={(e) => setCloudAutoSync(e.target.checked)}
+                                    />
+                                </label>
+                            </div>
+
+                            {/* Sync Now button + last sync */}
+                            <div className="flex items-center gap-4">
+                                <button
+                                    className="btn btn-primary btn-sm gap-2"
+                                    onClick={handleCloudSync}
+                                    disabled={cloudSyncing || !cloudSyncFolder}
+                                >
+                                    {cloudSyncing ? (
+                                        <span className="loading loading-spinner loading-sm"></span>
+                                    ) : (
+                                        <RefreshCw className="w-4 h-4" />
+                                    )}
+                                    {cloudSyncing ? t.settings.syncing : t.settings.syncNow}
+                                </button>
+                                {cloudLastSync && (
+                                    <span className="text-sm text-base-content/50">
+                                        {t.settings.lastCloudSync}: {new Date(Number(cloudLastSync) * 1000).toLocaleString()}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
