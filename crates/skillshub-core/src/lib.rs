@@ -4,6 +4,7 @@
 //! Provides skill management, multi-tool sync, security scanning, and registry access.
 
 pub mod adapters;
+pub mod config;
 pub mod error;
 pub mod models;
 pub mod plugins;
@@ -13,6 +14,7 @@ pub mod store;
 pub mod sync;
 pub mod update;
 
+pub use config::AppConfig;
 pub use error::{Error, Result};
 pub use models::*;
 pub use plugins::{PluginScanner, PluginSkill};

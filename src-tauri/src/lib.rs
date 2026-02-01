@@ -43,6 +43,9 @@ pub fn run() {
             scan_all_skills,
             full_sync_skills,
             get_hub_status,
+            // Config commands
+            get_app_config,
+            save_app_config,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

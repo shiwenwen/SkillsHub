@@ -538,7 +538,7 @@ impl SyncEngine {
 
     /// Distribute skills from hub to all tools
     /// Creates symlinks (or copies if symlinks fail) in each tool's skills directory
-    pub fn distribute_from_hub(&mut self) -> Result<Vec<(String, ToolType, bool)>> {
+    pub fn distribute_from_hub(&mut self, strategy: SyncStrategy) -> Result<Vec<(String, ToolType, bool)>> {
         let hub_skill_ids = self.get_hub_skill_ids();
         let mut results = Vec::new();
 
@@ -562,9 +562,22 @@ impl SyncEngine {
                         let _ = fs::create_dir_all(parent);
                     }
 
-                    // Try symlink first, fall back to copy
-                    let success = self.try_link(&source, &target).is_ok()
-                        || copy_dir_all(&source, &target).is_ok();
+                    // Apply sync strategy
+                    let success = match strategy {
+                        SyncStrategy::Auto => {
+                            // Try symlink first, fall back to copy
+                            self.try_link(&source, &target).is_ok()
+                                || copy_dir_all(&source, &target).is_ok()
+                        }
+                        SyncStrategy::Link => {
+                            // Always use symlink
+                            self.try_link(&source, &target).is_ok()
+                        }
+                        SyncStrategy::Copy => {
+                            // Always copy
+                            copy_dir_all(&source, &target).is_ok()
+                        }
+                    };
 
                     results.push((skill_id.clone(), adapter.tool_type(), success));
                 }
@@ -575,9 +588,9 @@ impl SyncEngine {
     }
 
     /// Full sync: collect from tools, then distribute to all tools
-    pub fn full_sync(&mut self) -> Result<FullSyncResult> {
+    pub fn full_sync(&mut self, strategy: SyncStrategy) -> Result<FullSyncResult> {
         let collected = self.collect_to_hub()?;
-        let distributed = self.distribute_from_hub()?;
+        let distributed = self.distribute_from_hub(strategy)?;
 
         Ok(FullSyncResult {
             collected_count: collected.len(),

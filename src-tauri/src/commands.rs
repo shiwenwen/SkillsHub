@@ -2,6 +2,7 @@
 
 use serde::Serialize;
 use skillshub_core::adapters::create_default_adapters;
+use skillshub_core::config::AppConfig;
 use skillshub_core::models::{SyncStrategy, ToolType};
 use skillshub_core::plugins::{PluginScanner, PluginSkill};
 use skillshub_core::scanner::SecurityScanner;
@@ -621,7 +622,11 @@ pub async fn full_sync_skills() -> Result<FullSyncResponse, String> {
         engine.register_adapter(adapter);
     }
 
-    let result = engine.full_sync().map_err(|e| e.to_string())?;
+    // Load configuration to get default sync strategy
+    let config = AppConfig::load_or_default();
+    let strategy = config.default_sync_strategy;
+
+    let result = engine.full_sync(strategy).map_err(|e| e.to_string())?;
 
     Ok(FullSyncResponse {
         collected_count: result.collected_count,
@@ -821,4 +826,20 @@ pub async fn remove_custom_tool(id: String) -> Result<(), String> {
     }
 
     save_custom_tools_to_file(&tools)
+}
+
+// ============================================================================
+// Configuration Management Commands
+// ============================================================================
+
+/// Get application configuration
+#[tauri::command]
+pub async fn get_app_config() -> Result<AppConfig, String> {
+    AppConfig::load().map_err(|e| e.to_string())
+}
+
+/// Save application configuration
+#[tauri::command]
+pub async fn save_app_config(config: AppConfig) -> Result<(), String> {
+    config.save().map_err(|e| e.to_string())
 }

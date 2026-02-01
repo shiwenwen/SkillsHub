@@ -36,6 +36,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - 修复中文翻译中 "Skills" 被错误翻译为 "技能" 的问题，Skills 作为专有名词保持不变
 - 修复设置页面注册源管理仅显示硬编码假数据的问题，现已连接后端真实数据
+- 修复"默认同步策略"设置不生效的问题：
+  - 后端新增配置管理模块，支持持久化用户设置到配置文件
+  - 修改同步引擎 `distribute_from_hub` 和 `full_sync` 方法支持策略参数
+  - 添加 `get_app_config` 和 `save_app_config` Tauri 命令
+  - 前端设置页面改为从后端加载和保存配置
+  - 技能同步操作现在会遵循用户设置的默认策略（Auto/Link/Copy）
 
 ### Added
 - 实现完整的注册源管理功能：

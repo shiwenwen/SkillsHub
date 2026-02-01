@@ -71,9 +71,7 @@ interface RegistryConfig {
 export default function Settings() {
     const t = useTranslation();
     const { language, setLanguage } = useLanguage();
-    const [defaultStrategy, setDefaultStrategy] = useState(() => {
-        return localStorage.getItem("skillshub_defaultStrategy") || "auto";
-    });
+    const [defaultStrategy, setDefaultStrategy] = useState("auto");
     const [tools, setTools] = useState<ToolConfig[]>(BUILTIN_TOOLS);
     const [customTools, setCustomTools] = useState<ToolConfig[]>([]);
     const [expandedTools, setExpandedTools] = useState<Set<string>>(new Set());
@@ -92,55 +90,86 @@ export default function Settings() {
     const [newRegistryDescription, setNewRegistryDescription] = useState("");
     const [isRegistryLoading, setIsRegistryLoading] = useState(false);
 
-    // 用户设置状态
-    const [checkUpdatesOnStartup, setCheckUpdatesOnStartup] = useState(() => {
-        const saved = localStorage.getItem("skillshub_checkUpdatesOnStartup");
-        return saved !== null ? saved === "true" : true;
-    });
-    const [autoSyncOnInstall, setAutoSyncOnInstall] = useState(() => {
-        const saved = localStorage.getItem("skillshub_autoSyncOnInstall");
-        return saved !== null ? saved === "true" : true;
-    });
+    // 用户设置状态（将从后端加载）
+    const [checkUpdatesOnStartup, setCheckUpdatesOnStartup] = useState(true);
+    const [autoSyncOnInstall, setAutoSyncOnInstall] = useState(true);
 
-    // 安全设置状态
-    const [scanBeforeInstall, setScanBeforeInstall] = useState(() => {
-        const saved = localStorage.getItem("skillshub_scanBeforeInstall");
-        return saved !== null ? saved === "true" : true;
-    });
-    const [scanBeforeUpdate, setScanBeforeUpdate] = useState(() => {
-        const saved = localStorage.getItem("skillshub_scanBeforeUpdate");
-        return saved !== null ? saved === "true" : true;
-    });
-    const [blockHighRisk, setBlockHighRisk] = useState(() => {
-        const saved = localStorage.getItem("skillshub_blockHighRisk");
-        return saved !== null ? saved === "true" : true;
-    });
+    // 安全设置状态（将从后端加载）
+    const [scanBeforeInstall, setScanBeforeInstall] = useState(true);
+    const [scanBeforeUpdate, setScanBeforeUpdate] = useState(true);
+    const [blockHighRisk, setBlockHighRisk] = useState(true);
 
-    // 保存设置到 localStorage
-    useEffect(() => {
-        localStorage.setItem("skillshub_checkUpdatesOnStartup", String(checkUpdatesOnStartup));
-    }, [checkUpdatesOnStartup]);
+    // 保存所有设置到后端
+    const saveAllSettings = async () => {
+        const config = {
+            default_sync_strategy: defaultStrategy === "auto" ? "Auto" : defaultStrategy === "link" ? "Link" : "Copy",
+            auto_sync_on_install: autoSyncOnInstall,
+            check_updates_on_startup: checkUpdatesOnStartup,
+            scan_before_install: scanBeforeInstall,
+            scan_before_update: scanBeforeUpdate,
+            block_high_risk: blockHighRisk,
+        };
 
-    useEffect(() => {
-        localStorage.setItem("skillshub_autoSyncOnInstall", String(autoSyncOnInstall));
-    }, [autoSyncOnInstall]);
+        try {
+            await invoke("save_app_config", { config });
+        } catch (error) {
+            console.error("Failed to save settings:", error);
+        }
 
-    useEffect(() => {
+        // Also save to localStorage for backward compatibility
         localStorage.setItem("skillshub_defaultStrategy", defaultStrategy);
-    }, [defaultStrategy]);
-
-    // 保存安全设置到 localStorage
-    useEffect(() => {
+        localStorage.setItem("skillshub_checkUpdatesOnStartup", String(checkUpdatesOnStartup));
+        localStorage.setItem("skillshub_autoSyncOnInstall", String(autoSyncOnInstall));
         localStorage.setItem("skillshub_scanBeforeInstall", String(scanBeforeInstall));
-    }, [scanBeforeInstall]);
-
-    useEffect(() => {
         localStorage.setItem("skillshub_scanBeforeUpdate", String(scanBeforeUpdate));
-    }, [scanBeforeUpdate]);
-
-    useEffect(() => {
         localStorage.setItem("skillshub_blockHighRisk", String(blockHighRisk));
-    }, [blockHighRisk]);
+    };
+
+    // 标记是否已初始化（用于防止初次加载时触发保存）
+    const [initialized, setInitialized] = useState(false);
+
+    // 从后端加载配置
+    useEffect(() => {
+        const loadConfig = async () => {
+            try {
+                const config = await invoke<{
+                    default_sync_strategy: string;
+                    auto_sync_on_install: boolean;
+                    check_updates_on_startup: boolean;
+                    scan_before_install: boolean;
+                    scan_before_update: boolean;
+                    block_high_risk: boolean;
+                }>("get_app_config");
+
+                // 将后端的策略转换为前端格式
+                const strategy = config.default_sync_strategy.toLowerCase();
+                setDefaultStrategy(strategy);
+                setAutoSyncOnInstall(config.auto_sync_on_install);
+                setCheckUpdatesOnStartup(config.check_updates_on_startup);
+                setScanBeforeInstall(config.scan_before_install);
+                setScanBeforeUpdate(config.scan_before_update);
+                setBlockHighRisk(config.block_high_risk);
+
+                // 标记为已初始化
+                setInitialized(true);
+            } catch (error) {
+                console.error("Failed to load config:", error);
+                // 如果加载失败，仍然标记为已初始化，使用默认值
+                setInitialized(true);
+            }
+        };
+
+        loadConfig();
+    }, []);
+
+    // 保存设置到后端和 localStorage
+    useEffect(() => {
+        // 只在初始化完成后才保存
+        if (!initialized) return;
+
+        saveAllSettings();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [defaultStrategy, checkUpdatesOnStartup, autoSyncOnInstall, scanBeforeInstall, scanBeforeUpdate, blockHighRisk, initialized]);
 
     // 加载已保存的自定义工具
     useEffect(() => {
