@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
-import { open as openPath } from "@tauri-apps/plugin-shell";
 import {
     RefreshCw,
     Check,
@@ -22,6 +21,7 @@ interface ToolInfo {
     tool_type: string;
     detected: boolean;
     skills_dir: string | null;
+    skills_dirs: string[];  // All skills directories (for tools with multiple paths)
     skill_count: number;
 }
 
@@ -42,6 +42,7 @@ interface ToolDetail {
     name: string;
     type: "builtin" | "custom";
     globalPath: string | null;
+    globalPaths: string[];  // Multiple global paths
     projectPath: string | null;
     detected?: boolean;
     skillCount?: number;
@@ -179,7 +180,7 @@ export default function SyncDashboard() {
     // 打开目录
     const openDirectory = async (path: string) => {
         try {
-            await openPath(path);
+            await invoke("open_directory", { path });
         } catch (error) {
             console.error("Failed to open directory:", error);
         }
@@ -193,6 +194,7 @@ export default function SyncDashboard() {
                 name: builtinTool.name,
                 type: "builtin",
                 globalPath: builtinTool.skills_dir,
+                globalPaths: builtinTool.skills_dirs || [],
                 projectPath: null,
                 detected: builtinTool.detected,
                 skillCount: builtinTool.skill_count,
@@ -203,6 +205,7 @@ export default function SyncDashboard() {
                 name: customTool.name,
                 type: "custom",
                 globalPath: customTool.global_path,
+                globalPaths: customTool.global_path ? [customTool.global_path] : [],
                 projectPath: customTool.project_path,
             });
         }
@@ -546,23 +549,37 @@ export default function SyncDashboard() {
                                 </>
                             )}
 
-                            {/* 全局路径 */}
-                            {selectedTool.globalPath && (
+                            {/* 全局路径 - 支持多路径 */}
+                            {selectedTool.globalPaths && selectedTool.globalPaths.length > 0 && (
                                 <div>
                                     <label className="label">
-                                        <span className="label-text font-semibold">{t.settings.globalPath}</span>
+                                        <span className="label-text font-semibold">
+                                            {t.settings.globalPath}
+                                            {selectedTool.globalPaths.length > 1 && (
+                                                <span className="badge badge-sm badge-ghost ml-2">
+                                                    {selectedTool.globalPaths.length}
+                                                </span>
+                                            )}
+                                        </span>
                                     </label>
-                                    <div className="flex items-center gap-2">
-                                        <p className="text-sm text-base-content/80 font-mono flex-1 break-all">
-                                            {selectedTool.globalPath}
-                                        </p>
-                                        <button
-                                            className="btn btn-ghost btn-sm btn-square"
-                                            onClick={() => openDirectory(selectedTool.globalPath!)}
-                                            title="Open Directory"
-                                        >
-                                            <ExternalLink className="w-4 h-4" />
-                                        </button>
+                                    <div className="space-y-2">
+                                        {selectedTool.globalPaths.map((path, index) => (
+                                            <div key={index} className="flex items-center gap-2 bg-base-300 rounded-lg p-2">
+                                                <p className="text-sm text-base-content/80 font-mono flex-1 break-all">
+                                                    {path}
+                                                </p>
+                                                <button
+                                                    className="btn btn-ghost btn-sm btn-square"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        openDirectory(path);
+                                                    }}
+                                                    title="Open Directory"
+                                                >
+                                                    <ExternalLink className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             )}

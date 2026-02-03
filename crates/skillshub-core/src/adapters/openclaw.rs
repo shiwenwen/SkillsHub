@@ -24,21 +24,14 @@ impl OpenClawAdapter {
         }
     }
 
-    fn default_path() -> Option<PathBuf> {
-        // First check for the standard workspace path: ~/.openclaw/workspace/skills/
-        if let Some(home) = dirs::home_dir() {
-            let workspace_path = home.join(".openclaw").join("workspace").join("skills");
-            if workspace_path.exists() {
-                return Some(workspace_path);
-            }
-        }
+    /// Get the workspace path: ~/.openclaw/workspace/skills/
+    fn workspace_path() -> Option<PathBuf> {
+        dirs::home_dir().map(|home| home.join(".openclaw").join("workspace").join("skills"))
+    }
 
-        // Try to detect OpenClaw installation path by running `which openclaw`
-        // OpenClaw is typically installed globally via npm, so paths may vary:
-        // - ~/.nvm/versions/node/v22.22.0/lib/node_modules/openclaw/skills/
-        // - /usr/local/lib/node_modules/openclaw/skills/
-        // - Other Node version manager paths
-
+    /// Detect OpenClaw installation path by running `which openclaw`
+    /// Returns path like: ~/.nvm/versions/node/v22.22.0/lib/node_modules/openclaw/skills/
+    fn detect_install_skills_path() -> Option<PathBuf> {
         Command::new("which")
             .arg("openclaw")
             .output()
@@ -69,6 +62,11 @@ impl OpenClawAdapter {
                 None
             })
     }
+
+    /// Get primary path (workspace path - for writing)
+    fn primary_path(&self) -> Option<PathBuf> {
+        self.custom_path.clone().or_else(Self::workspace_path)
+    }
 }
 
 impl Default for OpenClawAdapter {
@@ -93,18 +91,44 @@ impl ToolAdapter for OpenClawAdapter {
 
     fn skills_dir(&self) -> Result<PathBuf> {
         let path = self
-            .custom_path
-            .clone()
-            .or_else(Self::default_path)
+            .primary_path()
             .ok_or_else(|| crate::error::Error::ToolNotFound("OpenClaw".to_string()))?;
 
         std::fs::create_dir_all(&path)?;
         Ok(path)
     }
 
+    /// Get all skills directories (workspace + installation path)
+    fn skills_dirs(&self) -> Vec<PathBuf> {
+        let mut dirs = Vec::new();
+
+        // 1. Custom path (if set)
+        if let Some(ref custom) = self.custom_path {
+            if custom.exists() {
+                dirs.push(custom.clone());
+            }
+        }
+
+        // 2. Workspace path: ~/.openclaw/workspace/skills/
+        if let Some(workspace) = Self::workspace_path() {
+            if workspace.exists() && !dirs.contains(&workspace) {
+                dirs.push(workspace);
+            }
+        }
+
+        // 3. Installation path (NPM global)
+        if let Some(install_path) = Self::detect_install_skills_path() {
+            if !dirs.contains(&install_path) {
+                dirs.push(install_path);
+            }
+        }
+
+        dirs
+    }
+
     fn config_dir(&self) -> Option<PathBuf> {
-        // OpenClaw might have a config directory, but it's unclear from the info provided
-        // This can be updated if OpenClaw has a specific config directory
-        None
+        // OpenClaw config directory
+        dirs::home_dir().map(|home| home.join(".openclaw"))
     }
 }
+

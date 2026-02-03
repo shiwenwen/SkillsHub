@@ -36,6 +36,7 @@ pub struct ToolInfo {
     pub tool_type: String,
     pub detected: bool,
     pub skills_dir: Option<String>,
+    pub skills_dirs: Vec<String>,  // All skills directories (for tools with multiple paths)
     pub skill_count: usize,
 }
 
@@ -365,24 +366,35 @@ pub async fn list_tools() -> Result<Vec<ToolInfo>, String> {
         .map(|adapter| {
             let detected = adapter.detect();
             let skills_dir = adapter.skills_dir().ok();
-            let skill_count = skills_dir
-                .as_ref()
-                .and_then(|dir| {
-                    std::fs::read_dir(dir).ok().map(|entries| {
-                        entries
-                            .filter_map(|e| e.ok())
-                            .filter(|e| e.path().is_dir())
-                            .count()
-                    })
-                })
-                .unwrap_or(0);
+            
+            // Get all skills directories (for tools with multiple paths like OpenClaw)
+            let all_dirs = adapter.skills_dirs();
+            let skills_dirs: Vec<String> = all_dirs
+                .iter()
+                .map(|p| p.display().to_string())
+                .collect();
+            
+            // Count skills across all directories (avoiding duplicates by skill name)
+            let mut skill_names = std::collections::HashSet::new();
+            for dir in &all_dirs {
+                if let Ok(entries) = std::fs::read_dir(dir) {
+                    for entry in entries.filter_map(|e| e.ok()) {
+                        if entry.path().is_dir() {
+                            if let Some(name) = entry.path().file_name() {
+                                skill_names.insert(name.to_string_lossy().to_string());
+                            }
+                        }
+                    }
+                }
+            }
 
             ToolInfo {
                 name: adapter.tool_type().display_name().to_string(),
                 tool_type: format!("{:?}", adapter.tool_type()).to_lowercase(),
                 detected,
                 skills_dir: skills_dir.map(|p| p.display().to_string()),
-                skill_count,
+                skills_dirs,
+                skill_count: skill_names.len(),
             }
         })
         .collect())
@@ -934,4 +946,31 @@ pub async fn cloud_sync_full() -> Result<CloudSyncResponse, String> {
     config.save().map_err(|e| e.to_string())?;
 
     Ok(result.into())
+}
+
+/// Open a directory in the system file manager
+#[tauri::command]
+pub async fn open_directory(path: String) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(&path)
+            .spawn()
+            .map_err(|e| format!("Failed to open directory: {}", e))?;
+    }
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("explorer")
+            .arg(&path)
+            .spawn()
+            .map_err(|e| format!("Failed to open directory: {}", e))?;
+    }
+    #[cfg(target_os = "linux")]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(&path)
+            .spawn()
+            .map_err(|e| format!("Failed to open directory: {}", e))?;
+    }
+    Ok(())
 }

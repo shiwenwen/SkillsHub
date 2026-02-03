@@ -51,6 +51,8 @@ pub fn run() {
             cloud_sync_push,
             cloud_sync_pull,
             cloud_sync_full,
+            // Utility commands
+            open_directory,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

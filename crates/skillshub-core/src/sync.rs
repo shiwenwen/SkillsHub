@@ -443,7 +443,8 @@ impl SyncEngine {
         let hub_skills = self.get_hub_skill_ids();
 
         for adapter in &self.adapters {
-            if let Ok(skills_dir) = adapter.skills_dir() {
+            // Use skills_dirs() to scan multiple directories per tool
+            for skills_dir in adapter.skills_dirs() {
                 if skills_dir.exists() {
                     if let Ok(entries) = fs::read_dir(&skills_dir) {
                         for entry in entries.flatten() {
@@ -453,6 +454,12 @@ impl SyncEngine {
                                     let skill_id = name.to_string_lossy().to_string();
                                     // Skip hidden directories
                                     if skill_id.starts_with('.') {
+                                        continue;
+                                    }
+                                    // Avoid duplicates (same skill from multiple paths)
+                                    if all_skills.iter().any(|s: &ScannedSkill| {
+                                        s.id == skill_id && s.tool == adapter.tool_type()
+                                    }) {
                                         continue;
                                     }
                                     all_skills.push(ScannedSkill {

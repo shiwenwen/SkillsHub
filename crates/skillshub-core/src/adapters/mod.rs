@@ -51,8 +51,15 @@ pub trait ToolAdapter: Send + Sync {
     /// Detect if the tool is installed
     fn detect(&self) -> bool;
 
-    /// Get the skills directory for this tool
+    /// Get the primary skills directory for this tool (used for syncing/writing)
     fn skills_dir(&self) -> Result<PathBuf>;
+
+    /// Get all skills directories for this tool (used for scanning)
+    /// Some tools may have multiple directories (e.g., workspace + installation path)
+    /// By default, returns only the primary skills_dir
+    fn skills_dirs(&self) -> Vec<PathBuf> {
+        self.skills_dir().into_iter().collect()
+    }
 
     /// Get custom configuration directory if any
     fn config_dir(&self) -> Option<PathBuf> {
