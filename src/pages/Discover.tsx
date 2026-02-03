@@ -12,6 +12,15 @@ interface SkillListing {
     version: string;
     downloads: number;
     rating: number;
+    source: string;
+}
+
+interface RegistryConfig {
+    name: string;
+    url: string;
+    description: string;
+    enabled: boolean;
+    registry_type: string;
 }
 
 export default function Discover() {
@@ -26,7 +35,39 @@ export default function Discover() {
     const [installingSkills, setInstallingSkills] = useState<Set<string>>(new Set());
     const [installedSkills, setInstalledSkills] = useState<Set<string>>(new Set());
 
+    // Filtering
+    const [registries, setRegistries] = useState<RegistryConfig[]>([]);
+    const [selectedSource, setSelectedSource] = useState<string>("all");
+
     const PAGE_SIZE = 20;
+
+    // 获取 Skill 的源
+
+
+    // Filtered results
+    const filteredResults = results.filter(skill => {
+        if (selectedSource === "all") return true;
+
+        // Check if skill source matches selected registry
+        const skillSource = skill.source;
+
+        // Get selected registry
+        const registry = registries.find(r => r.name === selectedSource);
+        if (!registry) return true;
+
+        // Logic to match skill source to registry
+        // 1. Git match
+        if (registry.registry_type === "Git") {
+            return skillSource === `git:${registry.url}`;
+        }
+        // 2. ClawHub/Registry match
+        if (registry.registry_type === "ClawHub") {
+            // ClawHub skills start with registry:https://auth.clawdhub.com...
+            return skillSource.includes("clawdhub") || skillSource.includes("clawhub");
+        }
+
+        return true;
+    });
 
     // 安装 Skill
     const handleInstall = async (skillId: string) => {
@@ -122,7 +163,21 @@ export default function Discover() {
     // 初始加载
     useEffect(() => {
         loadSkills("", 0, false);
+
+        // Load registries
+        invoke<RegistryConfig[]>("list_registries")
+            .then(setRegistries)
+            .catch(console.error);
+
     }, [loadSkills]);
+
+    // 切换源时刷新
+    useEffect(() => {
+        // Reset page and reload when source changes
+        setPage(0);
+        setHasMore(true);
+        loadSkills(query, 0, false);
+    }, [selectedSource]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // 搜索处理
     async function handleSearch() {
@@ -168,7 +223,7 @@ export default function Discover() {
                 </p>
             </div>
 
-            {/* Search */}
+            {/* Search and Filter */}
             <div className="card bg-base-200 p-6">
                 <div className="flex gap-4">
                     <div className="join flex-1">
@@ -188,6 +243,18 @@ export default function Discover() {
                             <Search className="w-5 h-5" />
                         </button>
                     </div>
+                    <select
+                        className="select select-bordered w-full max-w-xs"
+                        value={selectedSource}
+                        onChange={(e) => setSelectedSource(e.target.value)}
+                    >
+                        <option value="all">Check All</option>
+                        {registries.map(r => (
+                            <option key={r.name} value={r.name}>
+                                {r.name}
+                            </option>
+                        ))}
+                    </select>
                 </div>
             </div>
 
@@ -196,7 +263,7 @@ export default function Discover() {
                 <div className="flex justify-center py-12">
                     <span className="loading loading-spinner loading-lg text-primary"></span>
                 </div>
-            ) : results.length === 0 ? (
+            ) : filteredResults.length === 0 ? (
                 <div className="card bg-base-200">
                     <div className="card-body items-center text-center py-12">
                         <Package className="w-16 h-16 text-base-content/30" />
@@ -208,7 +275,7 @@ export default function Discover() {
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {results.map((skill) => (
+                    {filteredResults.map((skill) => (
                         <div
                             key={skill.id}
                             className="card bg-base-200 hover:bg-base-300 transition-colors"

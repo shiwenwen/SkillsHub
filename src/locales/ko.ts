@@ -57,6 +57,7 @@ export const ko: Translations = {
     discover: {
         title: "Skills 탐색",
         description: "레지스트리에서 Skills 검색 및 설치",
+        source: "소스",
         searchPlaceholder: "Skills 검색...",
         searchForSkills: "Skills 검색",
         searchHint: "검색어를 입력하거나 태그로 탐색",

@@ -61,6 +61,7 @@ export const zh: Translations = {
     discover: {
         title: "发现 Skills",
         description: "从仓库中查找和安装 Skills",
+        source: "来源",
         searchPlaceholder: "搜索 Skills...",
         searchForSkills: "搜索 Skills",
         searchHint: "输入搜索内容或按标签浏览",

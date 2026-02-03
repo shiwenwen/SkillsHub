@@ -10,7 +10,9 @@ use crate::error::Result;
 use crate::models::{Skill, SkillMetadata, SkillSource, SkillVersion};
 
 pub mod git;
+pub mod clawhub;
 pub use git::GitRegistry;
+pub use clawhub::ClawHubRegistry;
 
 /// Registry configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -43,6 +45,8 @@ pub enum RegistryType {
     Local,
     /// Curated/official registry
     Curated,
+    /// ClawHub registry
+    ClawHub,
 }
 
 /// A skill listing from the registry
@@ -147,6 +151,7 @@ impl RegistryManager {
                 &config.name,
                 PathBuf::from(&config.url),
             ))),
+            RegistryType::ClawHub => Some(Box::new(ClawHubRegistry::new(&config.name))),
             _ => None, // TODO: Implement others
         }
     }
@@ -166,6 +171,15 @@ impl RegistryManager {
 
     fn default_registries() -> Vec<RegistryConfig> {
         vec![
+            RegistryConfig {
+                name: "clawhub".to_string(),
+                url: "https://www.clawhub.com".to_string(), // URL is for display/reference, API URL hardcoded in impl for now
+                branch: None,
+                description: Some("Official ClawHub Skills Registry".to_string()),
+                enabled: true,
+                registry_type: RegistryType::ClawHub,
+                tags: vec!["official".to_string(), "clawhub".to_string()],
+            },
             RegistryConfig {
                 name: "anthropics".to_string(),
                 url: "https://github.com/anthropics/skills".to_string(),

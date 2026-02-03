@@ -59,6 +59,7 @@ export const en = {
     discover: {
         title: "Discover Skills",
         description: "Find and install skills from registries",
+        source: "Source",
         searchPlaceholder: "Search skills...",
         searchForSkills: "Search for Skills",
         searchHint: "Enter a search query or browse by tags",

@@ -57,6 +57,7 @@ export const ja: Translations = {
     discover: {
         title: "Skills を探索",
         description: "レジストリから Skills を検索してインストール",
+        source: "ソース",
         searchPlaceholder: "Skills を検索...",
         searchForSkills: "Skills を検索",
         searchHint: "検索キーワードを入力するか、タグで閲覧",

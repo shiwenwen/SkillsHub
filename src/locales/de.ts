@@ -55,8 +55,9 @@ export const de: Translations = {
     },
 
     discover: {
-        title: "Skills entdecken",
-        description: "Skills aus Registries suchen und installieren",
+        title: "Skills Entdecken",
+        description: "Finden und installieren Sie Skills aus Registern",
+        source: "Quelle",
         searchPlaceholder: "Skills suchen...",
         searchForSkills: "Skills suchen",
         searchHint: "Suchbegriff eingeben oder nach Tags durchsuchen",

@@ -57,6 +57,7 @@ export const ru: Translations = {
     discover: {
         title: "Обзор Skills",
         description: "Поиск и установка Skills из реестров",
+        source: "Источник",
         searchPlaceholder: "Поиск Skills...",
         searchForSkills: "Поиск Skills",
         searchHint: "Введите запрос или просматривайте по тегам",

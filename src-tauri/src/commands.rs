@@ -24,6 +24,10 @@ pub struct SkillInfo {
     pub installed_at: String,
     pub scan_passed: bool,
     pub synced_tools: Vec<String>,
+    pub author: Option<String>,
+    pub tags: Vec<String>,
+    pub downloads: Option<u64>,
+    pub rating: Option<f32>,
 }
 
 #[derive(Debug, Serialize)]
@@ -71,6 +75,7 @@ pub async fn list_installed_skills() -> Result<Vec<SkillInfo>, String> {
     Ok(installed
         .into_iter()
         .map(|r| SkillInfo {
+
             id: r.skill_id.clone(),
             name: r.skill_id.clone(),
             version: r.version.version.clone(),
@@ -79,6 +84,10 @@ pub async fn list_installed_skills() -> Result<Vec<SkillInfo>, String> {
             installed_at: r.installed_at.clone(),
             scan_passed: r.scan_passed,
             synced_tools: r.projected_tools.clone(),
+            author: None, // Installed record currently lacks author metadata storage in simple list, would need to load full skill
+            tags: Vec::new(),
+            downloads: None,
+            rating: None,
         })
         .collect())
 }
@@ -91,6 +100,7 @@ pub async fn get_skill_info(skill_id: String) -> Result<SkillInfo, String> {
         .ok_or_else(|| format!("Skill '{}' not found", skill_id))?;
 
     Ok(SkillInfo {
+
         id: record.skill_id.clone(),
         name: record.skill_id.clone(),
         version: record.version.version.clone(),
@@ -99,6 +109,10 @@ pub async fn get_skill_info(skill_id: String) -> Result<SkillInfo, String> {
         installed_at: record.installed_at.clone(),
         scan_passed: record.scan_passed,
         synced_tools: record.projected_tools.clone(),
+        author: None, // TODO: Load from SKILL.md if possible
+        tags: Vec::new(),
+        downloads: None,
+        rating: None,
     })
 }
 
@@ -412,6 +426,10 @@ pub async fn search_skills(query: String) -> Result<Vec<SkillInfo>, String> {
             installed_at: String::new(),
             scan_passed: false,
             synced_tools: Vec::new(),
+            author: l.author,
+            tags: l.tags,
+            downloads: l.downloads,
+            rating: l.rating,
         })
         .collect())
 }
