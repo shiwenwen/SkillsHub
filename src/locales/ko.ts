@@ -51,6 +51,7 @@ export const ko: Translations = {
         skillsCanUpdate: "개의 Skills 업데이트 가능",
         syncing: "동기화 중...",
         fullSync: "전체 동기화",
+        searchPlaceholder: "Skills 검색...",
     },
 
     discover: {

@@ -52,6 +52,7 @@ export const en = {
         skillsCanUpdate: "skills can be updated",
         syncing: "Syncing...",
         fullSync: "Full Sync",
+        searchPlaceholder: "Search Skills...",
     },
 
     // 发现页面

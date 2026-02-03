@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Package, RefreshCw, Puzzle, Database, FolderSync, Link2, ArrowUpCircle, Check } from "lucide-react";
+import { Package, RefreshCw, Puzzle, Database, FolderSync, Link2, ArrowUpCircle, Check, Search } from "lucide-react";
 import { useTranslation } from "../i18n";
 import { useUpdateCheck } from "../hooks/useUpdateCheck";
 
@@ -50,6 +50,7 @@ export default function Installed() {
     const [syncing, setSyncing] = useState(false);
     const [activeTab, setActiveTab] = useState<"hub" | "scanned" | "plugins">("hub");
     const [toast, setToast] = useState<{ type: "success" | "error" | "info"; message: string } | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
 
     // 更新检查
     const {
@@ -167,6 +168,20 @@ export default function Installed() {
                 </div>
             </div>
 
+            {/* Search Bar */}
+            <div className="form-control">
+                <div className="relative">
+                    <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-base-content/50" />
+                    <input
+                        type="text"
+                        placeholder={t.installed.searchPlaceholder || "搜索 Skills..."}
+                        className="input input-bordered w-full pl-10"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+            </div>
+
             {/* Stats */}
             <div className="stats shadow bg-base-200 w-full">
                 <div className="stat">
@@ -275,44 +290,48 @@ export default function Installed() {
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {hubStatus.map((skill) => (
-                                        <div key={skill.skill_id} className="card bg-base-200 hover:bg-base-300 transition-colors">
-                                            <div className="card-body">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                                                        <Database className="w-6 h-6 text-primary" />
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <h3 className="font-bold truncate">{skill.skill_id}</h3>
-                                                        <p className="text-xs text-base-content/50 truncate">{skill.hub_path}</p>
-                                                    </div>
-                                                </div>
-
-                                                <div className="mt-3">
-                                                    <p className="text-xs text-base-content/60 mb-1">已同步到:</p>
-                                                    <div className="flex flex-wrap gap-1">
-                                                        {skill.synced_to.map((tool) => (
-                                                            <span key={tool} className="badge badge-success badge-sm">{tool}</span>
-                                                        ))}
-                                                        {skill.synced_to.length === 0 && (
-                                                            <span className="text-xs text-base-content/40">无</span>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                {skill.missing_in.length > 0 && (
-                                                    <div className="mt-2">
-                                                        <p className="text-xs text-base-content/60 mb-1">缺失于:</p>
-                                                        <div className="flex flex-wrap gap-1">
-                                                            {skill.missing_in.map((tool) => (
-                                                                <span key={tool} className="badge badge-warning badge-sm badge-outline">{tool}</span>
-                                                            ))}
+                                    {hubStatus
+                                        .filter((skill) =>
+                                            skill.skill_id.toLowerCase().includes(searchQuery.toLowerCase())
+                                        )
+                                        .map((skill) => (
+                                            <div key={skill.skill_id} className="card bg-base-200 hover:bg-base-300 transition-colors">
+                                                <div className="card-body">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                                                            <Database className="w-6 h-6 text-primary" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <h3 className="font-bold truncate">{skill.skill_id}</h3>
+                                                            <p className="text-xs text-base-content/50 truncate">{skill.hub_path}</p>
                                                         </div>
                                                     </div>
-                                                )}
+
+                                                    <div className="mt-3">
+                                                        <p className="text-xs text-base-content/60 mb-1">已同步到:</p>
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {skill.synced_to.map((tool) => (
+                                                                <span key={tool} className="badge badge-success badge-sm">{tool}</span>
+                                                            ))}
+                                                            {skill.synced_to.length === 0 && (
+                                                                <span className="text-xs text-base-content/40">无</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {skill.missing_in.length > 0 && (
+                                                        <div className="mt-2">
+                                                            <p className="text-xs text-base-content/60 mb-1">缺失于:</p>
+                                                            <div className="flex flex-wrap gap-1">
+                                                                {skill.missing_in.map((tool) => (
+                                                                    <span key={tool} className="badge badge-warning badge-sm badge-outline">{tool}</span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))}
                                 </div>
                             )}
                         </>
@@ -333,39 +352,43 @@ export default function Installed() {
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {uniqueScannedSkills.map((skill) => (
-                                        <div key={skill.id} className="card bg-base-200 hover:bg-base-300 transition-colors">
-                                            <div className="card-body">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary/20 to-accent/20 flex items-center justify-center">
-                                                        <Package className="w-6 h-6 text-secondary" />
+                                    {uniqueScannedSkills
+                                        .filter((skill) =>
+                                            skill.id.toLowerCase().includes(searchQuery.toLowerCase())
+                                        )
+                                        .map((skill) => (
+                                            <div key={skill.id} className="card bg-base-200 hover:bg-base-300 transition-colors">
+                                                <div className="card-body">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary/20 to-accent/20 flex items-center justify-center">
+                                                            <Package className="w-6 h-6 text-secondary" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <h3 className="font-bold truncate">{skill.id}</h3>
+                                                            <p className="text-xs text-base-content/50">
+                                                                {skill.in_hub ? (
+                                                                    <span className="text-success">✓ 在 Hub 中</span>
+                                                                ) : (
+                                                                    <span className="text-warning">⚠ 不在 Hub 中</span>
+                                                                )}
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <h3 className="font-bold truncate">{skill.id}</h3>
-                                                        <p className="text-xs text-base-content/50">
-                                                            {skill.in_hub ? (
-                                                                <span className="text-success">✓ 在 Hub 中</span>
-                                                            ) : (
-                                                                <span className="text-warning">⚠ 不在 Hub 中</span>
-                                                            )}
-                                                        </p>
-                                                    </div>
-                                                </div>
 
-                                                <div className="mt-3">
-                                                    <p className="text-xs text-base-content/60 mb-1">存在于:</p>
-                                                    <div className="flex flex-wrap gap-1">
-                                                        {skill.tools.map((t, idx) => (
-                                                            <span key={idx} className="badge badge-outline badge-sm gap-1">
-                                                                {t.is_link && <Link2 className="w-3 h-3" />}
-                                                                {t.tool}
-                                                            </span>
-                                                        ))}
+                                                    <div className="mt-3">
+                                                        <p className="text-xs text-base-content/60 mb-1">存在于:</p>
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {skill.tools.map((t, idx) => (
+                                                                <span key={idx} className="badge badge-outline badge-sm gap-1">
+                                                                    {t.is_link && <Link2 className="w-3 h-3" />}
+                                                                    {t.tool}
+                                                                </span>
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))}
                                 </div>
                             )}
                         </>
@@ -386,30 +409,35 @@ export default function Installed() {
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {pluginSkills.map((skill) => (
-                                        <div key={skill.id} className="card bg-base-200 hover:bg-base-300 transition-colors">
-                                            <div className="card-body">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center">
-                                                        <Puzzle className="w-6 h-6 text-accent" />
+                                    {pluginSkills
+                                        .filter((skill) =>
+                                            skill.skill_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                            skill.plugin_name.toLowerCase().includes(searchQuery.toLowerCase())
+                                        )
+                                        .map((skill) => (
+                                            <div key={skill.id} className="card bg-base-200 hover:bg-base-300 transition-colors">
+                                                <div className="card-body">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center">
+                                                            <Puzzle className="w-6 h-6 text-accent" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <h3 className="font-bold truncate">{skill.skill_name}</h3>
+                                                            <p className="text-sm text-base-content/60 truncate">{skill.plugin_name}</p>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <h3 className="font-bold truncate">{skill.skill_name}</h3>
-                                                        <p className="text-sm text-base-content/60 truncate">{skill.plugin_name}</p>
+
+                                                    <div className="text-xs text-base-content/50 mt-2 truncate">
+                                                        {skill.skill_path}
                                                     </div>
-                                                </div>
 
-                                                <div className="text-xs text-base-content/50 mt-2 truncate">
-                                                    {skill.skill_path}
-                                                </div>
-
-                                                <div className="flex flex-wrap gap-2 mt-3">
-                                                    <span className="badge badge-accent badge-sm">{skill.marketplace}</span>
-                                                    <span className="badge badge-outline badge-sm">v{skill.version.substring(0, 7)}</span>
+                                                    <div className="flex flex-wrap gap-2 mt-3">
+                                                        <span className="badge badge-accent badge-sm">{skill.marketplace}</span>
+                                                        <span className="badge badge-outline badge-sm">v{skill.version.substring(0, 7)}</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))}
                                 </div>
                             )}
                         </>

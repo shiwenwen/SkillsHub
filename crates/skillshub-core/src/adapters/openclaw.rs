@@ -25,6 +25,14 @@ impl OpenClawAdapter {
     }
 
     fn default_path() -> Option<PathBuf> {
+        // First check for the standard workspace path: ~/.openclaw/workspace/skills/
+        if let Some(home) = dirs::home_dir() {
+            let workspace_path = home.join(".openclaw").join("workspace").join("skills");
+            if workspace_path.exists() {
+                return Some(workspace_path);
+            }
+        }
+
         // Try to detect OpenClaw installation path by running `which openclaw`
         // OpenClaw is typically installed globally via npm, so paths may vary:
         // - ~/.nvm/versions/node/v22.22.0/lib/node_modules/openclaw/skills/

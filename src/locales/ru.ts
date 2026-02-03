@@ -51,6 +51,7 @@ export const ru: Translations = {
         skillsCanUpdate: "Skills можно обновить",
         syncing: "Синхронизация...",
         fullSync: "Полная синхронизация",
+        searchPlaceholder: "Поиск Skills...",
     },
 
     discover: {

@@ -51,7 +51,7 @@ const BUILTIN_TOOLS: ToolConfig[] = [
     { id: "kilocode", name: "Kilo Code", globalPath: "~/.kilocode/skills/", projectPath: ".kilocode/skills/", detected: false, hasGlobalPath: true },
     { id: "kimi", name: "Kimi CLI", globalPath: "~/.kimi/skills/", projectPath: ".kimi/skills/", detected: false, hasGlobalPath: true },
     { id: "opencode", name: "OpenCode", globalPath: "~/.config/opencode/skills/", projectPath: ".opencode/skills/", detected: false, hasGlobalPath: true },
-    { id: "openclaw", name: "OpenClaw", globalPath: "", projectPath: ".openclaw/skills/", detected: false, hasGlobalPath: false },
+    { id: "openclaw", name: "OpenClaw", globalPath: "~/.openclaw/workspace/skills/", projectPath: ".openclaw/skills/", detected: false, hasGlobalPath: true },
     { id: "qwen", name: "Qwen Code", globalPath: "~/.qwen/skills/", projectPath: ".qwen/skills/", detected: false, hasGlobalPath: true },
     { id: "roocode", name: "Roo Code", globalPath: "~/.roo/skills/", projectPath: ".roo/skills/", detected: false, hasGlobalPath: true },
     { id: "trae", name: "Trae", globalPath: "", projectPath: ".trae/skills/", detected: false, hasGlobalPath: false },

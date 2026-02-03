@@ -51,6 +51,7 @@ export const ja: Translations = {
         skillsCanUpdate: "個の Skills が更新可能",
         syncing: "同期中...",
         fullSync: "完全同期",
+        searchPlaceholder: "Skills を検索...",
     },
 
     discover: {

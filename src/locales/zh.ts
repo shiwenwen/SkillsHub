@@ -54,6 +54,7 @@ export const zh: Translations = {
         skillsCanUpdate: "个 Skills 可以更新",
         syncing: "同步中...",
         fullSync: "完整同步",
+        searchPlaceholder: "搜索 Skills...",
     },
 
     // 发现页面

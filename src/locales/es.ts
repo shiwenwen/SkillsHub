@@ -51,6 +51,7 @@ export const es: Translations = {
         skillsCanUpdate: "Skills pueden actualizarse",
         syncing: "Sincronizando...",
         fullSync: "Sincronización completa",
+        searchPlaceholder: "Buscar Skills...",
     },
 
     discover: {
