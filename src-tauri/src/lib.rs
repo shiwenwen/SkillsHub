@@ -13,12 +13,15 @@ pub fn run() {
             // Skill commands
             list_installed_skills,
             get_skill_info,
+            get_skill_detail,
             install_skill,
             uninstall_skill,
             update_skill,
             check_skill_updates,
             // Sync commands
             sync_skills,
+            sync_single_skill,
+            toggle_skill_tool_sync,
             check_drift,
             // Scan commands
             scan_skill,

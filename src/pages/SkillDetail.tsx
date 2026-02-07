@@ -7,9 +7,9 @@ import {
     Shield,
     RefreshCw,
     Trash2,
-    Clock,
-    GitBranch,
-    Check,
+    FolderOpen,
+    FileText,
+    Folder,
 } from "lucide-react";
 import { useTranslation } from "../i18n";
 
@@ -53,8 +53,28 @@ interface SecurityScanResult {
     findings: SecurityFinding[];
 }
 
-function normalizeToolIdentifier(value: string): string {
-    return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+interface SkillDetailInfo {
+    id: string;
+    name: string;
+    skill_path: string;
+    skill_md_content: string | null;
+    files: SkillFileInfo[];
+    synced_tools: SyncedToolInfo[];
+}
+
+interface SkillFileInfo {
+    name: string;
+    path: string;
+    is_dir: boolean;
+    size: number;
+}
+
+interface SyncedToolInfo {
+    tool_name: string;
+    tool_type: string;
+    is_synced: boolean;
+    is_link: boolean;
+    path: string | null;
 }
 
 function getRiskBadgeClass(risk: string): string {
@@ -73,6 +93,7 @@ export default function SkillDetail() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [skill, setSkill] = useState<SkillInfo | null>(null);
+    const [skillDetail, setSkillDetail] = useState<SkillDetailInfo | null>(null);
     const [loading, setLoading] = useState(true);
     const [toolsLoading, setToolsLoading] = useState(true);
     const [syncingAll, setSyncingAll] = useState(false);
@@ -83,7 +104,7 @@ export default function SkillDetail() {
     const [scanError, setScanError] = useState<string | null>(null);
     const [scanResult, setScanResult] = useState<SecurityScanResult | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState("overview");
+    const [activeTab, setActiveTab] = useState("readme");
 
     useEffect(() => {
         if (id) {
@@ -103,19 +124,6 @@ export default function SkillDetail() {
         return tools.filter((tool) => tool.detected);
     }, [tools]);
 
-    const syncedToolSet = useMemo(() => {
-        return new Set(
-            (skill?.synced_tools ?? []).map((tool) => normalizeToolIdentifier(tool))
-        );
-    }, [skill]);
-
-    function isToolSynced(tool: ToolInfo): boolean {
-        return (
-            syncedToolSet.has(normalizeToolIdentifier(tool.tool_type)) ||
-            syncedToolSet.has(normalizeToolIdentifier(tool.name))
-        );
-    }
-
     function errorMessage(error: unknown): string {
         if (error instanceof Error) {
             return error.message;
@@ -129,12 +137,34 @@ export default function SkillDetail() {
         }
         setLoading(true);
         try {
-            const result = await invoke<SkillInfo>("get_skill_info", { skillId: id });
-            setSkill(result);
+            const [skillResult, detailResult] = await Promise.all([
+                invoke<SkillInfo>("get_skill_info", { skillId: id }),
+                invoke<SkillDetailInfo>("get_skill_detail", { skillId: id }).catch(() => null),
+            ]);
+            setSkill(skillResult);
+            setSkillDetail(detailResult);
         } catch (error) {
             console.error("Failed to load skill:", error);
         }
         setLoading(false);
+    }
+
+    function formatBytes(bytes: number): string {
+        if (bytes === 0) return "0 B";
+        const k = 1024;
+        const sizes = ["B", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+    }
+
+    async function handleOpenDirectory() {
+        if (skillDetail?.skill_path) {
+            try {
+                await invoke("open_directory", { path: skillDetail.skill_path });
+            } catch (error) {
+                console.error("Failed to open directory:", error);
+            }
+        }
     }
 
     async function loadConfiguredTools() {
@@ -290,6 +320,14 @@ export default function SkillDetail() {
                         <div className="flex gap-2">
                             <button
                                 className="btn btn-ghost btn-sm gap-2"
+                                onClick={() => void handleOpenDirectory()}
+                                disabled={!skillDetail?.skill_path}
+                            >
+                                <FolderOpen className="w-4 h-4" />
+                                {t.settings.openDirectory}
+                            </button>
+                            <button
+                                className="btn btn-ghost btn-sm gap-2"
                                 onClick={() => void handleSyncAll()}
                                 disabled={syncingAll || uninstalling || toolsLoading || configuredTools.length === 0}
                             >
@@ -323,17 +361,17 @@ export default function SkillDetail() {
             <div role="tablist" className="tabs tabs-boxed bg-base-200 p-1">
                 <button
                     role="tab"
-                    className={`tab ${activeTab === "overview" ? "tab-active" : ""}`}
-                    onClick={() => setActiveTab("overview")}
+                    className={`tab ${activeTab === "readme" ? "tab-active" : ""}`}
+                    onClick={() => setActiveTab("readme")}
                 >
-                    {t.skillDetail.overview}
+                    {t.skillDetail.readme}
                 </button>
                 <button
                     role="tab"
-                    className={`tab ${activeTab === "security" ? "tab-active" : ""}`}
-                    onClick={() => setActiveTab("security")}
+                    className={`tab ${activeTab === "files" ? "tab-active" : ""}`}
+                    onClick={() => setActiveTab("files")}
                 >
-                    {t.skillDetail.security}
+                    {t.skillDetail.files}
                 </button>
                 <button
                     role="tab"
@@ -342,59 +380,75 @@ export default function SkillDetail() {
                 >
                     {t.skillDetail.syncStatus}
                 </button>
+                <button
+                    role="tab"
+                    className={`tab ${activeTab === "security" ? "tab-active" : ""}`}
+                    onClick={() => setActiveTab("security")}
+                >
+                    {t.skillDetail.security}
+                </button>
             </div>
 
             {/* Tab Content */}
-            {activeTab === "overview" && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="card bg-base-200">
-                        <div className="card-body">
-                            <h3 className="card-title">{t.skillDetail.details}</h3>
-                            <div className="space-y-4 mt-4">
-                                <div className="flex items-center gap-3">
-                                    <GitBranch className="w-5 h-5 text-base-content/60" />
-                                    <div>
-                                        <p className="text-sm text-base-content/60">{t.skillDetail.source}</p>
-                                        <p className="font-mono text-sm">{skill.source}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <Clock className="w-5 h-5 text-base-content/60" />
-                                    <div>
-                                        <p className="text-sm text-base-content/60">{t.skillDetail.installed}</p>
-                                        <p>{new Date(parseInt(skill.installed_at) * 1000).toLocaleString()}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="card bg-base-200">
-                        <div className="card-body">
-                            <h3 className="card-title">{t.skillDetail.syncedTools}</h3>
-                            {skill.synced_tools.length > 0 ? (
-                                <div className="space-y-2 mt-4">
-                                    {skill.synced_tools.map((tool) => (
-                                        <div
-                                            key={tool}
-                                            className="flex items-center justify-between p-3 bg-base-300 rounded-lg"
-                                        >
-                                            <span>{tool}</span>
-                                            <Check className="w-4 h-4 text-success" />
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="text-base-content/60 mt-4">
-                                    {t.skillDetail.notSyncedToAny}
-                                </p>
-                            )}
-                        </div>
+            {activeTab === "readme" && (
+                <div className="card bg-base-200">
+                    <div className="card-body">
+                        <h3 className="card-title">{t.skillDetail.readme}</h3>
+                        {skillDetail?.skill_md_content ? (
+                            <pre className="mt-4 p-4 bg-base-300 rounded-lg overflow-auto text-sm whitespace-pre-wrap font-mono max-h-[500px]">
+                                {skillDetail.skill_md_content}
+                            </pre>
+                        ) : (
+                            <p className="text-base-content/60 mt-4">
+                                {t.skillDetail.noReadme}
+                            </p>
+                        )}
                     </div>
                 </div>
             )}
 
-            {activeTab === "security" && (
+            {activeTab === "files" && (
+                <div className="card bg-base-200">
+                    <div className="card-body">
+                        <h3 className="card-title">{t.skillDetail.files}</h3>
+                        {skillDetail?.files && skillDetail.files.length > 0 ? (
+                            <div className="overflow-x-auto mt-4">
+                                <table className="table">
+                                    <thead>
+                                        <tr>
+                                            <th>{t.common.name}</th>
+                                            <th>{t.common.size}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {skillDetail.files.map((file) => (
+                                            <tr key={file.path}>
+                                                <td className="flex items-center gap-2">
+                                                    {file.is_dir ? (
+                                                        <Folder className="w-4 h-4 text-warning" />
+                                                    ) : (
+                                                        <FileText className="w-4 h-4 text-base-content/60" />
+                                                    )}
+                                                    <span className="font-mono text-sm">{file.name}</span>
+                                                </td>
+                                                <td className="text-base-content/60">
+                                                    {file.is_dir ? "-" : formatBytes(file.size)}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <p className="text-base-content/60 mt-4">
+                                {t.common.noData}
+                            </p>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {activeTab === "sync" && (
                 <div className="card bg-base-200">
                     <div className="card-body">
                         <div className="flex items-center justify-between gap-2">
@@ -425,8 +479,8 @@ export default function SkillDetail() {
                             <>
                                 <div
                                     className={`alert mt-4 ${scanResult.passed && scanResult.findings.length === 0
-                                            ? "alert-success"
-                                            : "alert-warning"
+                                        ? "alert-success"
+                                        : "alert-warning"
                                         }`}
                                 >
                                     <Shield className="w-5 h-5" />
@@ -495,7 +549,7 @@ export default function SkillDetail() {
                                         </tr>
                                     )}
 
-                                    {!toolsLoading && configuredTools.length === 0 && (
+                                    {!toolsLoading && (!skillDetail?.synced_tools || skillDetail.synced_tools.length === 0) && (
                                         <tr>
                                             <td colSpan={4} className="text-center text-base-content/60 py-8">
                                                 {t.skillDetail.notSyncedToAny}
@@ -503,18 +557,18 @@ export default function SkillDetail() {
                                         </tr>
                                     )}
 
-                                    {!toolsLoading &&
-                                        configuredTools.map((tool) => (
+                                    {!toolsLoading && skillDetail?.synced_tools &&
+                                        skillDetail.synced_tools.map((tool) => (
                                             <tr key={tool.tool_type}>
-                                                <td>{tool.name}</td>
+                                                <td>{tool.tool_name}</td>
                                                 <td>
-                                                    {isToolSynced(tool) ? (
+                                                    {tool.is_synced ? (
                                                         <span className="badge badge-success">{t.skillDetail.synced}</span>
                                                     ) : (
                                                         <span className="badge badge-ghost">{t.skillDetail.notSynced}</span>
                                                     )}
                                                 </td>
-                                                <td>{t.skillDetail.autoLink}</td>
+                                                <td>{tool.is_link ? t.skillDetail.autoLink : "Copy"}</td>
                                                 <td>
                                                     <button
                                                         className="btn btn-ghost btn-xs"
@@ -527,8 +581,8 @@ export default function SkillDetail() {
                                                     >
                                                         <RefreshCw
                                                             className={`w-3 h-3 ${refreshingTool === tool.tool_type
-                                                                    ? "animate-spin"
-                                                                    : ""
+                                                                ? "animate-spin"
+                                                                : ""
                                                                 }`}
                                                         />
                                                     </button>

@@ -13,6 +13,7 @@ export const ja: Translations = {
         installing: "インストール中...",
         uninstall: "アンインストール",
         sync: "同期",
+        syncing: "同期中...",
         refresh: "更新",
         search: "検索",
         loading: "読み込み中...",
@@ -20,6 +21,10 @@ export const ja: Translations = {
         detected: "検出済み",
         notFound: "見つかりません",
         popular: "人気",
+        name: "名前",
+        size: "サイズ",
+        noData: "データなし",
+        error: "エラー",
     },
 
     nav: {
@@ -156,6 +161,7 @@ export const ja: Translations = {
         autoSyncOnInstall: "インストール時に自動同期",
         checkUpdatesOnStartup: "起動時にアップデートを確認",
         storage: "ストレージ",
+        openDirectory: "ディレクトリを開く",
         localStoreLocation: "ローカルストア場所",
         storageUsed: "使用容量",
         skillsStored: "保存 Skills 数",

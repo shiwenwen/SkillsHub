@@ -14,6 +14,7 @@ export const zh: Translations = {
         installing: "安装中...",
         uninstall: "卸载",
         sync: "同步",
+        syncing: "同步中...",
         refresh: "刷新",
         search: "搜索",
         loading: "加载中...",
@@ -21,6 +22,10 @@ export const zh: Translations = {
         detected: "已检测",
         notFound: "未找到",
         popular: "热门",
+        name: "名称",
+        size: "大小",
+        noData: "暂无数据",
+        error: "错误",
     },
 
     // 导航
@@ -163,6 +168,7 @@ export const zh: Translations = {
         autoSyncOnInstall: "安装时自动同步",
         checkUpdatesOnStartup: "启动时检查更新",
         storage: "存储",
+        openDirectory: "打开目录",
         localStoreLocation: "本地存储位置",
         storageUsed: "已用空间",
         skillsStored: "存储 Skills 数",

@@ -13,6 +13,7 @@ export const ko: Translations = {
         installing: "설치 중...",
         uninstall: "제거",
         sync: "동기화",
+        syncing: "동기화 중...",
         refresh: "새로고침",
         search: "검색",
         loading: "로딩 중...",
@@ -20,6 +21,10 @@ export const ko: Translations = {
         detected: "감지됨",
         notFound: "찾을 수 없음",
         popular: "인기",
+        name: "이름",
+        size: "크기",
+        noData: "데이터 없음",
+        error: "오류",
     },
 
     nav: {
@@ -156,6 +161,7 @@ export const ko: Translations = {
         autoSyncOnInstall: "설치 시 자동 동기화",
         checkUpdatesOnStartup: "시작 시 업데이트 확인",
         storage: "저장소",
+        openDirectory: "디렉토리 열기",
         localStoreLocation: "로컬 저장 위치",
         storageUsed: "사용 용량",
         skillsStored: "저장된 Skills 수",

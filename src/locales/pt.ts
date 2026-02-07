@@ -13,6 +13,7 @@ export const pt: Translations = {
         installing: "Instalando...",
         uninstall: "Desinstalar",
         sync: "Sincronizar",
+        syncing: "Sincronizando...",
         refresh: "Atualizar",
         search: "Buscar",
         loading: "Carregando...",
@@ -20,6 +21,10 @@ export const pt: Translations = {
         detected: "Detectado",
         notFound: "Não encontrado",
         popular: "Popular",
+        name: "Nome",
+        size: "Tamanho",
+        noData: "Sem dados",
+        error: "Erro",
     },
 
     nav: {
@@ -156,6 +161,7 @@ export const pt: Translations = {
         autoSyncOnInstall: "Auto-sync ao instalar",
         checkUpdatesOnStartup: "Verificar atualizações ao iniciar",
         storage: "Armazenamento",
+        openDirectory: "Abrir diretório",
         localStoreLocation: "Local de armazenamento",
         storageUsed: "Armazenamento usado",
         skillsStored: "Skills armazenados",

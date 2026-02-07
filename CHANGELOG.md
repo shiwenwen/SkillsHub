@@ -32,6 +32,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 后端新增 `get_store_info` 命令，动态获取存储路径和统计信息
   - 前端从后端获取实际存储路径（macOS: `~/Library/Application Support/skillshub/store`，Linux: `~/.local/share/skillshub/store`，Windows: `AppData/Local/skillshub/store`）
   - 存储位置旁的文件夹按钮现在可以打开对应目录
+- **Skill 详情弹窗功能：**
+  - 新增 `SkillDetailModal` 组件，点击已安装 Skill 卡片可查看详情
+  - 显示 SKILL.md 原始内容，支持预览技能说明文档
+  - 列出技能目录下的所有资源文件（名称、大小、类型）
+  - 显示所有工具的同步状态（已同步/未同步），区分 Link/Copy 策略
+  - 支持"打开目录"按钮快速打开技能目录
+  - 支持"同步到所有"按钮一键同步到所有检测到的工具
+  - 支持单独切换每个工具的同步状态
+  - 后端新增 `get_skill_detail`、`sync_single_skill`、`toggle_skill_tool_sync` 命令
+  - 全部 9 种语言国际化翻译适配
 
 ### Added
 - 云端同步功能（iCloud Drive / Google Drive / OneDrive）：

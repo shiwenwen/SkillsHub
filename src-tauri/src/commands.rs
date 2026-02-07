@@ -74,7 +74,37 @@ pub struct SyncResult {
     pub error: Option<String>,
 }
 
-// Skill commands
+// ============================================================================
+// Skill Detail Types
+// ============================================================================
+
+#[derive(Debug, Serialize)]
+pub struct SkillDetailInfo {
+    pub id: String,
+    pub name: String,
+    pub skill_path: String,
+    pub skill_md_content: Option<String>,
+    pub files: Vec<SkillFileInfo>,
+    pub synced_tools: Vec<SyncedToolInfo>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct SkillFileInfo {
+    pub name: String,
+    pub path: String,
+    pub is_dir: bool,
+    pub size: u64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct SyncedToolInfo {
+    pub tool_name: String,
+    pub tool_type: String,
+    pub is_synced: bool,
+    pub is_link: bool,
+    pub path: Option<String>,
+}
+
 
 #[tauri::command]
 pub async fn list_installed_skills() -> Result<Vec<SkillInfo>, String> {
@@ -103,23 +133,142 @@ pub async fn list_installed_skills() -> Result<Vec<SkillInfo>, String> {
 #[tauri::command]
 pub async fn get_skill_info(skill_id: String) -> Result<SkillInfo, String> {
     let store = LocalStore::default_store().map_err(|e| e.to_string())?;
-    let record = store
-        .get_record(&skill_id)
-        .ok_or_else(|| format!("Skill '{}' not found", skill_id))?;
+    
+    // First try to get from installed records
+    if let Some(record) = store.get_record(&skill_id) {
+        return Ok(SkillInfo {
+            id: record.skill_id.clone(),
+            name: record.skill_id.clone(),
+            version: record.version.version.clone(),
+            description: String::new(),
+            source: record.source.display(),
+            installed_at: record.installed_at.clone(),
+            scan_passed: record.scan_passed,
+            synced_tools: record.projected_tools.clone(),
+            author: None,
+            tags: Vec::new(),
+            downloads: None,
+            rating: None,
+        });
+    }
+    
+    // Fall back to checking if skill exists in hub directory (for scanned skills)
+    let skill_path = store.skill_path(&skill_id);
+    if skill_path.exists() {
+        // Get modification time as installed_at
+        let installed_at = skill_path
+            .metadata()
+            .ok()
+            .and_then(|m| m.modified().ok())
+            .map(|t| {
+                t.duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_secs().to_string())
+                    .unwrap_or_default()
+            })
+            .unwrap_or_default();
+        
+        return Ok(SkillInfo {
+            id: skill_id.clone(),
+            name: skill_id.clone(),
+            version: "unknown".to_string(),
+            description: String::new(),
+            source: "scanned".to_string(),
+            installed_at,
+            scan_passed: true,
+            synced_tools: Vec::new(),
+            author: None,
+            tags: Vec::new(),
+            downloads: None,
+            rating: None,
+        });
+    }
+    
+    Err(format!("Skill '{}' not found", skill_id))
+}
 
-    Ok(SkillInfo {
-        id: record.skill_id.clone(),
-        name: record.skill_id.clone(),
-        version: record.version.version.clone(),
-        description: String::new(),
-        source: record.source.display(),
-        installed_at: record.installed_at.clone(),
-        scan_passed: record.scan_passed,
-        synced_tools: record.projected_tools.clone(),
-        author: None, // TODO: Load from SKILL.md if possible
-        tags: Vec::new(),
-        downloads: None,
-        rating: None,
+/// Get detailed skill information including SKILL.md content and files
+#[tauri::command]
+pub async fn get_skill_detail(skill_id: String) -> Result<SkillDetailInfo, String> {
+    let store = LocalStore::default_store().map_err(|e| e.to_string())?;
+    let skill_path = store.skill_path(&skill_id);
+    
+    if !skill_path.exists() {
+        return Err(format!("Skill '{}' not found in store", skill_id));
+    }
+    
+    // Read SKILL.md content if exists
+    let skill_md_path = skill_path.join("SKILL.md");
+    let skill_md_content = if skill_md_path.exists() {
+        std::fs::read_to_string(&skill_md_path).ok()
+    } else {
+        None
+    };
+    
+    // List all files in the skill directory
+    let mut files = Vec::new();
+    if let Ok(entries) = std::fs::read_dir(&skill_path) {
+        for entry in entries.filter_map(|e| e.ok()) {
+            let entry_path = entry.path();
+            let metadata = entry.metadata().ok();
+            files.push(SkillFileInfo {
+                name: entry.file_name().to_string_lossy().to_string(),
+                path: entry_path.display().to_string(),
+                is_dir: entry_path.is_dir(),
+                size: metadata.map(|m| m.len()).unwrap_or(0),
+            });
+        }
+    }
+    // Sort files: directories first, then by name
+    files.sort_by(|a, b| {
+        match (a.is_dir, b.is_dir) {
+            (true, false) => std::cmp::Ordering::Less,
+            (false, true) => std::cmp::Ordering::Greater,
+            _ => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
+        }
+    });
+    
+    // Get sync status for each tool
+    let adapters = create_default_adapters();
+    let mut synced_tools = Vec::new();
+    
+    for adapter in adapters {
+        if adapter.detect() {
+            let tool_name = adapter.tool_type().display_name().to_string();
+            let tool_type = format!("{:?}", adapter.tool_type()).to_lowercase();
+            
+            // Check all skill directories for this tool
+            let tool_dirs = adapter.skills_dirs();
+            let mut is_synced = false;
+            let mut is_link = false;
+            let mut synced_path: Option<String> = None;
+            
+            for dir in tool_dirs {
+                let potential_path = dir.join(&skill_id);
+                if potential_path.exists() {
+                    is_synced = true;
+                    is_link = potential_path.is_symlink();
+                    synced_path = Some(potential_path.display().to_string());
+                    break;
+                }
+            }
+            
+            synced_tools.push(SyncedToolInfo {
+                tool_name,
+                tool_type,
+                is_synced,
+                is_link,
+                path: synced_path,
+            });
+        }
+    }
+    
+    Ok(SkillDetailInfo {
+        id: skill_id.clone(),
+        name: skill_id,
+        skill_path: skill_path.display().to_string(),
+        skill_md_content,
+        files,
+        synced_tools,
     })
 }
 
@@ -366,6 +515,183 @@ pub async fn check_drift() -> Result<Vec<(String, String, String)>, String> {
         .into_iter()
         .map(|(skill, tool, drift)| (skill, tool.to_string(), drift.drift_type.to_string()))
         .collect())
+}
+
+/// Sync a single skill to all detected tools
+#[tauri::command]
+pub async fn sync_single_skill(skill_id: String) -> Result<Vec<SyncResult>, String> {
+    let store = LocalStore::default_store().map_err(|e| e.to_string())?;
+    let mut engine = SyncEngine::new(store);
+    
+    let adapters = create_default_adapters();
+    
+    let config = AppConfig::load_or_default();
+    let strategy = config.default_sync_strategy;
+    
+    let mut results = Vec::new();
+    let mut synced_tools = Vec::new();
+    
+    for adapter in &adapters {
+        if adapter.detect() {
+            let tool = adapter.tool_type();
+            let tool_name = format!("{:?}", tool).to_lowercase();
+            
+            let result = engine.sync_skill(&skill_id, tool, strategy.clone());
+            let success = result.is_ok();
+            if success {
+                synced_tools.push(tool_name.clone());
+            }
+            results.push(SyncResult {
+                skill_id: skill_id.clone(),
+                tool: tool_name,
+                success,
+                error: result.err().map(|e| e.to_string()),
+            });
+        }
+    }
+    
+    // Update projected_tools in the store
+    if !synced_tools.is_empty() {
+        let mut record_store = LocalStore::default_store().map_err(|e| e.to_string())?;
+        if let Some(record) = record_store.get_record(&skill_id) {
+            let mut all_tools: std::collections::HashSet<String> = record
+                .projected_tools
+                .iter()
+                .map(|t| t.to_lowercase())
+                .collect();
+            all_tools.extend(synced_tools.into_iter());
+            let mut projected_tools: Vec<String> = all_tools.into_iter().collect();
+            projected_tools.sort();
+            record_store
+                .update_projected_tools(&skill_id, projected_tools)
+                .map_err(|e| e.to_string())?;
+        }
+    }
+    
+    Ok(results)
+}
+
+/// Toggle sync for a skill to a specific tool
+#[tauri::command]
+pub async fn toggle_skill_tool_sync(
+    skill_id: String,
+    tool_type: String,
+    enable: bool,
+) -> Result<SyncResult, String> {
+    let store = LocalStore::default_store().map_err(|e| e.to_string())?;
+    let skill_path = store.skill_path(&skill_id);
+    
+    if !skill_path.exists() {
+        return Err(format!("Skill '{}' not found in store", skill_id));
+    }
+    
+    let tool = match tool_type.to_lowercase().as_str() {
+        "amp" => ToolType::Amp,
+        "antigravity" => ToolType::Antigravity,
+        "claude" => ToolType::Claude,
+        "codebuddy" => ToolType::CodeBuddy,
+        "codex" => ToolType::Codex,
+        "copilot" => ToolType::Copilot,
+        "cursor" => ToolType::Cursor,
+        "factory" => ToolType::Factory,
+        "gemini" => ToolType::Gemini,
+        "goose" => ToolType::Goose,
+        "kilocode" => ToolType::KiloCode,
+        "kimi" => ToolType::Kimi,
+        "opencode" => ToolType::OpenCode,
+        "openclaw" => ToolType::OpenClaw,
+        "qwen" => ToolType::Qwen,
+        "roocode" => ToolType::RooCode,
+        "trae" => ToolType::Trae,
+        "windsurf" => ToolType::Windsurf,
+        _ => return Err(format!("Unknown tool type: {}", tool_type)),
+    };
+    
+    if enable {
+        // Sync the skill to the tool
+        let mut engine = SyncEngine::new(store);
+        for adapter in create_default_adapters() {
+            engine.register_adapter(adapter);
+        }
+        
+        let config = AppConfig::load_or_default();
+        let strategy = config.default_sync_strategy;
+        
+        let result = engine.sync_skill(&skill_id, tool, strategy);
+        
+        // Update projected_tools
+        if result.is_ok() {
+            let mut record_store = LocalStore::default_store().map_err(|e| e.to_string())?;
+            if let Some(record) = record_store.get_record(&skill_id) {
+                let mut all_tools: std::collections::HashSet<String> = record
+                    .projected_tools
+                    .iter()
+                    .map(|t| t.to_lowercase())
+                    .collect();
+                all_tools.insert(tool_type.to_lowercase());
+                let mut projected_tools: Vec<String> = all_tools.into_iter().collect();
+                projected_tools.sort();
+                record_store
+                    .update_projected_tools(&skill_id, projected_tools)
+                    .map_err(|e| e.to_string())?;
+            }
+        }
+        
+        Ok(SyncResult {
+            skill_id,
+            tool: tool_type,
+            success: result.is_ok(),
+            error: result.err().map(|e| e.to_string()),
+        })
+    } else {
+        // Remove the skill from the tool
+        let adapters = create_default_adapters();
+        let adapter = adapters
+            .iter()
+            .find(|a| a.tool_type() == tool)
+            .ok_or_else(|| format!("Adapter for tool '{}' not found", tool_type))?;
+        
+        let tool_dirs = adapter.skills_dirs();
+        let mut removed = false;
+        
+        for dir in tool_dirs {
+            let skill_in_tool = dir.join(&skill_id);
+            if skill_in_tool.exists() {
+                if skill_in_tool.is_symlink() {
+                    std::fs::remove_file(&skill_in_tool)
+                        .map_err(|e| format!("Failed to remove symlink: {}", e))?;
+                } else {
+                    std::fs::remove_dir_all(&skill_in_tool)
+                        .map_err(|e| format!("Failed to remove directory: {}", e))?;
+                }
+                removed = true;
+                break;
+            }
+        }
+        
+        // Update projected_tools to remove this tool
+        if removed {
+            let mut record_store = LocalStore::default_store().map_err(|e| e.to_string())?;
+            if let Some(record) = record_store.get_record(&skill_id) {
+                let projected_tools: Vec<String> = record
+                    .projected_tools
+                    .iter()
+                    .filter(|t| t.to_lowercase() != tool_type.to_lowercase())
+                    .cloned()
+                    .collect();
+                record_store
+                    .update_projected_tools(&skill_id, projected_tools)
+                    .map_err(|e| e.to_string())?;
+            }
+        }
+        
+        Ok(SyncResult {
+            skill_id,
+            tool: tool_type,
+            success: removed,
+            error: if removed { None } else { Some("Skill not found in tool directory".to_string()) },
+        })
+    }
 }
 
 // Scan commands

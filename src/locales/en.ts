@@ -12,6 +12,7 @@ export const en = {
         installing: "Installing...",
         uninstall: "Uninstall",
         sync: "Sync",
+        syncing: "Syncing...",
         refresh: "Refresh",
         search: "Search",
         loading: "Loading...",
@@ -19,6 +20,10 @@ export const en = {
         detected: "Detected",
         notFound: "Not Found",
         popular: "Popular",
+        name: "Name",
+        size: "Size",
+        noData: "No data",
+        error: "Error",
     },
 
     // 导航
@@ -161,6 +166,7 @@ export const en = {
         autoSyncOnInstall: "Auto-sync on install",
         checkUpdatesOnStartup: "Check for updates on startup",
         storage: "Storage",
+        openDirectory: "Open Directory",
         localStoreLocation: "Local Store Location",
         storageUsed: "Storage Used",
         skillsStored: "Skills Stored",

@@ -13,6 +13,7 @@ export const ru: Translations = {
         installing: "Установка...",
         uninstall: "Удалить",
         sync: "Синхронизировать",
+        syncing: "Синхронизация...",
         refresh: "Обновить",
         search: "Поиск",
         loading: "Загрузка...",
@@ -20,6 +21,10 @@ export const ru: Translations = {
         detected: "Обнаружено",
         notFound: "Не найдено",
         popular: "Популярное",
+        name: "Имя",
+        size: "Размер",
+        noData: "Нет данных",
+        error: "Ошибка",
     },
 
     nav: {
@@ -156,6 +161,7 @@ export const ru: Translations = {
         autoSyncOnInstall: "Автосинхронизация при установке",
         checkUpdatesOnStartup: "Проверять обновления при запуске",
         storage: "Хранилище",
+        openDirectory: "Открыть каталог",
         localStoreLocation: "Расположение локального хранилища",
         storageUsed: "Использовано",
         skillsStored: "Skills сохранено",
