@@ -25,6 +25,9 @@ export const ko: Translations = {
         size: "크기",
         noData: "데이터 없음",
         error: "오류",
+        add: "추가",
+        about: "정보",
+        scan: "스캔",
     },
 
     nav: {

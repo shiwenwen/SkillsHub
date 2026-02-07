@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import {
     Package,
     Search,
@@ -7,8 +7,14 @@ import {
     Shield,
     Settings,
     Layers,
+    Sun,
+    Moon,
+    Languages,
+    Menu
 } from "lucide-react";
-import { useTranslation } from "../i18n";
+import { useTranslation, useLanguage } from "../i18n";
+import { Button } from "./ui/Button";
+import { useEffect, useState } from "react";
 
 interface LayoutProps {
     children: ReactNode;
@@ -16,6 +22,8 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
     const t = useTranslation();
+    const { language, setLanguage } = useLanguage();
+    const location = useLocation();
 
     const navItems = [
         { to: "/", icon: Package, label: t.nav.installed },
@@ -26,55 +34,94 @@ export default function Layout({ children }: LayoutProps) {
     ];
 
     return (
-        <div className="flex h-screen bg-base-100">
-            {/* Sidebar */}
-            <aside className="w-64 bg-base-200 border-r border-base-300 flex flex-col">
-                {/* Logo */}
-                <div className="p-6 border-b border-base-300">
+        <div className="flex flex-col h-screen bg-base-100 font-sans text-base-content selection:bg-primary/20 selection:text-primary">
+            {/* Top Navigation Bar */}
+            <header className="flex-none h-16 z-50 glass-panel sticky top-0">
+                <div className="container mx-auto h-full px-4 flex items-center justify-between">
+                    {/* Logo Section */}
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                            <Layers className="w-6 h-6 text-white" />
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/20">
+                            <Layers className="w-5 h-5 text-white" />
                         </div>
-                        <div>
-                            <h1 className="text-xl font-bold gradient-text">SkillsHub</h1>
-                            <p className="text-xs text-base-content/60">{t.nav.appDescription}</p>
+                        <div className="hidden md:block">
+                            <h1 className="text-lg font-bold gradient-text tracking-tight">SkillsHub</h1>
+                        </div>
+                    </div>
+
+                    {/* Navigation Items - Centered */}
+                    <nav className="hidden md:flex items-center gap-1 mx-4">
+                        {navItems.map((item) => {
+                            const isActive = location.pathname === item.to;
+                            return (
+                                <NavLink
+                                    key={item.to}
+                                    to={item.to}
+                                    className={`
+                                        flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300
+                                        ${isActive
+                                            ? "bg-primary/10 text-primary shadow-[0_0_20px_rgba(var(--p),0.3)]"
+                                            : "text-base-content/60 hover:text-base-content hover:bg-white/5"
+                                        }
+                                    `}
+                                >
+                                    <item.icon className={`w-4 h-4 ${isActive ? "animate-pulse" : ""}`} />
+                                    <span>{item.label}</span>
+                                </NavLink>
+                            );
+                        })}
+                    </nav>
+
+                    {/* Mobile Menu Button - Visible only on small screens */}
+                    <div className="md:hidden flex items-center">
+                        <Button variant="ghost" size="sm">
+                            <Menu className="w-5 h-5" />
+                        </Button>
+                    </div>
+
+
+                    {/* Right Actions */}
+                    <div className="hidden md:flex items-center gap-3">
+                        <div className="flex items-center gap-2 pr-4 border-r border-base-content/10 mr-1">
+                            {/* Theme Toggle */}
+                            <label className="swap swap-rotate btn btn-ghost btn-circle btn-sm">
+                                <input type="checkbox" className="theme-controller" value="antigravity" />
+                                <Sun className="swap-off fill-current w-5 h-5" />
+                                <Moon className="swap-on fill-current w-5 h-5" />
+                            </label>
+
+                            {/* Language Switcher */}
+                            <div className="dropdown dropdown-end">
+                                <div tabIndex={0} role="button" className="btn btn-ghost btn-sm btn-circle">
+                                    <Languages className="w-5 h-5" />
+                                </div>
+                                <ul tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52 mt-4 border border-base-content/10">
+                                    <li><a onClick={() => setLanguage("en")} className={language === "en" ? "active" : ""}>English</a></li>
+                                    <li><a onClick={() => setLanguage("zh")} className={language === "zh" ? "active" : ""}>中文</a></li>
+                                    <li><a onClick={() => setLanguage("ja")} className={language === "ja" ? "active" : ""}>日本語</a></li>
+                                    <li><a onClick={() => setLanguage("ko")} className={language === "ko" ? "active" : ""}>한국어</a></li>
+                                    <li><a onClick={() => setLanguage("fr")} className={language === "fr" ? "active" : ""}>Français</a></li>
+                                    <li><a onClick={() => setLanguage("de")} className={language === "de" ? "active" : ""}>Deutsch</a></li>
+                                    <li><a onClick={() => setLanguage("es")} className={language === "es" ? "active" : ""}>Español</a></li>
+                                    <li><a onClick={() => setLanguage("pt")} className={language === "pt" ? "active" : ""}>Português</a></li>
+                                    <li><a onClick={() => setLanguage("ru")} className={language === "ru" ? "active" : ""}>Русский</a></li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </header>
 
-                {/* Navigation */}
-                <nav className="flex-1 p-4 space-y-1">
-                    {navItems.map((item) => (
-                        <NavLink
-                            key={item.to}
-                            to={item.to}
-                            className={({ isActive }) =>
-                                `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
-                                    ? "bg-primary text-primary-content shadow-lg shadow-primary/25"
-                                    : "text-base-content/70 hover:bg-base-300 hover:text-base-content"
-                                }`
-                            }
-                        >
-                            <item.icon className="w-5 h-5" />
-                            <span className="font-medium">{item.label}</span>
-                        </NavLink>
-                    ))}
-                </nav>
-
-                {/* Footer */}
-                <div className="p-4 border-t border-base-300">
-                    <div className="glass-card p-4">
-                        <p className="text-xs text-base-content/60">{t.common.version} 0.1.0</p>
-                        <p className="text-xs text-base-content/40 mt-1">
-                            {t.nav.unifiedSkillsManagement}
-                        </p>
-                    </div>
+            {/* Main Content Area */}
+            <main className="flex-1 overflow-auto relative">
+                {/* Background ambient glow */}
+                <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+                    <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-primary/5 blur-[120px]" />
+                    <div className="absolute top-[20%] -right-[10%] w-[40%] h-[40%] rounded-full bg-secondary/5 blur-[120px]" />
                 </div>
-            </aside>
 
-            {/* Main Content */}
-            <main className="flex-1 overflow-auto">
-                <div className="p-8 animate-fade-in">{children}</div>
+                <div className="container mx-auto px-4 py-8 relative z-10 animate-fade-in">
+                    {children}
+                </div>
             </main>
         </div>
     );

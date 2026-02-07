@@ -11,32 +11,30 @@ export default {
     daisyui: {
         themes: [
             {
-                skillshub: {
-                    "primary": "#6366f1",
+                antigravity: {
+                    "primary": "#6366f1", // Indigo 500 - Vibrant Primary
                     "primary-content": "#ffffff",
-                    "secondary": "#8b5cf6",
+                    "secondary": "#a855f7", // Purple 500 - Secondary Accent
                     "secondary-content": "#ffffff",
-                    "accent": "#22d3ee",
-                    "accent-content": "#000000",
-                    "neutral": "#1f2937",
-                    "neutral-content": "#d1d5db",
-                    "base-100": "#0f172a",
-                    "base-200": "#1e293b",
-                    "base-300": "#334155",
-                    "base-content": "#f1f5f9",
-                    "info": "#38bdf8",
-                    "info-content": "#000000",
+                    "accent": "#0ea5e9", // Sky 500 - Cyan/Blue Accent
+                    "accent-content": "#ffffff",
+                    "neutral": "#1e293b", // Slate 800 - Component BG
+                    "neutral-content": "#94a3b8", // Slate 400 - Muted Text
+                    "base-100": "#0f172a", // Slate 900 - App BG (Deep Dark Blue)
+                    "base-200": "#1e293b", // Slate 800 - Card/Sidebar BG
+                    "base-300": "#334155", // Slate 700 - Borders/Hover
+                    "base-content": "#f8fafc", // Slate 50 - Main Text
+                    "info": "#3b82f6",
+                    "info-content": "#ffffff",
                     "success": "#22c55e",
-                    "success-content": "#000000",
-                    "warning": "#f59e0b",
-                    "warning-content": "#000000",
+                    "success-content": "#ffffff",
+                    "warning": "#eab308",
+                    "warning-content": "#ffffff",
                     "error": "#ef4444",
                     "error-content": "#ffffff",
                 },
             },
-            "light",
-            "dark",
         ],
-        darkTheme: "skillshub",
+        darkTheme: "antigravity", // Set as default dark theme
     },
 }

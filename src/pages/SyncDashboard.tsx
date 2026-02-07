@@ -8,20 +8,24 @@ import {
     AlertTriangle,
     Link as LinkIcon,
     Copy,
-    ArrowRight,
     Plus,
     FolderOpen,
     Pencil,
     ExternalLink,
+    Zap,
+    DownloadCloud
 } from "lucide-react";
 import { useTranslation } from "../i18n";
+import { Card } from "../components/ui/Card";
+import { Badge } from "../components/ui/Badge";
+import { Button } from "../components/ui/Button";
 
 interface ToolInfo {
     name: string;
     tool_type: string;
     detected: boolean;
     skills_dir: string | null;
-    skills_dirs: string[];  // All skills directories (for tools with multiple paths)
+    skills_dirs: string[];
     skill_count: number;
 }
 
@@ -42,7 +46,7 @@ interface ToolDetail {
     name: string;
     type: "builtin" | "custom";
     globalPath: string | null;
-    globalPaths: string[];  // Multiple global paths
+    globalPaths: string[];
     projectPath: string | null;
     detected?: boolean;
     skillCount?: number;
@@ -56,7 +60,7 @@ export default function SyncDashboard() {
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState(false);
 
-    // 添加/编辑自定义工具模态框状态
+    // Modal States
     const [showAddToolModal, setShowAddToolModal] = useState(false);
     const [editingTool, setEditingTool] = useState<CustomToolBackend | null>(null);
     const [newToolName, setNewToolName] = useState("");
@@ -64,7 +68,6 @@ export default function SyncDashboard() {
     const [newToolProjectPath, setNewToolProjectPath] = useState("");
     const [isAdding, setIsAdding] = useState(false);
 
-    // 工具详情模态框状态
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [selectedTool, setSelectedTool] = useState<ToolDetail | null>(null);
 
@@ -106,7 +109,6 @@ export default function SyncDashboard() {
         setSyncing(false);
     }
 
-    // 选择目录
     const selectDirectory = async (setter: (path: string) => void) => {
         try {
             const selected = await open({
@@ -122,7 +124,6 @@ export default function SyncDashboard() {
         }
     };
 
-    // 打开添加模态框
     const openAddModal = () => {
         setEditingTool(null);
         setNewToolName("");
@@ -131,7 +132,6 @@ export default function SyncDashboard() {
         setShowAddToolModal(true);
     };
 
-    // 打开编辑模态框
     const openEditModal = (tool: CustomToolBackend) => {
         setEditingTool(tool);
         setNewToolName(tool.name);
@@ -140,14 +140,12 @@ export default function SyncDashboard() {
         setShowAddToolModal(true);
     };
 
-    // 添加或更新自定义工具
     const saveCustomTool = async () => {
         if (!newToolName.trim()) return;
         setIsAdding(true);
 
         try {
             if (editingTool) {
-                // 更新现有工具
                 const result = await invoke<CustomToolBackend>("update_custom_tool", {
                     id: editingTool.id,
                     name: newToolName,
@@ -156,7 +154,6 @@ export default function SyncDashboard() {
                 });
                 setCustomTools(prev => prev.map(t => t.id === result.id ? result : t));
             } else {
-                // 添加新工具
                 const result = await invoke<CustomToolBackend>("add_custom_tool", {
                     name: newToolName,
                     globalPath: newToolGlobalPath.trim() || null,
@@ -177,7 +174,6 @@ export default function SyncDashboard() {
         }
     };
 
-    // 打开目录
     const openDirectory = async (path: string) => {
         try {
             await invoke("open_directory", { path });
@@ -186,7 +182,6 @@ export default function SyncDashboard() {
         }
     };
 
-    // 查看工具详情
     const viewToolDetail = (tool: ToolInfo | CustomToolBackend, type: "builtin" | "custom") => {
         if (type === "builtin") {
             const builtinTool = tool as ToolInfo;
@@ -213,227 +208,215 @@ export default function SyncDashboard() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="max-w-7xl mx-auto space-y-6 pb-20">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold">{t.syncDashboard.title}</h1>
+                    <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+                        {t.syncDashboard.title}
+                    </h1>
                     <p className="text-base-content/60 mt-1">
                         {t.syncDashboard.description}
                     </p>
                 </div>
-                <div className="flex gap-3">
-                    <button
-                        onClick={loadData}
-                        className="btn btn-ghost btn-sm gap-2"
-                        disabled={loading}
-                    >
-                        <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+                <div className="flex items-center gap-3">
+                    <Button variant="ghost" onClick={loadData} disabled={loading}>
+                        <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
                         {t.common.refresh}
-                    </button>
-                    <button
-                        onClick={syncAll}
-                        className="btn btn-primary btn-sm gap-2"
-                        disabled={syncing}
-                    >
-                        {syncing ? (
-                            <span className="loading loading-spinner loading-sm"></span>
-                        ) : (
-                            <ArrowRight className="w-4 h-4" />
-                        )}
+                    </Button>
+                    <Button variant="primary" onClick={syncAll} disabled={syncing} loading={syncing} className="shadow-lg shadow-primary/20">
+                        <Zap className="w-4 h-4 mr-2" />
                         {t.syncDashboard.syncAll}
-                    </button>
+                    </Button>
                 </div>
             </div>
 
             {/* Tools Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {loading ? (
                     Array.from({ length: 4 }).map((_, i) => (
-                        <div key={i} className="card bg-base-200 animate-pulse">
-                            <div className="card-body">
-                                <div className="h-6 bg-base-300 rounded w-24"></div>
-                                <div className="h-4 bg-base-300 rounded w-32 mt-2"></div>
-                            </div>
+                        <div key={i} className="glass-card p-6 animate-pulse h-32">
+                            <div className="h-6 bg-base-300 rounded w-24 mb-3"></div>
+                            <div className="h-4 bg-base-300 rounded w-16"></div>
                         </div>
                     ))
                 ) : (
                     <>
+                        {/* Built-in Tools */}
                         {tools.map((tool) => (
-                            <div
+                            <Card
                                 key={tool.tool_type}
-                                className={`card ${tool.detected ? "bg-base-200 cursor-pointer hover:shadow-lg transition-shadow" : "bg-base-200/50"
+                                className={`cursor-pointer transition-all duration-200 group relative overflow-hidden ${tool.detected
+                                    ? "hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 border-primary/20 bg-primary/5"
+                                    : "hover:border-base-content/20 opacity-70 hover:opacity-100"
                                     }`}
                                 onClick={() => tool.detected && viewToolDetail(tool, "builtin")}
                             >
-                                <div className="card-body">
-                                    <div className="flex items-center justify-between gap-2">
-                                        <h3 className="font-bold truncate" title={tool.name}>{tool.name}</h3>
-                                        {tool.detected ? (
-                                            <span className="badge badge-success badge-sm whitespace-nowrap">{t.syncDashboard.active}</span>
-                                        ) : (
-                                            <span className="badge badge-ghost badge-sm whitespace-nowrap">
-                                                {t.syncDashboard.notFound}
-                                            </span>
-                                        )}
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className={`p-2 rounded-lg ${tool.detected ? "bg-primary/10 text-primary" : "bg-base-200 text-base-content/40"}`}>
+                                        <FolderOpen className="w-5 h-5" />
                                     </div>
-                                    {tool.detected && (
-                                        <>
-                                            <p className="text-sm text-base-content/60 font-mono truncate" title={tool.skills_dir || ''}>
-                                                {tool.skills_dir}
-                                            </p>
-                                            <div className="flex items-center justify-between mt-2">
-                                                <span className="text-sm">
-                                                    {tool.skill_count} {t.syncDashboard.skillsSynced}
-                                                </span>
-                                                <div className="flex gap-1">
-                                                    <div className="tooltip" data-tip="Symlink">
-                                                        <LinkIcon className="w-4 h-4 text-success" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </>
-                                    )}
+                                    <Badge variant={tool.detected ? "success" : "neutral"} size="sm">
+                                        {tool.detected ? t.syncDashboard.active : t.syncDashboard.notFound}
+                                    </Badge>
                                 </div>
-                            </div>
+
+                                <h3 className="font-bold text-lg mb-1 group-hover:text-primary transition-colors">{tool.name}</h3>
+
+                                {tool.detected ? (
+                                    <>
+                                        <div className="text-xs text-base-content/50 font-mono truncate mb-3">
+                                            {tool.skills_dir || 'Path not found'}
+                                        </div>
+                                        <div className="flex items-center justify-between text-sm pt-2 border-t border-base-200/50">
+                                            <span className="font-medium">
+                                                {tool.skill_count} <span className="text-base-content/50 font-normal">{t.syncDashboard.skillsSynced}</span>
+                                            </span>
+                                            <LinkIcon className="w-4 h-4 text-primary/50" />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="text-xs text-base-content/40 mt-2">
+                                        Not detected in standard locations
+                                    </div>
+                                )}
+                            </Card>
                         ))}
 
-                        {/* 自定义工具卡片 */}
+                        {/* Custom Tools */}
                         {customTools.map((tool) => (
-                            <div
+                            <Card
                                 key={tool.id}
-                                className="card bg-base-200 cursor-pointer hover:shadow-lg transition-shadow"
+                                className="cursor-pointer transition-all duration-200 hover:border-secondary/50 hover:shadow-lg hover:shadow-secondary/5 border-secondary/20 bg-secondary/5 group relative"
                                 onClick={() => viewToolDetail(tool, "custom")}
                             >
-                                <div className="card-body">
-                                    <div className="flex items-center justify-between gap-2">
-                                        <h3 className="font-bold truncate" title={tool.name}>{tool.name}</h3>
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                className="btn btn-ghost btn-xs btn-circle"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    openEditModal(tool);
-                                                }}
-                                                title="Edit"
-                                            >
-                                                <Pencil className="w-3 h-3" />
-                                            </button>
-                                            <span className="badge badge-primary badge-sm whitespace-nowrap">{t.settings.customTool}</span>
-                                        </div>
-                                    </div>
-                                    <p className="text-sm text-base-content/60 font-mono truncate" title={tool.global_path || tool.project_path || ''}>
-                                        {tool.global_path || tool.project_path || "-"}
-                                    </p>
+                                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                    <Button
+                                        variant="ghost"
+                                        size="xs"
+                                        className="h-6 w-6 p-0 rounded-full bg-base-100/50 hover:bg-base-100"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            openEditModal(tool);
+                                        }}
+                                    >
+                                        <Pencil className="w-3 h-3" />
+                                    </Button>
                                 </div>
-                            </div>
+
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="p-2 rounded-lg bg-secondary/10 text-secondary">
+                                        <FolderOpen className="w-5 h-5" />
+                                    </div>
+                                    <Badge variant="secondary" size="sm">{t.settings.customTool}</Badge>
+                                </div>
+
+                                <h3 className="font-bold text-lg mb-1 group-hover:text-secondary transition-colors">{tool.name}</h3>
+                                <div className="text-xs text-base-content/50 font-mono truncate mb-2">
+                                    {tool.global_path || tool.project_path || "-"}
+                                </div>
+                            </Card>
                         ))}
 
-                        {/* 添加自定义工具卡片 */}
+                        {/* Add Tool Card */}
                         <div
-                            className="card bg-base-200/50 border-2 border-dashed border-base-300 hover:border-primary cursor-pointer transition-colors"
+                            className="glass-card flex flex-col items-center justify-center p-6 border-dashed border-2 border-base-300 hover:border-primary hover:bg-base-200/30 cursor-pointer transition-all duration-200 min-h-[160px] group"
                             onClick={openAddModal}
                         >
-                            <div className="card-body items-center justify-center text-center">
-                                <Plus className="w-8 h-8 text-base-content/40" />
-                                <span className="text-sm text-base-content/60">{t.settings.addCustomTool}</span>
+                            <div className="w-12 h-12 rounded-full bg-base-200 group-hover:bg-primary/10 flex items-center justify-center mb-3 transition-colors">
+                                <Plus className="w-6 h-6 text-base-content/40 group-hover:text-primary transition-colors" />
                             </div>
+                            <span className="font-medium text-base-content/60 group-hover:text-primary transition-colors">
+                                {t.settings.addCustomTool}
+                            </span>
                         </div>
                     </>
                 )}
             </div>
 
             {/* Drift Detection */}
-            <div className="card bg-base-200">
-                <div className="card-body">
-                    <h3 className="card-title">
-                        <AlertTriangle className="w-5 h-5" />
-                        {t.syncDashboard.driftDetection}
-                    </h3>
-                    {drifts.length === 0 ? (
-                        <div className="alert alert-success mt-4">
-                            <Check className="w-5 h-5" />
-                            <span>{t.syncDashboard.allInSync}</span>
-                        </div>
-                    ) : (
-                        <div className="overflow-x-auto mt-4">
-                            <table className="table">
-                                <thead>
-                                    <tr>
-                                        <th>{t.security.skill}</th>
-                                        <th>{t.syncDashboard.tool}</th>
-                                        <th>{t.syncDashboard.issue}</th>
-                                        <th>{t.syncDashboard.actions}</th>
+            <Card title={t.syncDashboard.driftDetection} icon={<AlertTriangle className="w-5 h-5 text-warning" />}>
+                {drifts.length === 0 ? (
+                    <div className="flex items-center gap-3 p-4 bg-success/10 text-success rounded-xl border border-success/20">
+                        <Check className="w-5 h-5" />
+                        <span className="font-medium">{t.syncDashboard.allInSync}</span>
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="table w-full">
+                            <thead>
+                                <tr className="text-base-content/60 border-b border-base-200/50">
+                                    <th>{t.security.skill}</th>
+                                    <th>{t.syncDashboard.tool}</th>
+                                    <th>{t.syncDashboard.issue}</th>
+                                    <th>{t.syncDashboard.actions}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {drifts.map((drift, i) => (
+                                    <tr key={i} className="hover:bg-base-200/30 transition-colors border-b border-base-200/30 last:border-0">
+                                        <td className="font-medium">{drift.skill_id}</td>
+                                        <td>{drift.tool}</td>
+                                        <td>
+                                            <Badge variant="warning" size="sm">
+                                                {drift.drift_type}
+                                            </Badge>
+                                        </td>
+                                        <td>
+                                            <Button variant="ghost" size="xs">{t.syncDashboard.repair}</Button>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    {drifts.map((drift, i) => (
-                                        <tr key={i}>
-                                            <td>{drift.skill_id}</td>
-                                            <td>{drift.tool}</td>
-                                            <td>
-                                                <span className="badge badge-warning">
-                                                    {drift.drift_type}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <button className="btn btn-ghost btn-xs">{t.syncDashboard.repair}</button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-            </div>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </Card>
 
-            {/* Sync Strategy */}
-            <div className="card bg-base-200">
-                <div className="card-body">
-                    <h3 className="card-title">{t.syncDashboard.syncStrategy}</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                        <div className="p-4 rounded-lg border-2 border-primary bg-primary/5">
-                            <div className="flex items-center gap-3">
-                                <LinkIcon className="w-6 h-6 text-primary" />
-                                <div>
-                                    <h4 className="font-bold">{t.syncDashboard.linkRecommended}</h4>
-                                    <p className="text-sm text-base-content/60">
-                                        {t.syncDashboard.linkDesc}
-                                    </p>
-                                </div>
-                            </div>
+            {/* Sync Strategy Info */}
+            <Card title={t.syncDashboard.syncStrategy} icon={<DownloadCloud className="w-5 h-5 text-info" />}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-5 rounded-xl border border-primary/30 bg-primary/5 flex items-start gap-4">
+                        <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                            <LinkIcon className="w-5 h-5" />
                         </div>
-                        <div className="p-4 rounded-lg border border-base-300">
-                            <div className="flex items-center gap-3">
-                                <Copy className="w-6 h-6 text-base-content/60" />
-                                <div>
-                                    <h4 className="font-bold">{t.syncDashboard.copy}</h4>
-                                    <p className="text-sm text-base-content/60">
-                                        {t.syncDashboard.copyDesc}
-                                    </p>
-                                </div>
-                            </div>
+                        <div>
+                            <h4 className="font-bold text-primary mb-1">{t.syncDashboard.linkRecommended}</h4>
+                            <p className="text-sm text-base-content/70 leading-relaxed">
+                                {t.syncDashboard.linkDesc}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="p-5 rounded-xl border border-base-300 bg-base-200/30 flex items-start gap-4">
+                        <div className="p-2 bg-base-200 rounded-lg text-base-content/60">
+                            <Copy className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-base-content mb-1">{t.syncDashboard.copy}</h4>
+                            <p className="text-sm text-base-content/60 leading-relaxed">
+                                {t.syncDashboard.copyDesc}
+                            </p>
                         </div>
                     </div>
                 </div>
-            </div>
+            </Card>
 
+            {/* Modals */}
             {/* Add/Edit Custom Tool Modal */}
             {showAddToolModal && createPortal(
                 <div className="modal modal-open">
-                    <div className="modal-box">
-                        <h3 className="font-bold text-lg">
-                            {editingTool ? "Edit Custom Tool" : t.settings.addCustomTool}
+                    <div className="modal-box glass-panel max-w-lg">
+                        <h3 className="font-bold text-lg mb-6">
+                            {editingTool ? t.settings.customTool || "Edit Custom Tool" : t.settings.addCustomTool}
                         </h3>
-                        <div className="py-4 space-y-4">
+                        <div className="space-y-4">
                             <div className="form-control">
                                 <label className="label">
                                     <span className="label-text">{t.settings.toolName}</span>
                                 </label>
                                 <input
                                     type="text"
-                                    className="input input-bordered"
+                                    className="input input-bordered w-full"
                                     placeholder={t.settings.toolNamePlaceholder}
                                     value={newToolName}
                                     onChange={(e) => setNewToolName(e.target.value)}
@@ -459,11 +442,9 @@ export default function SyncDashboard() {
                                         <FolderOpen className="w-4 h-4" />
                                     </button>
                                 </div>
-                                <label className="label">
-                                    <span className="label-text-alt text-base-content/50">
-                                        {t.settings.globalPathHint}
-                                    </span>
-                                </label>
+                                <span className="label-text-alt text-base-content/50 mt-1">
+                                    {t.settings.globalPathHint}
+                                </span>
                             </div>
                             <div className="form-control">
                                 <label className="label">
@@ -471,38 +452,34 @@ export default function SyncDashboard() {
                                 </label>
                                 <input
                                     type="text"
-                                    className="input input-bordered font-mono text-sm"
+                                    className="input input-bordered font-mono text-sm w-full"
                                     placeholder=".tool/skills/"
                                     value={newToolProjectPath}
                                     onChange={(e) => setNewToolProjectPath(e.target.value)}
                                 />
-                                <label className="label">
-                                    <span className="label-text-alt text-base-content/50">
-                                        {t.settings.projectPathHint}
-                                    </span>
-                                </label>
+                                <span className="label-text-alt text-base-content/50 mt-1">
+                                    {t.settings.projectPathHint}
+                                </span>
                             </div>
                         </div>
                         <div className="modal-action">
-                            <button
-                                className="btn btn-ghost"
-                                onClick={() => {
-                                    setShowAddToolModal(false);
-                                    setEditingTool(null);
-                                }}
-                            >
+                            <Button variant="ghost" onClick={() => {
+                                setShowAddToolModal(false);
+                                setEditingTool(null);
+                            }}>
                                 {t.common.cancel}
-                            </button>
-                            <button
-                                className="btn btn-primary"
+                            </Button>
+                            <Button
+                                variant="primary"
                                 onClick={saveCustomTool}
                                 disabled={!newToolName.trim() || isAdding}
+                                loading={isAdding}
                             >
-                                {isAdding ? <span className="loading loading-spinner loading-sm"></span> : (editingTool ? t.common.save : t.settings.addTool)}
-                            </button>
+                                {editingTool ? t.common.save : t.settings.addTool}
+                            </Button>
                         </div>
                     </div>
-                    <div className="modal-backdrop" onClick={() => {
+                    <div className="modal-backdrop bg-base-100/80 backdrop-blur-sm" onClick={() => {
                         setShowAddToolModal(false);
                         setEditingTool(null);
                     }} />
@@ -513,95 +490,83 @@ export default function SyncDashboard() {
             {/* Tool Detail Modal */}
             {showDetailModal && selectedTool && createPortal(
                 <div className="modal modal-open">
-                    <div className="modal-box">
-                        <h3 className="font-bold text-lg mb-4">{selectedTool.name}</h3>
+                    <div className="modal-box glass-panel">
+                        <h3 className="font-bold text-xl mb-6 flex items-center gap-2">
+                            {selectedTool.name}
+                            <Badge variant={selectedTool.type === "custom" ? "primary" : "success"}>
+                                {selectedTool.type === "custom" ? t.settings.customTool : "Built-in"}
+                            </Badge>
+                        </h3>
 
-                        <div className="space-y-4">
-                            {/* 工具类型 */}
-                            <div>
-                                <label className="label">
-                                    <span className="label-text font-semibold">Type</span>
-                                </label>
-                                <span className={`badge ${selectedTool.type === "custom" ? "badge-primary" : "badge-success"}`}>
-                                    {selectedTool.type === "custom" ? t.settings.customTool : "Built-in"}
-                                </span>
-                            </div>
-
-                            {/* 内置工具的额外信息 */}
+                        <div className="space-y-6">
+                            {/* Built-in Status */}
                             {selectedTool.type === "builtin" && (
-                                <>
-                                    <div>
-                                        <label className="label">
-                                            <span className="label-text font-semibold">Status</span>
-                                        </label>
-                                        <span className={`badge ${selectedTool.detected ? "badge-success" : "badge-ghost"}`}>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-base-200/50 p-3 rounded-xl border border-base-300/50">
+                                        <div className="text-xs text-base-content/50 uppercase font-bold mb-1">Status</div>
+                                        <Badge variant={selectedTool.detected ? "success" : "neutral"} size="sm">
                                             {selectedTool.detected ? t.syncDashboard.active : t.syncDashboard.notFound}
-                                        </span>
+                                        </Badge>
                                     </div>
                                     {selectedTool.detected && selectedTool.skillCount !== undefined && (
-                                        <div>
-                                            <label className="label">
-                                                <span className="label-text font-semibold">Skills Synced</span>
-                                            </label>
-                                            <p className="text-base-content">{selectedTool.skillCount}</p>
+                                        <div className="bg-base-200/50 p-3 rounded-xl border border-base-300/50">
+                                            <div className="text-xs text-base-content/50 uppercase font-bold mb-1">Synced Skills</div>
+                                            <div className="text-lg font-bold">{selectedTool.skillCount}</div>
                                         </div>
                                     )}
-                                </>
+                                </div>
                             )}
 
-                            {/* 全局路径 - 支持多路径 */}
+                            {/* Global Config */}
                             {selectedTool.globalPaths && selectedTool.globalPaths.length > 0 && (
                                 <div>
-                                    <label className="label">
-                                        <span className="label-text font-semibold">
-                                            {t.settings.globalPath}
-                                            {selectedTool.globalPaths.length > 1 && (
-                                                <span className="badge badge-sm badge-ghost ml-2">
-                                                    {selectedTool.globalPaths.length}
-                                                </span>
-                                            )}
-                                        </span>
-                                    </label>
+                                    <h4 className="font-bold mb-2 flex items-center justify-between">
+                                        {t.settings.globalPath}
+                                        {selectedTool.globalPaths.length > 1 && (
+                                            <Badge variant="ghost" size="xs">{selectedTool.globalPaths.length} paths</Badge>
+                                        )}
+                                    </h4>
                                     <div className="space-y-2">
                                         {selectedTool.globalPaths.map((path, index) => (
-                                            <div key={index} className="flex items-center gap-2 bg-base-300 rounded-lg p-2">
-                                                <p className="text-sm text-base-content/80 font-mono flex-1 break-all">
+                                            <div key={index} className="flex items-center gap-2 bg-base-200/50 rounded-lg p-3 border border-base-300/50">
+                                                <code className="text-xs text-base-content/80 font-mono flex-1 break-all select-all">
                                                     {path}
-                                                </p>
-                                                <button
-                                                    className="btn btn-ghost btn-sm btn-square"
+                                                </code>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="xs"
+                                                    className="btn-square h-8 w-8"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         openDirectory(path);
                                                     }}
-                                                    title="Open Directory"
                                                 >
                                                     <ExternalLink className="w-4 h-4" />
-                                                </button>
+                                                </Button>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             )}
 
-                            {/* 项目路径 */}
+                            {/* Project Path Config */}
                             {selectedTool.projectPath && (
                                 <div>
-                                    <label className="label">
-                                        <span className="label-text font-semibold">{t.settings.projectPath}</span>
-                                    </label>
-                                    <p className="text-sm text-base-content/80 font-mono break-all">
-                                        {selectedTool.projectPath}
-                                    </p>
-                                    <p className="text-xs text-base-content/50 mt-1">
-                                        (Relative path from project root)
-                                    </p>
+                                    <h4 className="font-bold mb-2">{t.settings.projectPath}</h4>
+                                    <div className="bg-base-200/50 rounded-lg p-3 border border-base-300/50">
+                                        <code className="text-xs text-base-content/80 font-mono break-all select-all block">
+                                            {selectedTool.projectPath}
+                                        </code>
+                                        <p className="text-xs text-base-content/40 mt-2">
+                                            (Relative from project root)
+                                        </p>
+                                    </div>
                                 </div>
                             )}
 
-                            {/* 如果两个路径都没有 */}
+                            {/* No config warning */}
                             {!selectedTool.globalPath && !selectedTool.projectPath && (
-                                <div className="alert">
+                                <div className="alert alert-warning shadow-sm">
                                     <AlertTriangle className="w-5 h-5" />
                                     <span>No paths configured for this tool</span>
                                 </div>
@@ -609,18 +574,15 @@ export default function SyncDashboard() {
                         </div>
 
                         <div className="modal-action">
-                            <button
-                                className="btn btn-primary"
-                                onClick={() => {
-                                    setShowDetailModal(false);
-                                    setSelectedTool(null);
-                                }}
-                            >
+                            <Button variant="primary" onClick={() => {
+                                setShowDetailModal(false);
+                                setSelectedTool(null);
+                            }}>
                                 {t.common.close}
-                            </button>
+                            </Button>
                         </div>
                     </div>
-                    <div className="modal-backdrop" onClick={() => {
+                    <div className="modal-backdrop bg-base-100/80 backdrop-blur-sm" onClick={() => {
                         setShowDetailModal(false);
                         setSelectedTool(null);
                     }} />

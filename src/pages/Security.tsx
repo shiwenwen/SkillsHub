@@ -6,10 +6,17 @@ import {
     Check,
     X,
     Search,
+    ShieldCheck,
     FileWarning,
     Lock,
+    Plus,
+    ShieldAlert,
+    Activity
 } from "lucide-react";
 import { useTranslation } from "../i18n";
+import { Card } from "../components/ui/Card";
+import { Badge } from "../components/ui/Badge";
+import { Button } from "../components/ui/Button";
 
 type RiskLevel = "LOW" | "MEDIUM" | "HIGH" | "BLOCK";
 type ScanStatus = "PASSED" | "REVIEW" | "BLOCKED";
@@ -184,13 +191,6 @@ export default function Security() {
     const [selectedRegistryName, setSelectedRegistryName] = useState("");
     const [securityRules, setSecurityRules] = useState<SecurityRule[]>([]);
     const [scanRecords, setScanRecords] = useState<SecurityScanRecord[]>([]);
-
-    const riskColors: Record<string, string> = {
-        LOW: "badge-info",
-        MEDIUM: "badge-warning",
-        HIGH: "badge-error",
-        BLOCK: "badge-error",
-    };
 
     const recentScans = useMemo(() => {
         return scanRecords.map((record) => {
@@ -380,9 +380,7 @@ export default function Security() {
 
     function handleAddTrustedSource() {
         const source = newTrustedSource.trim();
-        if (!source) {
-            return;
-        }
+        if (!source) return;
 
         setTrustedSources((current) => {
             if (current.some((item) => item.toLowerCase() === source.toLowerCase())) {
@@ -401,21 +399,15 @@ export default function Security() {
     }
 
     function handleAddRegistryAsTrustedSource() {
-        if (!selectedRegistryName) {
-            return;
-        }
+        if (!selectedRegistryName) return;
 
         const selectedRegistry = configuredRegistries.find(
             (registry) => registry.name === selectedRegistryName
         );
-        if (!selectedRegistry) {
-            return;
-        }
+        if (!selectedRegistry) return;
 
         const source = selectedRegistry.url.trim();
-        if (!source) {
-            return;
-        }
+        if (!source) return;
 
         setTrustedSources((current) => {
             if (current.some((item) => item.toLowerCase() === source.toLowerCase())) {
@@ -433,114 +425,63 @@ export default function Security() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="max-w-7xl mx-auto space-y-6 pb-20">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold">{t.security.title}</h1>
+                    <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+                        {t.security.title}
+                    </h1>
                     <p className="text-base-content/60 mt-1">
                         {t.security.description}
                     </p>
                 </div>
-                <button
+                <Button
+                    variant="primary"
                     onClick={scanAllSkills}
-                    className="btn btn-primary btn-sm gap-2"
                     disabled={scanning}
+                    loading={scanning}
+                    className="shadow-lg shadow-primary/20"
                 >
-                    {scanning ? (
-                        <span className="loading loading-spinner loading-sm"></span>
-                    ) : (
-                        <Search className="w-4 h-4" />
-                    )}
+                    <Search className="w-4 h-4 mr-2" />
                     {t.security.scanAll}
-                </button>
+                </Button>
             </div>
 
             {/* Stats */}
-            <div className="stats shadow bg-base-200 w-full">
-                <div className="stat">
-                    <div className="stat-figure text-success">
-                        <Shield className="w-8 h-8" />
-                    </div>
-                    <div className="stat-title">{t.security.scanned}</div>
-                    <div className="stat-value text-success">{stats.scanned}</div>
-                    <div className="stat-desc">
-                        {stats.verified} {t.security.skillsVerified}
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-base-200/50 p-6 rounded-2xl border border-base-300/50 flex flex-col items-center justify-center text-center">
+                    <Shield className="w-8 h-8 text-primary mb-3" />
+                    <div className="text-2xl font-bold text-primary">{stats.scanned}</div>
+                    <div className="text-xs text-base-content/60 font-medium uppercase mt-1">{t.security.scanned}</div>
                 </div>
-                <div className="stat">
-                    <div className="stat-figure text-warning">
-                        <AlertTriangle className="w-8 h-8" />
-                    </div>
-                    <div className="stat-title">{t.security.warnings}</div>
-                    <div className="stat-value text-warning">{stats.warnings}</div>
-                    <div className="stat-desc">{t.security.requireReview}</div>
+                <div className="bg-base-200/50 p-6 rounded-2xl border border-base-300/50 flex flex-col items-center justify-center text-center">
+                    <Check className="w-8 h-8 text-success mb-3" />
+                    <div className="text-2xl font-bold text-success">{stats.verified}</div>
+                    <div className="text-xs text-base-content/60 font-medium uppercase mt-1">{t.security.skillsVerified}</div>
                 </div>
-                <div className="stat">
-                    <div className="stat-figure text-error">
-                        <X className="w-8 h-8" />
-                    </div>
-                    <div className="stat-title">{t.security.blocked}</div>
-                    <div className="stat-value text-error">{stats.blocked}</div>
-                    <div className="stat-desc">{t.security.criticalIssues}</div>
+                <div className="bg-base-200/50 p-6 rounded-2xl border border-base-300/50 flex flex-col items-center justify-center text-center">
+                    <AlertTriangle className="w-8 h-8 text-warning mb-3" />
+                    <div className="text-2xl font-bold text-warning">{stats.warnings}</div>
+                    <div className="text-xs text-base-content/60 font-medium uppercase mt-1">{t.security.warnings}</div>
                 </div>
-            </div>
-
-            {/* Scan Rules */}
-            <div className="card bg-base-200">
-                <div className="card-body">
-                    <h3 className="card-title">{t.security.activeSecurityRules}</h3>
-                    <div className="overflow-x-auto mt-4">
-                        <table className="table table-zebra">
-                            <thead>
-                                <tr>
-                                    <th>{t.security.ruleId}</th>
-                                    <th>{t.security.name}</th>
-                                    <th>{t.security.riskLevel}</th>
-                                    <th>{t.security.status}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {securityRules.length === 0 && (
-                                    <tr>
-                                        <td colSpan={4} className="text-center text-base-content/60 py-6">
-                                            {t.security.noIssues}
-                                        </td>
-                                    </tr>
-                                )}
-                                {securityRules.map((rule) => (
-                                    <tr key={rule.id}>
-                                        <td className="font-mono">{rule.id}</td>
-                                        <td>{rule.name}</td>
-                                        <td>
-                                            <span className={`badge ${riskColors[rule.riskLevel]}`}>
-                                                {rule.riskLevel}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span className={`badge ${rule.enabled ? "badge-success" : "badge-ghost"} badge-sm gap-1`}>
-                                                {rule.enabled && <Check className="w-3 h-3" />} {rule.enabled ? t.security.enabled : t.security.blocked}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                <div className="bg-base-200/50 p-6 rounded-2xl border border-base-300/50 flex flex-col items-center justify-center text-center">
+                    <ShieldAlert className="w-8 h-8 text-error mb-3" />
+                    <div className="text-2xl font-bold text-error">{stats.blocked}</div>
+                    <div className="text-xs text-base-content/60 font-medium uppercase mt-1">{t.security.blocked}</div>
                 </div>
             </div>
 
             {/* Policy Configuration */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="card bg-base-200">
-                    <div className="card-body">
-                        <h3 className="card-title">
-                            <Lock className="w-5 h-5" />
-                            {t.security.scanPolicy}
-                        </h3>
-                        <div className="form-control mt-4">
+                <Card title={t.security.scanPolicy} icon={<Lock className="w-5 h-5 text-secondary" />}>
+                    <div className="space-y-4">
+                        <div className="form-control bg-base-200/30 p-3 rounded-lg hover:bg-base-200/50 transition-colors">
                             <label className="label cursor-pointer">
-                                <span className="label-text">{t.security.blockHighRiskFindings}</span>
+                                <div>
+                                    <span className="label-text font-medium block">{t.security.blockHighRiskFindings}</span>
+                                    <span className="label-text-alt text-base-content/60">Automatically block high risk findings</span>
+                                </div>
                                 <input
                                     type="checkbox"
                                     className="toggle toggle-error"
@@ -559,9 +500,12 @@ export default function Security() {
                                 />
                             </label>
                         </div>
-                        <div className="form-control">
+                        <div className="form-control bg-base-200/30 p-3 rounded-lg hover:bg-base-200/50 transition-colors">
                             <label className="label cursor-pointer">
-                                <span className="label-text">{t.security.requireConfirmMedium}</span>
+                                <div>
+                                    <span className="label-text font-medium block">{t.security.requireConfirmMedium}</span>
+                                    <span className="label-text-alt text-base-content/60">Require manual confirmation for medium risks</span>
+                                </div>
                                 <input
                                     type="checkbox"
                                     className="toggle toggle-warning"
@@ -580,9 +524,12 @@ export default function Security() {
                                 />
                             </label>
                         </div>
-                        <div className="form-control">
+                        <div className="form-control bg-base-200/30 p-3 rounded-lg hover:bg-base-200/50 transition-colors">
                             <label className="label cursor-pointer">
-                                <span className="label-text">{t.security.autoApproveLow}</span>
+                                <div>
+                                    <span className="label-text font-medium block">{t.security.autoApproveLow}</span>
+                                    <span className="label-text-alt text-base-content/60">Automatically approve low risk findings</span>
+                                </div>
                                 <input
                                     type="checkbox"
                                     className="toggle toggle-success"
@@ -602,138 +549,183 @@ export default function Security() {
                             </label>
                         </div>
                     </div>
-                </div>
+                </Card>
 
-                <div className="card bg-base-200">
-                    <div className="card-body">
-                        <h3 className="card-title">
-                            <FileWarning className="w-5 h-5" />
-                            {t.security.trustedSources}
-                        </h3>
-                        <div className="space-y-2 mt-4">
-                            {trustedSources.map(
-                                (source) => (
-                                    <div
-                                        key={source}
-                                        className="flex items-center justify-between p-3 bg-base-300 rounded-lg"
+                <Card title={t.security.trustedSources} icon={<FileWarning className="w-5 h-5 text-accent" />}>
+                    <div className="space-y-4">
+                        <div className="flex flex-wrap gap-2 mb-4">
+                            {trustedSources.map((source) => (
+                                <Badge key={source} variant="outline" className="gap-2 pr-1">
+                                    {source}
+                                    <button
+                                        onClick={() => handleRemoveTrustedSource(source)}
+                                        className="btn btn-ghost btn-xs btn-circle h-4 w-4 min-h-0"
                                     >
-                                        <span className="font-mono text-sm">{source}</span>
-                                        <button
-                                            className="btn btn-ghost btn-xs"
-                                            disabled={loadingPolicy}
-                                            onClick={() => handleRemoveTrustedSource(source)}
-                                        >
-                                            {t.security.remove}
-                                        </button>
-                                    </div>
-                                )
+                                        <X className="w-3 h-3 text-error" />
+                                    </button>
+                                </Badge>
+                            ))}
+                            {trustedSources.length === 0 && (
+                                <div className="text-sm text-base-content/50 italic py-2">No trusted sources configured</div>
                             )}
-                            <div className="flex gap-2 mt-2">
-                                <input
-                                    type="text"
-                                    className="input input-bordered input-sm flex-1 font-mono"
-                                    placeholder={t.security.addTrustedSource}
-                                    value={newTrustedSource}
-                                    disabled={loadingPolicy}
-                                    onChange={(event) => setNewTrustedSource(event.target.value)}
-                                    onKeyDown={(event) => {
-                                        if (event.key === "Enter") {
-                                            handleAddTrustedSource();
-                                        }
-                                    }}
-                                />
-                                <button
-                                    className="btn btn-outline btn-sm"
-                                    disabled={loadingPolicy}
-                                    onClick={handleAddTrustedSource}
-                                >
-                                    {t.security.addTrustedSource}
-                                </button>
-                            </div>
-                            <div className="flex gap-2 mt-2">
-                                <select
-                                    className="select select-bordered select-sm flex-1"
-                                    value={selectedRegistryName}
-                                    disabled={loadingPolicy || configuredRegistries.length === 0}
-                                    onChange={(event) => setSelectedRegistryName(event.target.value)}
-                                >
-                                    {configuredRegistries.length === 0 && (
-                                        <option value="">{t.security.noConfiguredRegistries}</option>
-                                    )}
-                                    {configuredRegistries.map((registry) => (
-                                        <option key={registry.name} value={registry.name}>
-                                            {registry.name}
-                                        </option>
-                                    ))}
-                                </select>
-                                <button
-                                    className="btn btn-outline btn-sm"
-                                    disabled={loadingPolicy || configuredRegistries.length === 0}
-                                    onClick={handleAddRegistryAsTrustedSource}
-                                >
-                                    {t.security.addRegistryAsTrustedSource}
-                                </button>
-                            </div>
+                        </div>
+
+                        <div className="join w-full">
+                            <input
+                                type="text"
+                                className="input input-bordered input-sm flex-1 font-mono join-item"
+                                placeholder={t.security.addTrustedSource}
+                                value={newTrustedSource}
+                                disabled={loadingPolicy}
+                                onChange={(event) => setNewTrustedSource(event.target.value)}
+                                onKeyDown={(event) => {
+                                    if (event.key === "Enter") handleAddTrustedSource();
+                                }}
+                            />
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={loadingPolicy}
+                                onClick={handleAddTrustedSource}
+                                className="join-item"
+                            >
+                                <Plus className="w-4 h-4" />
+                            </Button>
+                        </div>
+
+                        <div className="divider text-xs text-base-content/30 my-2">OR ADD FROM REGISTRY</div>
+
+                        <div className="join w-full">
+                            <select
+                                className="select select-bordered select-sm flex-1 join-item"
+                                value={selectedRegistryName}
+                                disabled={loadingPolicy || configuredRegistries.length === 0}
+                                onChange={(event) => setSelectedRegistryName(event.target.value)}
+                            >
+                                {configuredRegistries.length === 0 && (
+                                    <option value="">{t.security.noConfiguredRegistries}</option>
+                                )}
+                                {configuredRegistries.map((registry) => (
+                                    <option key={registry.name} value={registry.name}>
+                                        {registry.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={loadingPolicy || configuredRegistries.length === 0}
+                                onClick={handleAddRegistryAsTrustedSource}
+                                className="join-item"
+                            >
+                                {t.common.add || "Add"}
+                            </Button>
                         </div>
                     </div>
-                </div>
+                </Card>
             </div>
 
             {/* Recent Scans */}
-            <div className="card bg-base-200">
-                <div className="card-body">
-                    <h3 className="card-title">{t.security.recentScanResults}</h3>
-                    <div className="overflow-x-auto mt-4">
-                        <table className="table">
-                            <thead>
+            <Card title={t.security.recentScanResults} icon={<Activity className="w-5 h-5 text-info" />}>
+                <div className="overflow-x-auto">
+                    <table className="table w-full">
+                        <thead>
+                            <tr className="text-base-content/60 border-b border-base-200/50">
+                                <th>{t.security.skill}</th>
+                                <th>{t.security.scannedAt}</th>
+                                <th>{t.security.riskLevel}</th>
+                                <th>{t.security.status}</th>
+                                <th>{t.security.findings}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {recentScans.length === 0 && (
                                 <tr>
-                                    <th>{t.security.skill}</th>
-                                    <th>{t.security.scannedAt}</th>
-                                    <th>{t.security.riskLevel}</th>
-                                    <th>{t.security.status}</th>
-                                    <th>{t.security.findings}</th>
+                                    <td colSpan={5} className="text-center text-base-content/60 py-8">
+                                        <ShieldCheck className="w-12 h-12 mx-auto mb-2 opacity-20" />
+                                        {t.security.noIssues}
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {recentScans.length === 0 && (
-                                    <tr>
-                                        <td colSpan={5} className="text-center text-base-content/60 py-6">
-                                            {t.security.noIssues}
-                                        </td>
-                                    </tr>
-                                )}
-                                {recentScans.map((scan) => (
-                                    <tr key={`${scan.skill}-${scan.scannedAt}`}>
-                                        <td className="font-medium">{scan.skill}</td>
-                                        <td className="text-base-content/60">{formatScannedAt(scan.scannedAt)}</td>
-                                        <td>
-                                            <span className={`badge ${riskColors[scan.risk]}`}>
-                                                {scan.risk}
+                            )}
+                            {recentScans.map((scan) => (
+                                <tr key={`${scan.skill}-${scan.scannedAt}`} className="hover:bg-base-200/30 transition-colors border-b border-base-200/30 last:border-0">
+                                    <td className="font-medium">{scan.skill}</td>
+                                    <td className="text-base-content/60 text-sm">{formatScannedAt(scan.scannedAt)}</td>
+                                    <td>
+                                        <Badge variant={
+                                            scan.risk === 'LOW' ? 'info' :
+                                                scan.risk === 'MEDIUM' ? 'warning' : 'error'
+                                        } size="sm">
+                                            {scan.risk}
+                                        </Badge>
+                                    </td>
+                                    <td>
+                                        {scan.status === "PASSED" ? (
+                                            <span className="text-success flex items-center gap-1 text-sm font-medium">
+                                                <Check className="w-4 h-4" /> {t.security.passed}
                                             </span>
-                                        </td>
-                                        <td>
-                                            {scan.status === "PASSED" ? (
-                                                <span className="text-success flex items-center gap-1">
-                                                    <Check className="w-4 h-4" /> {t.security.passed}
-                                                </span>
-                                            ) : scan.status === "BLOCKED" ? (
-                                                <span className="text-error flex items-center gap-1">
-                                                    <X className="w-4 h-4" /> {t.security.blocked}
-                                                </span>
-                                            ) : (
-                                                <span className="text-warning flex items-center gap-1">
-                                                    <AlertTriangle className="w-4 h-4" /> {t.security.requireReview}
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td>{scan.findings}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                        ) : scan.status === "BLOCKED" ? (
+                                            <span className="text-error flex items-center gap-1 text-sm font-medium">
+                                                <X className="w-4 h-4" /> {t.security.blocked}
+                                            </span>
+                                        ) : (
+                                            <span className="text-warning flex items-center gap-1 text-sm font-medium">
+                                                <AlertTriangle className="w-4 h-4" /> {t.security.requireReview}
+                                            </span>
+                                        )}
+                                    </td>
+                                    <td className="text-center">{scan.findings}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
-            </div>
+            </Card>
+
+            {/* Scan Rules */}
+            <Card title={t.security.activeSecurityRules} icon={<ShieldCheck className="w-5 h-5 text-success" />}>
+                <div className="overflow-x-auto">
+                    <table className="table w-full">
+                        <thead>
+                            <tr className="text-base-content/60 border-b border-base-200/50">
+                                <th>{t.security.ruleId}</th>
+                                <th>{t.security.name}</th>
+                                <th>{t.security.riskLevel}</th>
+                                <th>{t.security.status}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {securityRules.length === 0 && (
+                                <tr>
+                                    <td colSpan={4} className="text-center text-base-content/60 py-6">
+                                        {t.security.noIssues}
+                                    </td>
+                                </tr>
+                            )}
+                            {securityRules.map((rule) => (
+                                <tr key={rule.id} className="hover:bg-base-200/30 transition-colors border-b border-200/30 last:border-0">
+                                    <td className="font-mono text-xs opacity-70">{rule.id}</td>
+                                    <td className="font-medium">{rule.name}</td>
+                                    <td>
+                                        <Badge variant={
+                                            rule.riskLevel === "HIGH" || rule.riskLevel === "BLOCK" ? "error" :
+                                                rule.riskLevel === "MEDIUM" ? "warning" : "info"
+                                        } size="sm">
+                                            {rule.riskLevel}
+                                        </Badge>
+                                    </td>
+                                    <td>
+                                        <Badge variant={rule.enabled ? "success" : "neutral"} size="sm" className="gap-1">
+                                            {rule.enabled && <Check className="w-3 h-3" />}
+                                            {rule.enabled ? t.security.enabled : t.security.blocked}
+                                        </Badge>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </Card>
         </div>
     );
 }

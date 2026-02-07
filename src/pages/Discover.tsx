@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Search, Package, Download, Star, Loader2, Check } from "lucide-react";
+import { Search, Package, Download, Star, Loader2, Check, Filter } from "lucide-react";
 import { useTranslation } from "../i18n";
+import { Card } from "../components/ui/Card";
+import { Badge } from "../components/ui/Badge";
+import { Button } from "../components/ui/Button";
 
 interface SkillListing {
     id: string;
@@ -47,28 +50,18 @@ export default function Discover() {
 
     const PAGE_SIZE = 20;
 
-    // 获取 Skill 的源
-
-
     // Filtered results
     const filteredResults = results.filter(skill => {
         if (selectedSource === "all") return true;
 
-        // Check if skill source matches selected registry
         const skillSource = skill.source;
-
-        // Get selected registry
         const registry = registries.find(r => r.name === selectedSource);
         if (!registry) return true;
 
-        // Logic to match skill source to registry
-        // 1. Git match
         if (registry.registry_type === "Git") {
             return skillSource === `git:${registry.url}`;
         }
-        // 2. ClawHub/Registry match
         if (registry.registry_type === "ClawHub") {
-            // ClawHub skills start with registry:https://auth.clawdhub.com...
             return skillSource.includes("clawdhub") || skillSource.includes("clawhub");
         }
 
@@ -83,20 +76,17 @@ export default function Discover() {
             const config = await invoke<AppConfig>("get_app_config");
 
             if (config.scan_before_install) {
-                // 执行安全扫描
                 try {
                     const scanResult = await invoke<{ overall_risk: string; findings: unknown[] }>("scan_skill", {
                         skillId: skillId,
                     });
 
-                    // 如果启用了阻止高风险且扫描结果为高风险，则阻止安装
                     if (config.block_high_risk && scanResult.overall_risk === "high") {
-                        alert(`安装被阻止：Skill "${skillId}" 被检测为高风险。`);
+                        alert(`Installation blocked: Skill "${skillId}" detected as high risk.`);
                         return;
                     }
                 } catch (scanError) {
                     console.warn("Security scan failed, proceeding with install:", scanError);
-                    // 扫描失败时继续安装（可以根据需要修改此行为）
                 }
             }
 
@@ -105,12 +95,9 @@ export default function Discover() {
                 tools: [],
             });
 
-            // 标记为已安装
             setInstalledSkills(prev => new Set(prev).add(skillId));
 
-            // 检查是否需要自动同步
             if (config.auto_sync_on_install) {
-                // 默认开启自动同步
                 try {
                     await invoke("full_sync_skills");
                     console.log("Auto sync completed after install");
@@ -120,7 +107,7 @@ export default function Discover() {
             }
         } catch (error) {
             console.error("Install failed:", error);
-            alert(`安装失败: ${error}`);
+            alert(`Installation failed: ${error}`);
         } finally {
             setInstallingSkills(prev => {
                 const next = new Set(prev);
@@ -143,7 +130,6 @@ export default function Discover() {
                 query: searchQuery,
             });
 
-            // 模拟分页（后端暂不支持分页，前端处理）
             const startIndex = pageNum * PAGE_SIZE;
             const endIndex = startIndex + PAGE_SIZE;
             const pageResults = result.slice(startIndex, endIndex);
@@ -166,30 +152,24 @@ export default function Discover() {
     // 初始加载
     useEffect(() => {
         loadSkills("", 0, false);
-
-        // Load registries
         invoke<RegistryConfig[]>("list_registries")
             .then(setRegistries)
             .catch(console.error);
-
     }, [loadSkills]);
 
     // 切换源时刷新
     useEffect(() => {
-        // Reset page and reload when source changes
         setPage(0);
         setHasMore(true);
         loadSkills(query, 0, false);
-    }, [selectedSource]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [selectedSource]);
 
-    // 搜索处理
     async function handleSearch() {
         setPage(0);
         setHasMore(true);
         await loadSkills(query, 0, false);
     }
 
-    // 加载更多
     const loadMore = useCallback(() => {
         if (!loadingMore && hasMore) {
             const nextPage = page + 1;
@@ -217,144 +197,165 @@ export default function Discover() {
     }, [hasMore, loading, loadingMore, loadMore]);
 
     return (
-        <div className="space-y-6">
+        <div className="max-w-7xl mx-auto space-y-6 pb-20">
             {/* Header */}
             <div>
-                <h1 className="text-3xl font-bold">{t.discover.title}</h1>
+                <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+                    {t.discover.title}
+                </h1>
                 <p className="text-base-content/60 mt-1">
                     {t.discover.description}
                 </p>
             </div>
 
-            {/* Search and Filter */}
-            <div className="card bg-base-200 p-6">
-                <div className="flex gap-4">
-                    <div className="join flex-1">
-                        <input
-                            type="text"
-                            placeholder={t.discover.searchPlaceholder}
-                            className="input input-bordered join-item flex-1"
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                            onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                        />
-                        <button
+            {/* Search and Toolbar */}
+            <div className="sticky top-0 z-10 bg-base-100/80 backdrop-blur-md pb-4 pt-2 -mx-4 px-4 border-b border-base-200/50">
+                <div className="flex flex-col md:flex-row gap-4">
+                    <div className="join flex-1 shadow-sm">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-base-content/50" />
+                            <input
+                                type="text"
+                                placeholder={t.discover.searchPlaceholder}
+                                className="input input-bordered w-full pl-10 join-item bg-base-200/50 focus:bg-base-100 transition-colors"
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                            />
+                        </div>
+                        <Button
+                            variant="primary"
+                            className="join-item"
                             onClick={handleSearch}
-                            className="btn btn-primary join-item"
                             disabled={loading}
                         >
-                            <Search className="w-5 h-5" />
-                        </button>
+                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : t.common.search || "Search"}
+                        </Button>
                     </div>
-                    <select
-                        className="select select-bordered w-full max-w-xs"
-                        value={selectedSource}
-                        onChange={(e) => setSelectedSource(e.target.value)}
-                    >
-                        <option value="all">Check All</option>
-                        {registries.map(r => (
-                            <option key={r.name} value={r.name}>
-                                {r.name}
-                            </option>
-                        ))}
-                    </select>
+
+                    <div className="flex items-center gap-2 min-w-[200px]">
+                        <Filter className="w-4 h-4 text-base-content/50" />
+                        <select
+                            className="select select-bordered flex-1 bg-base-200/50 focus:bg-base-100 transition-colors"
+                            value={selectedSource}
+                            onChange={(e) => setSelectedSource(e.target.value)}
+                        >
+                            <option value="all">All Sources</option>
+                            {registries.map(r => (
+                                <option key={r.name} value={r.name}>
+                                    {r.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            {/* Results */}
-            {loading ? (
-                <div className="flex justify-center py-12">
+            {/* Results Grid */}
+            {loading && page === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-4">
                     <span className="loading loading-spinner loading-lg text-primary"></span>
+                    <p className="text-base-content/50 animate-pulse">{t.common.loading}</p>
                 </div>
             ) : filteredResults.length === 0 ? (
-                <div className="card bg-base-200">
-                    <div className="card-body items-center text-center py-12">
-                        <Package className="w-16 h-16 text-base-content/30" />
-                        <h2 className="card-title mt-4">{t.discover.searchForSkills}</h2>
-                        <p className="text-base-content/60">
-                            {t.discover.searchHint}
-                        </p>
+                <div className="glass-panel p-12 text-center rounded-2xl border-dashed border-2 border-base-300">
+                    <div className="w-20 h-20 bg-base-200 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Package className="w-10 h-10 text-base-content/30" />
                     </div>
+                    <h2 className="text-xl font-bold mb-2">{t.discover.searchForSkills}</h2>
+                    <p className="text-base-content/60 max-w-md mx-auto">
+                        {t.discover.searchHint}
+                    </p>
                 </div>
             ) : (
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {filteredResults.map((skill) => (
-                        <div
+                        <Card
                             key={skill.id}
-                            className="card bg-base-200 hover:bg-base-300 transition-colors"
+                            className="flex flex-col h-full hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group"
+                            noPadding
                         >
-                            <div className="card-body">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-secondary/20 to-accent/20 flex items-center justify-center">
-                                            <Package className="w-7 h-7 text-secondary" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-lg font-bold">{skill.name || skill.id}</h3>
-                                            <p className="text-sm text-base-content/60">
-                                                {t.discover.by} {skill.author || t.discover.unknown} • v{skill.version}
-                                            </p>
-                                        </div>
+                            <div className="p-5 flex-1 flex flex-col">
+                                <div className="flex items-start justify-between mb-4">
+                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary/10 to-accent/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                        <Package className="w-6 h-6 text-secondary" />
                                     </div>
-                                    {installedSkills.has(skill.id) ? (
-                                        <button className="btn btn-success btn-sm gap-2" disabled>
-                                            <Check className="w-4 h-4" />
-                                            {t.common.installed || "已安装"}
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className="btn btn-primary btn-sm gap-2"
-                                            onClick={() => handleInstall(skill.id)}
-                                            disabled={installingSkills.has(skill.id)}
-                                        >
-                                            {installingSkills.has(skill.id) ? (
-                                                <Loader2 className="w-4 h-4 animate-spin" />
-                                            ) : (
-                                                <Download className="w-4 h-4" />
-                                            )}
-                                            {installingSkills.has(skill.id)
-                                                ? (t.common.installing || "安装中...")
-                                                : t.common.install}
-                                        </button>
+                                    <Badge variant="outline" size="xs" className="font-mono">v{skill.version}</Badge>
+                                </div>
+
+                                <div className="mb-2">
+                                    <h3 className="font-bold text-lg leading-tight mb-1 group-hover:text-primary transition-colors line-clamp-1" title={skill.name}>
+                                        {skill.name || skill.id}
+                                    </h3>
+                                    <p className="text-xs text-base-content/50">
+                                        by {skill.author || "Unknown"}
+                                    </p>
+                                </div>
+
+                                <p className="text-sm text-base-content/70 mb-4 line-clamp-3 flex-1">
+                                    {skill.description}
+                                </p>
+
+                                <div className="flex flex-wrap gap-1.5 mb-4">
+                                    {skill.tags?.slice(0, 3).map((tag) => (
+                                        <Badge key={tag} variant="neutral" size="xs">
+                                            {tag}
+                                        </Badge>
+                                    ))}
+                                    {skill.tags?.length > 3 && (
+                                        <Badge variant="neutral" size="xs">+{skill.tags.length - 3}</Badge>
                                     )}
                                 </div>
 
-                                <p className="text-base-content/70 mt-3">{skill.description}</p>
-
-                                <div className="flex items-center justify-between mt-4">
-                                    <div className="flex flex-wrap gap-2">
-                                        {skill.tags?.map((tag) => (
-                                            <span key={tag} className="badge badge-outline badge-sm">
-                                                {tag}
-                                            </span>
-                                        ))}
-                                    </div>
-                                    <div className="flex items-center gap-4 text-sm text-base-content/60">
-                                        <span className="flex items-center gap-1">
-                                            <Download className="w-4 h-4" />
+                                <div className="flex items-center justify-between pt-4 border-t border-base-200/50 mt-auto">
+                                    <div className="flex items-center gap-3 text-xs text-base-content/50 font-medium">
+                                        <span className="flex items-center gap-1" title="Downloads">
+                                            <Download className="w-3.5 h-3.5" />
                                             {skill.downloads?.toLocaleString() || 0}
                                         </span>
-                                        <span className="flex items-center gap-1">
-                                            <Star className="w-4 h-4 text-warning" />
-                                            {skill.rating?.toFixed(1) || "N/A"}
+                                        <span className="flex items-center gap-1" title="Rating">
+                                            <Star className="w-3.5 h-3.5 text-warning/80 fill-warning/20" />
+                                            {skill.rating?.toFixed(1) || "-"}
                                         </span>
                                     </div>
+
+                                    {installedSkills.has(skill.id) ? (
+                                        <Button variant="ghost" size="sm" className="text-success cursor-default hover:bg-transparent px-2 h-8 min-h-0">
+                                            <Check className="w-4 h-4 mr-1" />
+                                            Installed
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            variant="primary"
+                                            size="sm"
+                                            className="h-8 min-h-0 px-3 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            onClick={() => handleInstall(skill.id)}
+                                            disabled={installingSkills.has(skill.id)}
+                                            loading={installingSkills.has(skill.id)}
+                                        >
+                                            <Download className="w-3.5 h-3.5 mr-1" />
+                                            Install
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
-                        </div>
+                        </Card>
                     ))}
-
-                    {/* 加载更多触发器 */}
-                    <div ref={loaderRef} className="flex justify-center py-4">
-                        {loadingMore && (
-                            <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                        )}
-                        {!hasMore && results.length > 0 && (
-                            <p className="text-base-content/50 text-sm">已加载全部</p>
-                        )}
-                    </div>
                 </div>
             )}
+
+            {/* Load More Trigger */}
+            <div ref={loaderRef} className="flex justify-center py-8">
+                {loadingMore && (
+                    <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                        <span className="text-xs text-base-content/40">Loading more skills...</span>
+                    </div>
+                )}
+                {!hasMore && results.length > 0 && (
+                    <div className="divider text-xs text-base-content/30 w-full max-w-sm mx-auto">End of Results</div>
+                )}
+            </div>
         </div>
     );
 }

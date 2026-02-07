@@ -25,6 +25,9 @@ export const fr: Translations = {
         size: "Taille",
         noData: "Aucune donnée",
         error: "Erreur",
+        add: "Ajouter",
+        about: "À propos",
+        scan: "Scanner",
     },
 
     nav: {

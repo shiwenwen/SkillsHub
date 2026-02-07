@@ -25,6 +25,9 @@ export const ja: Translations = {
         size: "サイズ",
         noData: "データなし",
         error: "エラー",
+        add: "追加",
+        about: "について",
+        scan: "スキャン",
     },
 
     nav: {

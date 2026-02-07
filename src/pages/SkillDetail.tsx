@@ -4,14 +4,22 @@ import { invoke } from "@tauri-apps/api/core";
 import {
     ArrowLeft,
     Package,
-    Shield,
     RefreshCw,
     Trash2,
+    FileCode,
+    ShieldCheck,
+    ShieldAlert,
+    ExternalLink,
     FolderOpen,
+    AlertTriangle,
     FileText,
     Folder,
+    Check
 } from "lucide-react";
 import { useTranslation } from "../i18n";
+import { Card } from "../components/ui/Card";
+import { Badge } from "../components/ui/Badge";
+import { Button } from "../components/ui/Button";
 
 interface SkillInfo {
     id: string;
@@ -77,15 +85,15 @@ interface SyncedToolInfo {
     path: string | null;
 }
 
-function getRiskBadgeClass(risk: string): string {
+function getRiskBadgeVariant(risk: string): "neutral" | "primary" | "secondary" | "accent" | "ghost" | "link" | "outline" | "error" | "warning" | "success" | "info" {
     const normalized = risk.trim().toUpperCase();
     if (normalized === "BLOCK" || normalized === "HIGH") {
-        return "badge-error";
+        return "error";
     }
     if (normalized === "MEDIUM") {
-        return "badge-warning";
+        return "warning";
     }
-    return "badge-info";
+    return "info";
 }
 
 export default function SkillDetail() {
@@ -132,9 +140,7 @@ export default function SkillDetail() {
     }
 
     async function loadSkillInfo() {
-        if (!id) {
-            return;
-        }
+        if (!id) return;
         setLoading(true);
         try {
             const [skillResult, detailResult] = await Promise.all([
@@ -180,22 +186,15 @@ export default function SkillDetail() {
     }
 
     async function runSecurityScan() {
-        if (!id) {
-            return;
-        }
+        if (!id) return;
         setScanLoading(true);
         setScanError(null);
         try {
             const result = await invoke<SecurityScanResult>("scan_skill", { skillId: id });
             setScanResult(result);
             setSkill((prev) => {
-                if (!prev) {
-                    return prev;
-                }
-                return {
-                    ...prev,
-                    scan_passed: result.passed,
-                };
+                if (!prev) return prev;
+                return { ...prev, scan_passed: result.passed };
             });
         } catch (error) {
             console.error("Failed to run security scan:", error);
@@ -205,9 +204,7 @@ export default function SkillDetail() {
     }
 
     async function handleSyncTools(toolTypes: string[]) {
-        if (!id || toolTypes.length === 0) {
-            return;
-        }
+        if (!id || toolTypes.length === 0) return;
 
         setActionError(null);
         try {
@@ -217,7 +214,7 @@ export default function SkillDetail() {
             });
             const failed = results.filter((item) => !item.success);
             if (failed.length > 0) {
-                setActionError(failed.map((item) => `${item.tool}: ${item.error ?? "failed"}`).join("; "));
+                setActionError(failed.map((item) => `${item.tool}: ${item.error ?? "failed"} `).join("; "));
             }
             await loadSkillInfo();
         } catch (error) {
@@ -227,9 +224,7 @@ export default function SkillDetail() {
     }
 
     async function handleSyncAll() {
-        if (configuredTools.length === 0) {
-            return;
-        }
+        if (configuredTools.length === 0) return;
         setSyncingAll(true);
         try {
             await handleSyncTools(configuredTools.map((tool) => tool.tool_type));
@@ -248,10 +243,7 @@ export default function SkillDetail() {
     }
 
     async function handleUninstall() {
-        if (!id) {
-            return;
-        }
-
+        if (!id) return;
         setUninstalling(true);
         setActionError(null);
         try {
@@ -266,172 +258,172 @@ export default function SkillDetail() {
 
     if (loading) {
         return (
-            <div className="flex justify-center py-12">
-                <span className="loading loading-spinner loading-lg text-primary"></span>
+            <div className="flex justify-center items-center py-20">
+                <div className="flex flex-col items-center gap-4">
+                    <span className="loading loading-spinner loading-lg text-primary"></span>
+                    <span className="text-base-content/50">Loading skill details...</span>
+                </div>
             </div>
         );
     }
 
     if (!skill) {
         return (
-            <div className="card bg-base-200">
-                <div className="card-body items-center text-center">
-                    <h2 className="card-title">{t.skillDetail.skillNotFound}</h2>
-                    <Link to="/" className="btn btn-primary mt-4">
-                        {t.skillDetail.back}
-                    </Link>
-                </div>
+            <div className="flex flex-col items-center justify-center py-20">
+                <Package className="w-16 h-16 text-base-content/20 mb-4" />
+                <h2 className="text-2xl font-bold mb-2">{t.skillDetail.skillNotFound}</h2>
+                <p className="text-base-content/60 mb-6">The skill you are looking for could not be found.</p>
+                <Link to="/">
+                    <Button variant="primary">{t.skillDetail.back}</Button>
+                </Link>
             </div>
         );
     }
 
+    const tabs = [
+        { id: "readme", label: t.skillDetail.readme, icon: FileText },
+        { id: "files", label: t.skillDetail.files, icon: Folder },
+        { id: "sync", label: t.skillDetail.syncStatus, icon: RefreshCw },
+        { id: "security", label: t.skillDetail.security, icon: ShieldCheck },
+    ];
+
     return (
-        <div className="space-y-6">
+        <div className="max-w-5xl mx-auto space-y-6 pb-20">
             {/* Back Button */}
-            <Link to="/" className="btn btn-ghost btn-sm gap-2">
-                <ArrowLeft className="w-4 h-4" />
-                {t.skillDetail.back}
+            <Link to="/" className="inline-block">
+                <Button variant="ghost" size="sm" className="gap-2 pl-2">
+                    <ArrowLeft className="w-4 h-4" />
+                    {t.skillDetail.back}
+                </Button>
             </Link>
 
             {/* Header */}
-            <div className="card bg-base-200">
-                <div className="card-body">
-                    <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                                <Package className="w-8 h-8 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-2xl font-bold">{skill.name}</h1>
-                                <p className="text-base-content/60">{t.skillDetail.version} {skill.version}</p>
-                                <div className="flex gap-2 mt-2">
-                                    {skill.scan_passed ? (
-                                        <span className="badge badge-success gap-1">
-                                            <Shield className="w-3 h-3" /> {t.skillDetail.secure}
-                                        </span>
-                                    ) : (
-                                        <span className="badge badge-error gap-1">
-                                            <Shield className="w-3 h-3" /> {t.skillDetail.issuesFound}
-                                        </span>
-                                    )}
+            <div className="glass-card p-8">
+                <div className="flex flex-col md:flex-row items-start justify-between gap-6">
+                    <div className="flex items-start gap-6">
+                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-secondary/80 flex items-center justify-center shadow-lg shadow-primary/20 text-white shrink-0">
+                            <Package className="w-10 h-10" />
+                        </div>
+                        <div>
+                            <h1 className="text-3xl font-bold mb-2">{skill.name}</h1>
+                            <div className="flex flex-wrap items-center gap-3 mb-4">
+                                <Badge variant="neutral" className="font-mono">{skill.version}</Badge>
+                                <span className="text-base-content/30">•</span>
+                                <div className="flex items-center gap-2 text-sm text-base-content/60">
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                    <span className="truncate max-w-[200px]">{skill.source}</span>
                                 </div>
                             </div>
-                        </div>
-                        <div className="flex gap-2">
-                            <button
-                                className="btn btn-ghost btn-sm gap-2"
-                                onClick={() => void handleOpenDirectory()}
-                                disabled={!skillDetail?.skill_path}
-                            >
-                                <FolderOpen className="w-4 h-4" />
-                                {t.settings.openDirectory}
-                            </button>
-                            <button
-                                className="btn btn-ghost btn-sm gap-2"
-                                onClick={() => void handleSyncAll()}
-                                disabled={syncingAll || uninstalling || toolsLoading || configuredTools.length === 0}
-                            >
-                                <RefreshCw className={`w-4 h-4 ${syncingAll ? "animate-spin" : ""}`} />
-                                {syncingAll ? t.settings.syncing : t.common.sync}
-                            </button>
-                            <button
-                                className="btn btn-error btn-sm gap-2"
-                                onClick={() => void handleUninstall()}
-                                disabled={uninstalling || syncingAll}
-                            >
-                                {uninstalling ? (
-                                    <span className="loading loading-spinner loading-xs"></span>
+                            <div className="flex gap-2">
+                                {skill.scan_passed ? (
+                                    <Badge variant="success" className="gap-1.5 pl-1.5">
+                                        <ShieldCheck className="w-3.5 h-3.5" /> {t.skillDetail.secure}
+                                    </Badge>
                                 ) : (
-                                    <Trash2 className="w-4 h-4" />
+                                    <Badge variant="error" className="gap-1.5 pl-1.5">
+                                        <ShieldAlert className="w-3.5 h-3.5" /> {t.skillDetail.issuesFound}
+                                    </Badge>
                                 )}
-                                {t.common.uninstall}
-                            </button>
+                            </div>
                         </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                        <Button
+                            variant="ghost"
+                            onClick={() => void handleOpenDirectory()}
+                            disabled={!skillDetail?.skill_path}
+                            title={t.settings.openDirectory}
+                        >
+                            <FolderOpen className="w-4 h-4 mr-2" />
+                            {t.settings.openDirectory}
+                        </Button>
+                        <Button
+                            variant="primary"
+                            onClick={() => void handleSyncAll()}
+                            disabled={syncingAll || uninstalling || toolsLoading || configuredTools.length === 0}
+                            loading={syncingAll}
+                        >
+                            <RefreshCw className="w-4 h-4 mr-2" />
+                            {syncingAll ? t.settings.syncing : t.common.sync}
+                        </Button>
+                        <Button
+                            variant="danger"
+                            variantType="outline"
+                            onClick={() => void handleUninstall()}
+                            disabled={uninstalling || syncingAll}
+                            loading={uninstalling}
+                        >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            {t.common.uninstall}
+                        </Button>
                     </div>
                 </div>
             </div>
 
             {actionError && (
-                <div className="alert alert-error">
+                <div className="alert alert-error shadow-sm rounded-xl">
+                    <AlertTriangle className="w-5 h-5" />
                     <span>{actionError}</span>
                 </div>
             )}
 
             {/* Tabs */}
-            <div role="tablist" className="tabs tabs-boxed bg-base-200 p-1">
-                <button
-                    role="tab"
-                    className={`tab ${activeTab === "readme" ? "tab-active" : ""}`}
-                    onClick={() => setActiveTab("readme")}
-                >
-                    {t.skillDetail.readme}
-                </button>
-                <button
-                    role="tab"
-                    className={`tab ${activeTab === "files" ? "tab-active" : ""}`}
-                    onClick={() => setActiveTab("files")}
-                >
-                    {t.skillDetail.files}
-                </button>
-                <button
-                    role="tab"
-                    className={`tab ${activeTab === "sync" ? "tab-active" : ""}`}
-                    onClick={() => setActiveTab("sync")}
-                >
-                    {t.skillDetail.syncStatus}
-                </button>
-                <button
-                    role="tab"
-                    className={`tab ${activeTab === "security" ? "tab-active" : ""}`}
-                    onClick={() => setActiveTab("security")}
-                >
-                    {t.skillDetail.security}
-                </button>
+            <div className="tabs tabs-boxed bg-base-200/50 p-1 w-full md:w-auto inline-flex overflow-x-auto">
+                {tabs.map((tab) => (
+                    <a
+                        key={tab.id}
+                        className={`tab h - 10 px - 6 transition - all duration - 200 rounded - lg ${activeTab === tab.id ? "bg-primary text-primary-content shadow-md" : "hover:bg-base-300"} `}
+                        onClick={() => setActiveTab(tab.id)}
+                    >
+                        <tab.icon className="w-4 h-4 mr-2" />
+                        {tab.label}
+                    </a>
+                ))}
             </div>
 
             {/* Tab Content */}
-            {activeTab === "readme" && (
-                <div className="card bg-base-200">
-                    <div className="card-body">
-                        <h3 className="card-title">{t.skillDetail.readme}</h3>
+            <div className="animate-fade-in">
+                {activeTab === "readme" && (
+                    <Card title={t.skillDetail.readme} icon={<FileText className="w-5 h-5 text-primary" />}>
                         {skillDetail?.skill_md_content ? (
-                            <pre className="mt-4 p-4 bg-base-300 rounded-lg overflow-auto text-sm whitespace-pre-wrap font-mono max-h-[500px]">
-                                {skillDetail.skill_md_content}
-                            </pre>
+                            <div className="mockup-code bg-base-300 text-base-content/80 before:hidden">
+                                <pre className="px-6 py-4 whitespace-pre-wrap font-mono text-sm leading-relaxed max-h-[600px] overflow-auto custom-scrollbar">
+                                    {skillDetail.skill_md_content}
+                                </pre>
+                            </div>
                         ) : (
-                            <p className="text-base-content/60 mt-4">
-                                {t.skillDetail.noReadme}
-                            </p>
+                            <div className="text-center py-12 text-base-content/40 bg-base-200/30 rounded-xl border border-dashed border-base-300">
+                                <FileText className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                                <p>{t.skillDetail.noReadme}</p>
+                            </div>
                         )}
-                    </div>
-                </div>
-            )}
+                    </Card>
+                )}
 
-            {activeTab === "files" && (
-                <div className="card bg-base-200">
-                    <div className="card-body">
-                        <h3 className="card-title">{t.skillDetail.files}</h3>
+                {activeTab === "files" && (
+                    <Card title={t.skillDetail.files} icon={<Folder className="w-5 h-5 text-secondary" />}>
                         {skillDetail?.files && skillDetail.files.length > 0 ? (
-                            <div className="overflow-x-auto mt-4">
-                                <table className="table">
+                            <div className="overflow-x-auto">
+                                <table className="table w-full">
                                     <thead>
-                                        <tr>
+                                        <tr className="text-base-content/60 border-b border-base-200/50">
                                             <th>{t.common.name}</th>
                                             <th>{t.common.size}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {skillDetail.files.map((file) => (
-                                            <tr key={file.path}>
-                                                <td className="flex items-center gap-2">
+                                            <tr key={file.path} className="hover:bg-base-200/30 transition-colors border-b border-base-200/30 last:border-0">
+                                                <td className="flex items-center gap-3 py-3">
                                                     {file.is_dir ? (
-                                                        <Folder className="w-4 h-4 text-warning" />
+                                                        <Folder className="w-5 h-5 text-warning fill-warning/20" />
                                                     ) : (
-                                                        <FileText className="w-4 h-4 text-base-content/60" />
+                                                        <FileCode className="w-5 h-5 text-base-content/40" />
                                                     )}
                                                     <span className="font-mono text-sm">{file.name}</span>
                                                 </td>
-                                                <td className="text-base-content/60">
+                                                <td className="text-base-content/60 font-mono text-xs">
                                                     {file.is_dir ? "-" : formatBytes(file.size)}
                                                 </td>
                                             </tr>
@@ -440,100 +432,48 @@ export default function SkillDetail() {
                                 </table>
                             </div>
                         ) : (
-                            <p className="text-base-content/60 mt-4">
-                                {t.common.noData}
-                            </p>
+                            <div className="text-center py-12 text-base-content/40">
+                                <Folder className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                                <p>{t.common.noData}</p>
+                            </div>
                         )}
-                    </div>
-                </div>
-            )}
+                    </Card>
+                )}
 
-            {activeTab === "sync" && (
-                <div className="card bg-base-200">
-                    <div className="card-body">
-                        <div className="flex items-center justify-between gap-2">
-                            <h3 className="card-title">{t.skillDetail.securityScanResults}</h3>
-                            <button
-                                className="btn btn-ghost btn-sm gap-2"
+                {activeTab === "sync" && (
+                    <Card
+                        title={t.skillDetail.syncStatus}
+                        icon={<RefreshCw className="w-5 h-5 text-info" />}
+                        actions={
+                            <Button
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => void runSecurityScan()}
                                 disabled={scanLoading}
                             >
-                                <RefreshCw className={`w-4 h-4 ${scanLoading ? "animate-spin" : ""}`} />
+                                <RefreshCw className={`w - 3.5 h - 3.5 mr - 2 ${scanLoading ? "animate-spin" : ""} `} />
                                 {t.common.refresh}
-                            </button>
-                        </div>
-
-                        {scanLoading && (
-                            <div className="flex justify-center py-8">
-                                <span className="loading loading-spinner loading-md text-primary"></span>
-                            </div>
-                        )}
-
-                        {!scanLoading && scanError && (
-                            <div className="alert alert-error mt-4">
-                                <span>{scanError}</span>
-                            </div>
-                        )}
-
+                            </Button>
+                        }
+                    >
+                        {/* Security Scan Summary inside Sync Tab for better context */}
                         {!scanLoading && !scanError && scanResult && (
-                            <>
-                                <div
-                                    className={`alert mt-4 ${scanResult.passed && scanResult.findings.length === 0
-                                        ? "alert-success"
-                                        : "alert-warning"
-                                        }`}
-                                >
-                                    <Shield className="w-5 h-5" />
-                                    <span>
+                            <div className={`mb - 6 p - 4 rounded - xl border ${scanResult.passed && scanResult.findings.length === 0 ? "bg-success/5 border-success/20 text-success" : "bg-warning/5 border-warning/20 text-warning"} `}>
+                                <div className="flex items-center gap-3">
+                                    {scanResult.passed ? <ShieldCheck className="w-5 h-5" /> : <ShieldAlert className="w-5 h-5" />}
+                                    <span className="font-medium">
                                         {scanResult.findings.length === 0
                                             ? t.skillDetail.passedAllChecks
-                                            : `${scanResult.overall_risk} · ${t.security.findings}: ${scanResult.findings.length}`}
+                                            : `${scanResult.overall_risk} · ${t.security.findings}: ${scanResult.findings.length} `}
                                     </span>
                                 </div>
-
-                                {scanResult.findings.length > 0 && (
-                                    <div className="space-y-3 mt-4">
-                                        {scanResult.findings.map((finding, index) => (
-                                            <div
-                                                key={`${finding.rule_name}-${finding.file}-${finding.line ?? index}`}
-                                                className="p-4 rounded-lg bg-base-300"
-                                            >
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <div>
-                                                        <p className="font-semibold">{finding.rule_name}</p>
-                                                        <p className="text-sm text-base-content/70 mt-1">
-                                                            {finding.description}
-                                                        </p>
-                                                    </div>
-                                                    <span className={`badge ${getRiskBadgeClass(finding.risk_level)}`}>
-                                                        {finding.risk_level}
-                                                    </span>
-                                                </div>
-                                                <p className="text-xs font-mono text-base-content/70 mt-2">
-                                                    {finding.file}
-                                                    {finding.line ? `:${finding.line}` : ""}
-                                                </p>
-                                                <p className="text-sm text-base-content/70 mt-1">
-                                                    {finding.recommendation}
-                                                </p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </>
+                            </div>
                         )}
-                    </div>
-                </div>
-            )}
 
-            {activeTab === "sync" && (
-                <div className="card bg-base-200">
-                    <div className="card-body">
-                        <h3 className="card-title">{t.skillDetail.syncStatus}</h3>
-                        <div className="overflow-x-auto mt-4">
-                            <table className="table">
+                        <div className="overflow-x-auto">
+                            <table className="table w-full">
                                 <thead>
-                                    <tr>
+                                    <tr className="text-base-content/60 border-b border-base-200/50">
                                         <th>{t.skillDetail.tool}</th>
                                         <th>{t.skillDetail.status}</th>
                                         <th>{t.skillDetail.strategy}</th>
@@ -559,42 +499,144 @@ export default function SkillDetail() {
 
                                     {!toolsLoading && skillDetail?.synced_tools &&
                                         skillDetail.synced_tools.map((tool) => (
-                                            <tr key={tool.tool_type}>
-                                                <td>{tool.tool_name}</td>
+                                            <tr key={tool.tool_type} className="hover:bg-base-200/30 transition-colors border-b border-base-200/30 last:border-0">
+                                                <td className="font-medium">{tool.tool_name}</td>
                                                 <td>
                                                     {tool.is_synced ? (
-                                                        <span className="badge badge-success">{t.skillDetail.synced}</span>
+                                                        <Badge variant="success" size="sm" className="gap-1">
+                                                            <Check className="w-3 h-3" /> {t.skillDetail.synced}
+                                                        </Badge>
                                                     ) : (
-                                                        <span className="badge badge-ghost">{t.skillDetail.notSynced}</span>
+                                                        <Badge variant="neutral" size="sm">
+                                                            {t.skillDetail.notSynced}
+                                                        </Badge>
                                                     )}
                                                 </td>
-                                                <td>{tool.is_link ? t.skillDetail.autoLink : "Copy"}</td>
+                                                <td className="text-sm">
+                                                    {tool.is_link ? (
+                                                        <span className="flex items-center gap-1.5 text-base-content/70">
+                                                            <ExternalLink className="w-3.5 h-3.5" />
+                                                            {t.skillDetail.autoLink}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="flex items-center gap-1.5 text-base-content/70">
+                                                            <FileText className="w-3.5 h-3.5" />
+                                                            Copy
+                                                        </span>
+                                                    )}
+                                                </td>
                                                 <td>
-                                                    <button
-                                                        className="btn btn-ghost btn-xs"
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="xs"
                                                         onClick={() => void handleRefreshTool(tool.tool_type)}
-                                                        disabled={
-                                                            refreshingTool === tool.tool_type ||
-                                                            syncingAll ||
-                                                            uninstalling
-                                                        }
+                                                        disabled={refreshingTool === tool.tool_type || syncingAll || uninstalling}
+                                                        className="btn-square h-8 w-8"
                                                     >
-                                                        <RefreshCw
-                                                            className={`w-3 h-3 ${refreshingTool === tool.tool_type
-                                                                ? "animate-spin"
-                                                                : ""
-                                                                }`}
-                                                        />
-                                                    </button>
+                                                        <RefreshCw className={`w - 4 h - 4 ${refreshingTool === tool.tool_type ? "animate-spin" : ""} `} />
+                                                    </Button>
                                                 </td>
                                             </tr>
                                         ))}
                                 </tbody>
                             </table>
                         </div>
-                    </div>
-                </div>
-            )}
+                    </Card>
+                )}
+
+                {activeTab === "security" && (
+                    <Card
+                        title={t.skillDetail.security}
+                        icon={<ShieldCheck className="w-5 h-5 text-accent" />}
+                        actions={
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => void runSecurityScan()}
+                                disabled={scanLoading}
+                            >
+                                <RefreshCw className={`w - 3.5 h - 3.5 mr - 2 ${scanLoading ? "animate-spin" : ""} `} />
+                                {t.common.scan}
+                            </Button>
+                        }
+                    >
+                        {scanLoading && (
+                            <div className="flex justify-center py-12">
+                                <span className="loading loading-spinner loading-md text-primary"></span>
+                            </div>
+                        )}
+
+                        {!scanLoading && scanError && (
+                            <div className="alert alert-error shadow-sm rounded-xl">
+                                <AlertTriangle className="w-5 h-5" />
+                                <span>{scanError}</span>
+                            </div>
+                        )}
+
+                        {!scanLoading && !scanError && scanResult && (
+                            <>
+                                <div className={`p - 6 rounded - xl border mb - 6 flex items - center justify - between ${scanResult.passed && scanResult.findings.length === 0 ? "bg-success/5 border-success/20 text-success" : "bg-warning/5 border-warning/20 text-warning"} `}>
+                                    <div className="flex items-center gap-3">
+                                        {scanResult.passed ? <ShieldCheck className="w-8 h-8" /> : <ShieldAlert className="w-8 h-8" />}
+                                        <div>
+                                            <h3 className="font-bold text-lg">
+                                                {scanResult.findings.length === 0 ? t.skillDetail.passedAllChecks : "Issues Detected"}
+                                            </h3>
+                                            <p className="opacity-80 text-sm">
+                                                {scanResult.findings.length === 0
+                                                    ? "This skill is safe to use according to current security rules."
+                                                    : `Found ${scanResult.findings.length} potential issues.Risk Level: ${scanResult.overall_risk} `}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {scanResult.overall_risk !== "LOW" && (
+                                        <Badge variant={getRiskBadgeVariant(scanResult.overall_risk)} className="text-lg px-4 h-8">
+                                            {scanResult.overall_risk}
+                                        </Badge>
+                                    )}
+                                </div>
+
+                                {scanResult.findings.length > 0 && (
+                                    <div className="space-y-4">
+                                        <h4 className="font-bold border-b border-base-200/50 pb-2 mb-4">Detailed Findings</h4>
+                                        {scanResult.findings.map((finding, index) => (
+                                            <div
+                                                key={`${finding.rule_name} -${finding.file} -${finding.line ?? index} `}
+                                                className="p-5 rounded-xl bg-base-200/30 border border-base-300 hover:border-base-content/20 transition-colors"
+                                            >
+                                                <div className="flex items-start justify-between gap-4 mb-2">
+                                                    <div>
+                                                        <h5 className="font-bold text-base flex items-center gap-2">
+                                                            {finding.rule_name}
+                                                        </h5>
+                                                        <p className="text-sm text-base-content/70 mt-1">
+                                                            {finding.description}
+                                                        </p>
+                                                    </div>
+                                                    <Badge variant={getRiskBadgeVariant(finding.risk_level)} size="sm">
+                                                        {finding.risk_level}
+                                                    </Badge>
+                                                </div>
+
+                                                <div className="bg-base-300/50 rounded-lg p-2.5 mt-3 font-mono text-xs text-base-content/80 flex items-center gap-2">
+                                                    <FileCode className="w-3.5 h-3.5 opacity-50" />
+                                                    {finding.file}
+                                                    {finding.line && <span className="opacity-50">: {finding.line}</span>}
+                                                </div>
+
+                                                <div className="mt-3 flex items-start gap-2 text-sm text-base-content/80 bg-info/5 p-3 rounded-lg border border-info/10">
+                                                    <ExternalLink className="w-4 h-4 text-info mt-0.5 shrink-0" />
+                                                    <span>{finding.recommendation}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </Card>
+                )}
+            </div>
         </div>
     );
 }

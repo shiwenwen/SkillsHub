@@ -25,6 +25,9 @@ export const ru: Translations = {
         size: "Размер",
         noData: "Нет данных",
         error: "Ошибка",
+        add: "Добавить",
+        about: "О программе",
+        scan: "Сканировать",
     },
 
     nav: {
