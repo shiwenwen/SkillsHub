@@ -15,6 +15,14 @@ pub struct SecurityScanner {
     policy: ScanPolicy,
 }
 
+/// Security rule metadata for UI display
+#[derive(Debug, Clone)]
+pub struct SecurityRuleInfo {
+    pub id: String,
+    pub name: String,
+    pub risk_level: RiskLevel,
+}
+
 /// A scanning rule
 pub struct ScanRule {
     pub id: String,
@@ -43,6 +51,32 @@ impl SecurityScanner {
     /// Add a custom rule
     pub fn add_rule(&mut self, rule: ScanRule) {
         self.rules.push(rule);
+    }
+
+    /// List all active rules as metadata for display
+    pub fn list_rules(&self) -> Vec<SecurityRuleInfo> {
+        let mut rules: Vec<SecurityRuleInfo> = self
+            .rules
+            .iter()
+            .map(|rule| SecurityRuleInfo {
+                id: rule.id.clone(),
+                name: rule.name.clone(),
+                risk_level: rule.risk_level,
+            })
+            .collect();
+
+        rules.push(SecurityRuleInfo {
+            id: "FILE001".to_string(),
+            name: "Binary Executable".to_string(),
+            risk_level: RiskLevel::Block,
+        });
+        rules.push(SecurityRuleInfo {
+            id: "FILE002".to_string(),
+            name: "Shell Script".to_string(),
+            risk_level: RiskLevel::Medium,
+        });
+
+        rules
     }
 
     /// Scan a skill directory

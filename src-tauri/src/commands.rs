@@ -36,7 +36,7 @@ pub struct ToolInfo {
     pub tool_type: String,
     pub detected: bool,
     pub skills_dir: Option<String>,
-    pub skills_dirs: Vec<String>,  // All skills directories (for tools with multiple paths)
+    pub skills_dirs: Vec<String>, // All skills directories (for tools with multiple paths)
     pub skill_count: usize,
 }
 
@@ -46,6 +46,14 @@ pub struct ScanResult {
     pub passed: bool,
     pub overall_risk: String,
     pub findings: Vec<Finding>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct SecurityRuleInfo {
+    pub id: String,
+    pub name: String,
+    pub risk_level: String,
+    pub enabled: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -76,7 +84,6 @@ pub async fn list_installed_skills() -> Result<Vec<SkillInfo>, String> {
     Ok(installed
         .into_iter()
         .map(|r| SkillInfo {
-
             id: r.skill_id.clone(),
             name: r.skill_id.clone(),
             version: r.version.version.clone(),
@@ -101,7 +108,6 @@ pub async fn get_skill_info(skill_id: String) -> Result<SkillInfo, String> {
         .ok_or_else(|| format!("Skill '{}' not found", skill_id))?;
 
     Ok(SkillInfo {
-
         id: record.skill_id.clone(),
         name: record.skill_id.clone(),
         version: record.version.version.clone(),
@@ -355,6 +361,21 @@ pub async fn scan_skill(skill_id: String) -> Result<ScanResult, String> {
     })
 }
 
+#[tauri::command]
+pub async fn list_security_rules() -> Result<Vec<SecurityRuleInfo>, String> {
+    let scanner = SecurityScanner::new();
+    Ok(scanner
+        .list_rules()
+        .into_iter()
+        .map(|rule| SecurityRuleInfo {
+            id: rule.id,
+            name: rule.name,
+            risk_level: rule.risk_level.to_string(),
+            enabled: true,
+        })
+        .collect())
+}
+
 // Tool commands
 
 #[tauri::command]
@@ -366,14 +387,12 @@ pub async fn list_tools() -> Result<Vec<ToolInfo>, String> {
         .map(|adapter| {
             let detected = adapter.detect();
             let skills_dir = adapter.skills_dir().ok();
-            
+
             // Get all skills directories (for tools with multiple paths like OpenClaw)
             let all_dirs = adapter.skills_dirs();
-            let skills_dirs: Vec<String> = all_dirs
-                .iter()
-                .map(|p| p.display().to_string())
-                .collect();
-            
+            let skills_dirs: Vec<String> =
+                all_dirs.iter().map(|p| p.display().to_string()).collect();
+
             // Count skills across all directories (avoiding duplicates by skill name)
             let mut skill_names = std::collections::HashSet::new();
             for dir in &all_dirs {
@@ -982,7 +1001,12 @@ pub async fn get_store_info() -> Result<StoreInfo, String> {
     // Count skills
     let skill_count = if store_dir.join("skills").exists() {
         std::fs::read_dir(store_dir.join("skills"))
-            .map(|entries| entries.filter_map(|e| e.ok()).filter(|e| e.path().is_dir()).count())
+            .map(|entries| {
+                entries
+                    .filter_map(|e| e.ok())
+                    .filter(|e| e.path().is_dir())
+                    .count()
+            })
             .unwrap_or(0)
     } else {
         0

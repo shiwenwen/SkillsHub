@@ -22,6 +22,7 @@ pub fn run() {
             check_drift,
             // Scan commands
             scan_skill,
+            list_security_rules,
             // Tool commands
             list_tools,
             detect_tools,

@@ -50,6 +50,13 @@ interface ScanResult {
     findings: unknown[];
 }
 
+interface SecurityRuleDto {
+    id: string;
+    name: string;
+    risk_level: string;
+    enabled: boolean;
+}
+
 interface SecurityScanRecordDto {
     skill: string;
     scanned_at: number;
@@ -66,24 +73,21 @@ interface SecurityScanRecord {
     source: string;
 }
 
-const DEFAULT_TRUSTED_SOURCES: string[] = [
-    "github.com/official-skills",
-    "skillshub.io/curated",
-];
+interface SecurityRule {
+    id: string;
+    name: string;
+    riskLevel: RiskLevel;
+    enabled: boolean;
+}
 
 function normalizeTrustedSources(sources: string[]): string[] {
-    const normalized = Array.from(
+    return Array.from(
         new Set(
             sources
                 .map((item) => item.trim())
                 .filter((item) => item.length > 0)
         )
     );
-
-    if (normalized.length === 0) {
-        return DEFAULT_TRUSTED_SOURCES;
-    }
-    return normalized;
 }
 
 function normalizeRiskLevel(value: string): RiskLevel {
@@ -151,6 +155,15 @@ function toDto(record: SecurityScanRecord): SecurityScanRecordDto {
     };
 }
 
+function fromRuleDto(rule: SecurityRuleDto): SecurityRule {
+    return {
+        id: rule.id,
+        name: rule.name,
+        riskLevel: normalizeRiskLevel(rule.risk_level),
+        enabled: rule.enabled,
+    };
+}
+
 export default function Security() {
     const t = useTranslation();
     const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
@@ -159,8 +172,9 @@ export default function Security() {
     const [blockHighRiskFindings, setBlockHighRiskFindings] = useState(true);
     const [requireConfirmMedium, setRequireConfirmMedium] = useState(true);
     const [autoApproveLow, setAutoApproveLow] = useState(false);
-    const [trustedSources, setTrustedSources] = useState<string[]>(DEFAULT_TRUSTED_SOURCES);
+    const [trustedSources, setTrustedSources] = useState<string[]>([]);
     const [newTrustedSource, setNewTrustedSource] = useState("");
+    const [securityRules, setSecurityRules] = useState<SecurityRule[]>([]);
     const [scanRecords, setScanRecords] = useState<SecurityScanRecord[]>([]);
 
     const riskColors: Record<string, string> = {
@@ -227,6 +241,19 @@ export default function Security() {
         };
 
         void loadScanRecords();
+    }, []);
+
+    useEffect(() => {
+        const loadSecurityRules = async () => {
+            try {
+                const rules = await invoke<SecurityRuleDto[]>("list_security_rules");
+                setSecurityRules(rules.map(fromRuleDto));
+            } catch (error) {
+                console.error("Failed to load security rules:", error);
+            }
+        };
+
+        void loadSecurityRules();
     }, []);
 
     async function persistSecurityPolicy(next: {
@@ -417,27 +444,25 @@ export default function Security() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {[
-                                    { id: "CMD001", name: "Destructive Commands", level: "HIGH" },
-                                    { id: "CMD002", name: "Privilege Escalation", level: "HIGH" },
-                                    { id: "NET001", name: "Data Exfiltration", level: "HIGH" },
-                                    { id: "CRED001", name: "Credential Access", level: "HIGH" },
-                                    { id: "EVAL001", name: "Dynamic Code Execution", level: "MEDIUM" },
-                                    { id: "PATH001", name: "System Path Access", level: "MEDIUM" },
-                                    { id: "FILE001", name: "Binary Executables", level: "BLOCK" },
-                                    { id: "FILE002", name: "Shell Scripts", level: "MEDIUM" },
-                                ].map((rule) => (
+                                {securityRules.length === 0 && (
+                                    <tr>
+                                        <td colSpan={4} className="text-center text-base-content/60 py-6">
+                                            {t.security.noIssues}
+                                        </td>
+                                    </tr>
+                                )}
+                                {securityRules.map((rule) => (
                                     <tr key={rule.id}>
                                         <td className="font-mono">{rule.id}</td>
                                         <td>{rule.name}</td>
                                         <td>
-                                            <span className={`badge ${riskColors[rule.level]}`}>
-                                                {rule.level}
+                                            <span className={`badge ${riskColors[rule.riskLevel]}`}>
+                                                {rule.riskLevel}
                                             </span>
                                         </td>
                                         <td>
-                                            <span className="badge badge-success badge-sm gap-1">
-                                                <Check className="w-3 h-3" /> {t.security.enabled}
+                                            <span className={`badge ${rule.enabled ? "badge-success" : "badge-ghost"} badge-sm gap-1`}>
+                                                {rule.enabled && <Check className="w-3 h-3" />} {rule.enabled ? t.security.enabled : t.security.blocked}
                                             </span>
                                         </td>
                                     </tr>

@@ -166,10 +166,7 @@ export default function Settings() {
     const [blockHighRisk, setBlockHighRisk] = useState(true);
     const [requireConfirmMedium, setRequireConfirmMedium] = useState(true);
     const [autoApproveLow, setAutoApproveLow] = useState(false);
-    const [trustedSources, setTrustedSources] = useState<string[]>([
-        "github.com/official-skills",
-        "skillshub.io/curated",
-    ]);
+    const [trustedSources, setTrustedSources] = useState<string[]>([]);
 
     // 存储信息
     const [storeInfo, setStoreInfo] = useState<StoreInfo | null>(null);

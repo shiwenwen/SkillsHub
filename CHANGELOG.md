@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 扫描策略开关（阻止高风险 / 中风险需确认 / 自动通过低风险）改为通过后端 `AppConfig` 持久化并参与扫描结果判定
   - 可信来源支持新增与移除，并持久化到后端 `AppConfig`
   - 最近扫描结果改为通过后端命令持久化（`get_security_scan_records` / `save_security_scan_records`），并用于统计卡片展示
+  - 安全规则列表改为通过后端命令 `list_security_rules` 提供，移除前端规则硬编码数组
   - 移除安全、安装、更新流程对 `localStorage` 安全配置键的依赖，统一以 Tauri 后端配置为单一数据源
 - 修复设置页面存储位置、使用量、Skills 数量硬编码显示的问题：
   - 后端新增 `get_store_info` 命令，动态获取存储路径和统计信息
