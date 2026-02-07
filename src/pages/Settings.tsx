@@ -118,6 +118,16 @@ interface PersistedCustomTool {
     projectPath: string;
 }
 
+
+interface DetectedToolInfo {
+    name: string;
+    tool_type: string;
+    detected: boolean;
+    skills_dir: string | null;
+    skills_dirs: string[];
+    skill_count: number;
+}
+
 const VALID_SYNC_STRATEGIES = new Set(["auto", "link", "copy"]);
 const VALID_CLOUD_PROVIDERS = new Set(["ICloud", "GoogleDrive", "OneDrive", "Custom"]);
 
@@ -129,7 +139,37 @@ export default function Settings() {
     const [customTools, setCustomTools] = useState<ToolConfig[]>([]);
     const [expandedTools, setExpandedTools] = useState<Set<string>>(new Set());
     const [showAddToolModal, setShowAddToolModal] = useState(false);
+
+    // Detect installed tools on mount
+    useEffect(() => {
+        const detectTools = async () => {
+            try {
+                const detectedTools = await invoke<DetectedToolInfo[]>("detect_tools");
+                setTools(prevTools => prevTools.map(tool => {
+                    // Find matching detected tool info
+                    const detected = detectedTools.find(d =>
+                        d.tool_type.toLowerCase() === tool.id.toLowerCase()
+                    );
+
+                    if (detected) {
+                        return {
+                            ...tool,
+                            detected: detected.detected,
+                            // Update global path if detected and different
+                            globalPath: detected.skills_dir || tool.globalPath,
+                        };
+                    }
+                    return tool;
+                }));
+            } catch (error) {
+                console.error("Failed to detect tools:", error);
+            }
+        };
+        detectTools();
+    }, []);
+
     const [newToolName, setNewToolName] = useState("");
+
     const [newToolGlobalPath, setNewToolGlobalPath] = useState("");
     const [newToolProjectPath, setNewToolProjectPath] = useState("");
     const [isLoading, setIsLoading] = useState(false);

@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 修复 Security 页面功能未实现的问题：
   - `scanAllSkills` 改为真实调用后端 `scan_all_skills` + `scan_skill` 执行全量扫描
   - 扫描策略开关（阻止高风险 / 中风险需确认 / 自动通过低风险）改为通过后端 `AppConfig` 持久化并参与扫描结果判定
+- 修复设置页面预置工具状态显示问题：
+  - 接入后端 `detect_tools` 接口，动态获取工具安装状态
+  - 自动更新已检测工具的全局路径（如果检测到的路径与默认不同）
   - 可信来源支持新增与移除，并持久化到后端 `AppConfig`
   - 最近扫描结果改为通过后端命令持久化（`get_security_scan_records` / `save_security_scan_records`），并用于统计卡片展示
   - 安全规则列表改为通过后端命令 `list_security_rules` 提供，移除前端规则硬编码数组
