@@ -137,6 +137,8 @@ export const de: Translations = {
         trustedSources: "Vertrauenswürdige Quellen",
         remove: "Entfernen",
         addTrustedSource: "Vertrauenswürdige Quelle hinzufügen",
+        addRegistryAsTrustedSource: "Registry-Quelle hinzufügen",
+        noConfiguredRegistries: "Keine konfigurierten Registries",
         recentScanResults: "Neueste Scan-Ergebnisse",
         skill: "Skill",
         scannedAt: "Gescannt am",

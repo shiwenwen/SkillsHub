@@ -137,6 +137,8 @@ export const pt: Translations = {
         trustedSources: "Fontes confiáveis",
         remove: "Remover",
         addTrustedSource: "Adicionar fonte confiável",
+        addRegistryAsTrustedSource: "Adicionar fonte do registro",
+        noConfiguredRegistries: "Nenhum registro configurado",
         recentScanResults: "Resultados recentes de verificação",
         skill: "Skill",
         scannedAt: "Verificado em",

@@ -143,6 +143,8 @@ export const zh: Translations = {
         trustedSources: "可信来源",
         remove: "移除",
         addTrustedSource: "添加可信来源",
+        addRegistryAsTrustedSource: "添加仓库来源",
+        noConfiguredRegistries: "没有已配置仓库",
         recentScanResults: "最近扫描结果",
         skill: "Skill",
         scannedAt: "扫描时间",

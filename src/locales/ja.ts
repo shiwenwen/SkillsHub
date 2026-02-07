@@ -137,6 +137,8 @@ export const ja: Translations = {
         trustedSources: "信頼済みソース",
         remove: "削除",
         addTrustedSource: "信頼済みソースを追加",
+        addRegistryAsTrustedSource: "レジストリソースを追加",
+        noConfiguredRegistries: "設定済みレジストリがありません",
         recentScanResults: "最近のスキャン結果",
         skill: "Skill",
         scannedAt: "スキャン日時",

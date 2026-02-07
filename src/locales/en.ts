@@ -141,6 +141,8 @@ export const en = {
         trustedSources: "Trusted Sources",
         remove: "Remove",
         addTrustedSource: "Add Trusted Source",
+        addRegistryAsTrustedSource: "Add Registry Source",
+        noConfiguredRegistries: "No configured registries",
         recentScanResults: "Recent Scan Results",
         skill: "Skill",
         scannedAt: "Scanned At",

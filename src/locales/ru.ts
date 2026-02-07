@@ -137,6 +137,8 @@ export const ru: Translations = {
         trustedSources: "Доверенные источники",
         remove: "Удалить",
         addTrustedSource: "Добавить доверенный источник",
+        addRegistryAsTrustedSource: "Добавить источник из реестра",
+        noConfiguredRegistries: "Нет настроенных реестров",
         recentScanResults: "Последние результаты сканирования",
         skill: "Skill",
         scannedAt: "Дата сканирования",

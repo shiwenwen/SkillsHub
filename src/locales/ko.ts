@@ -137,6 +137,8 @@ export const ko: Translations = {
         trustedSources: "신뢰할 수 있는 소스",
         remove: "제거",
         addTrustedSource: "신뢰할 수 있는 소스 추가",
+        addRegistryAsTrustedSource: "레지스트리 소스 추가",
+        noConfiguredRegistries: "설정된 레지스트리가 없습니다",
         recentScanResults: "최근 스캔 결과",
         skill: "Skill",
         scannedAt: "스캔 시간",

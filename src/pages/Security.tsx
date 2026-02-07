@@ -80,6 +80,12 @@ interface SecurityRule {
     enabled: boolean;
 }
 
+interface RegistryConfig {
+    name: string;
+    url: string;
+    enabled: boolean;
+}
+
 function normalizeTrustedSources(sources: string[]): string[] {
     return Array.from(
         new Set(
@@ -174,6 +180,8 @@ export default function Security() {
     const [autoApproveLow, setAutoApproveLow] = useState(false);
     const [trustedSources, setTrustedSources] = useState<string[]>([]);
     const [newTrustedSource, setNewTrustedSource] = useState("");
+    const [configuredRegistries, setConfiguredRegistries] = useState<RegistryConfig[]>([]);
+    const [selectedRegistryName, setSelectedRegistryName] = useState("");
     const [securityRules, setSecurityRules] = useState<SecurityRule[]>([]);
     const [scanRecords, setScanRecords] = useState<SecurityScanRecord[]>([]);
 
@@ -254,6 +262,23 @@ export default function Security() {
         };
 
         void loadSecurityRules();
+    }, []);
+
+    useEffect(() => {
+        const loadRegistries = async () => {
+            try {
+                const registries = await invoke<RegistryConfig[]>("list_registries");
+                const enabledRegistries = registries.filter((registry) => registry.enabled);
+                setConfiguredRegistries(enabledRegistries);
+                if (enabledRegistries.length > 0) {
+                    setSelectedRegistryName(enabledRegistries[0].name);
+                }
+            } catch (error) {
+                console.error("Failed to load registries:", error);
+            }
+        };
+
+        void loadRegistries();
     }, []);
 
     async function persistSecurityPolicy(next: {
@@ -373,6 +398,38 @@ export default function Security() {
             return nextTrustedSources;
         });
         setNewTrustedSource("");
+    }
+
+    function handleAddRegistryAsTrustedSource() {
+        if (!selectedRegistryName) {
+            return;
+        }
+
+        const selectedRegistry = configuredRegistries.find(
+            (registry) => registry.name === selectedRegistryName
+        );
+        if (!selectedRegistry) {
+            return;
+        }
+
+        const source = selectedRegistry.url.trim();
+        if (!source) {
+            return;
+        }
+
+        setTrustedSources((current) => {
+            if (current.some((item) => item.toLowerCase() === source.toLowerCase())) {
+                return current;
+            }
+            const nextTrustedSources = [...current, source];
+            void persistSecurityPolicy({
+                blockHighRiskFindings,
+                requireConfirmMedium,
+                autoApproveLow,
+                trustedSources: nextTrustedSources,
+            });
+            return nextTrustedSources;
+        });
     }
 
     return (
@@ -591,6 +648,30 @@ export default function Security() {
                                     onClick={handleAddTrustedSource}
                                 >
                                     {t.security.addTrustedSource}
+                                </button>
+                            </div>
+                            <div className="flex gap-2 mt-2">
+                                <select
+                                    className="select select-bordered select-sm flex-1"
+                                    value={selectedRegistryName}
+                                    disabled={loadingPolicy || configuredRegistries.length === 0}
+                                    onChange={(event) => setSelectedRegistryName(event.target.value)}
+                                >
+                                    {configuredRegistries.length === 0 && (
+                                        <option value="">{t.security.noConfiguredRegistries}</option>
+                                    )}
+                                    {configuredRegistries.map((registry) => (
+                                        <option key={registry.name} value={registry.name}>
+                                            {registry.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <button
+                                    className="btn btn-outline btn-sm"
+                                    disabled={loadingPolicy || configuredRegistries.length === 0}
+                                    onClick={handleAddRegistryAsTrustedSource}
+                                >
+                                    {t.security.addRegistryAsTrustedSource}
                                 </button>
                             </div>
                         </div>
