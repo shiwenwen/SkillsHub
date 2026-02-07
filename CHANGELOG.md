@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 最近扫描结果改为通过后端命令持久化（`get_security_scan_records` / `save_security_scan_records`），并用于统计卡片展示
   - 安全规则列表改为通过后端命令 `list_security_rules` 提供，移除前端规则硬编码数组
   - 移除安全、安装、更新流程对 `localStorage` 安全配置键的依赖，统一以 Tauri 后端配置为单一数据源
+- 修复 SkillDetail 页面未实现与硬编码问题：
+  - 顶部“同步”按钮接入后端 `sync_skills`，支持将当前 Skill 同步到已检测工具
+  - 顶部“卸载”按钮接入后端 `uninstall_skill`，卸载后返回安装列表
+  - 同步状态页“刷新”按钮接入后端同步逻辑，支持按工具单独同步
+  - 同步状态工具列表改为从后端 `list_tools` 动态加载，不再使用前端硬编码
+  - 安全页改为调用后端 `scan_skill` 显示真实扫描结果与问题明细
+  - 后端 `sync_skills` 在成功后会更新 `projected_tools` 持久化状态，前端刷新后同步状态保持一致
 
 ### Added
 - 安全页面可信来源支持从“已配置仓库”中选择并一键添加：

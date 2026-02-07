@@ -290,24 +290,66 @@ pub async fn sync_skills(
     }
 
     let mut results = Vec::new();
+    let mut successful_tools_by_skill: std::collections::HashMap<String, std::collections::HashSet<String>> =
+        std::collections::HashMap::new();
 
     for skill_id in skill_ids {
         for tool_str in &tools {
             let tool = match tool_str.to_lowercase().as_str() {
+                "amp" => ToolType::Amp,
+                "antigravity" => ToolType::Antigravity,
                 "claude" => ToolType::Claude,
+                "codebuddy" => ToolType::CodeBuddy,
+                "codex" => ToolType::Codex,
+                "copilot" => ToolType::Copilot,
                 "cursor" => ToolType::Cursor,
+                "factory" => ToolType::Factory,
                 "gemini" => ToolType::Gemini,
+                "goose" => ToolType::Goose,
+                "kilocode" => ToolType::KiloCode,
+                "kimi" => ToolType::Kimi,
                 "opencode" => ToolType::OpenCode,
+                "openclaw" => ToolType::OpenClaw,
+                "qwen" => ToolType::Qwen,
+                "roocode" => ToolType::RooCode,
+                "trae" => ToolType::Trae,
+                "windsurf" => ToolType::Windsurf,
                 _ => continue,
             };
 
             let result = engine.sync_skill(&skill_id, tool, SyncStrategy::Auto);
+            if result.is_ok() {
+                successful_tools_by_skill
+                    .entry(skill_id.clone())
+                    .or_default()
+                    .insert(tool_str.to_lowercase());
+            }
             results.push(SyncResult {
                 skill_id: skill_id.clone(),
                 tool: tool_str.clone(),
                 success: result.is_ok(),
                 error: result.err().map(|e| e.to_string()),
             });
+        }
+    }
+
+    if !successful_tools_by_skill.is_empty() {
+        let mut record_store = LocalStore::default_store().map_err(|e| e.to_string())?;
+        for (skill_id, synced_tools) in successful_tools_by_skill {
+            if let Some(record) = record_store.get_record(&skill_id) {
+                let mut merged_tools: std::collections::HashSet<String> = record
+                    .projected_tools
+                    .iter()
+                    .map(|tool| tool.to_lowercase())
+                    .collect();
+                merged_tools.extend(synced_tools.into_iter());
+
+                let mut projected_tools: Vec<String> = merged_tools.into_iter().collect();
+                projected_tools.sort();
+                record_store
+                    .update_projected_tools(&skill_id, projected_tools)
+                    .map_err(|e| e.to_string())?;
+            }
         }
     }
 
