@@ -218,6 +218,14 @@ export const ko: Translations = {
         cloudSyncSuccess: "클라우드 동기화 완료",
         skillsPushed: "개 스킬 푸시됨",
         skillsPulled: "개 스킬 풀됨",
+        theme: "테마",
+        themeDescription: "원하는 색상 테마를 선택하세요",
+        themeAuto: "자동",
+        themeLight: "라이트",
+        themeDark: "다크",
+        themeAutoDescription: "시스템 설정에 따름",
+        themeLightDescription: "밝은 색상 테마",
+        themeDarkDescription: "어두운 색상 테마",
     },
 
     skillDetail: {

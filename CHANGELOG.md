@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- 主题切换功能，支持三种模式：
+  - **自动模式**：跟随系统偏好自动切换亮色/暗色主题
+  - **日间模式**：亮色配色方案
+  - **夜间模式**：暗色配色方案
+  - 新增 `ThemeProvider` 上下文管理主题状态，支持 `localStorage` 持久化
+  - 新增 DaisyUI 双主题配置（`skillshub-light` / `skillshub-dark`）
+  - 导航栏新增主题切换下拉菜单（支持自动/亮色/暗色）
+  - 设置页面"通用"标签新增主题选择卡片，三按钮切换
+  - 自动监听系统偏好 `prefers-color-scheme` 变化（auto 模式下实时响应）
+  - 修复玻璃效果（glass-card / glass-panel）在亮色主题下的适配
+  - 全部 9 种语言国际化翻译适配
+
 ### Fixed
 - 修复 Security 页面功能未实现的问题：
   - `scanAllSkills` 改为真实调用后端 `scan_all_skills` + `scan_skill` 执行全量扫描

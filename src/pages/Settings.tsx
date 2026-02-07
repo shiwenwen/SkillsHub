@@ -15,9 +15,14 @@ import {
     Info,
     Server,
     LayoutGrid,
-    Search
+    Search,
+    Sun,
+    Moon,
+    Monitor,
+    Palette
 } from "lucide-react";
 import { useTranslation, useLanguage, type Language } from "../i18n";
+import { useTheme, type ThemeMode } from "../theme";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { Card } from "../components/ui/Card";
@@ -141,6 +146,7 @@ const VALID_CLOUD_PROVIDERS = new Set(["ICloud", "GoogleDrive", "OneDrive", "Cus
 export default function Settings() {
     const t = useTranslation();
     const { language, setLanguage } = useLanguage();
+    const { themeMode, setThemeMode } = useTheme();
     const [activeTab, setActiveTab] = useState("general");
 
     // Config State
@@ -866,6 +872,34 @@ export default function Settings() {
                                     <option value="pt">Português</option>
                                     <option value="ru">Русский</option>
                                 </select>
+                            </div>
+                        </Card>
+
+                        <Card title={t.settings.theme} icon={<Palette className="w-5 h-5 text-accent" />}>
+                            <div className="form-control">
+                                <label className="label">
+                                    <span className="label-text">{t.settings.themeDescription}</span>
+                                </label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {([
+                                        { mode: "auto" as ThemeMode, icon: Monitor, label: t.settings.themeAuto, desc: t.settings.themeAutoDescription },
+                                        { mode: "light" as ThemeMode, icon: Sun, label: t.settings.themeLight, desc: t.settings.themeLightDescription },
+                                        { mode: "dark" as ThemeMode, icon: Moon, label: t.settings.themeDark, desc: t.settings.themeDarkDescription },
+                                    ]).map((opt) => (
+                                        <button
+                                            key={opt.mode}
+                                            className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer ${
+                                                themeMode === opt.mode
+                                                    ? "border-primary bg-primary/10 text-primary"
+                                                    : "border-base-300 bg-base-200/50 text-base-content/60 hover:border-base-content/20"
+                                            }`}
+                                            onClick={() => setThemeMode(opt.mode)}
+                                        >
+                                            <opt.icon className="w-6 h-6" />
+                                            <span className="text-sm font-medium">{opt.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </Card>
 

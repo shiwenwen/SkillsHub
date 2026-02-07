@@ -218,6 +218,14 @@ export const ru: Translations = {
         cloudSyncSuccess: "Облачная синхронизация завершена",
         skillsPushed: "навыков отправлено",
         skillsPulled: "навыков получено",
+        theme: "Тема",
+        themeDescription: "Выберите предпочитаемую цветовую схему",
+        themeAuto: "Авто",
+        themeLight: "Светлая",
+        themeDark: "Тёмная",
+        themeAutoDescription: "Следовать настройкам системы",
+        themeLightDescription: "Светлая цветовая схема",
+        themeDarkDescription: "Тёмная цветовая схема",
     },
 
     skillDetail: {

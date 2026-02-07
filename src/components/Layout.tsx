@@ -9,12 +9,13 @@ import {
     Layers,
     Sun,
     Moon,
+    Monitor,
     Languages,
     Menu
 } from "lucide-react";
 import { useTranslation, useLanguage } from "../i18n";
+import { useTheme, type ThemeMode } from "../theme";
 import { Button } from "./ui/Button";
-import { useEffect, useState } from "react";
 
 interface LayoutProps {
     children: ReactNode;
@@ -23,7 +24,16 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
     const t = useTranslation();
     const { language, setLanguage } = useLanguage();
+    const { themeMode, setThemeMode } = useTheme();
     const location = useLocation();
+
+    const themeOptions: { mode: ThemeMode; icon: typeof Sun; label: string }[] = [
+        { mode: "auto", icon: Monitor, label: t.settings.themeAuto },
+        { mode: "light", icon: Sun, label: t.settings.themeLight },
+        { mode: "dark", icon: Moon, label: t.settings.themeDark },
+    ];
+
+    const currentThemeIcon = themeMode === "light" ? Sun : themeMode === "dark" ? Moon : Monitor;
 
     const navItems = [
         { to: "/", icon: Package, label: t.nav.installed },
@@ -60,7 +70,7 @@ export default function Layout({ children }: LayoutProps) {
                                         flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300
                                         ${isActive
                                             ? "bg-primary/10 text-primary shadow-[0_0_20px_rgba(var(--p),0.3)]"
-                                            : "text-base-content/60 hover:text-base-content hover:bg-white/5"
+                                            : "text-base-content/60 hover:text-base-content hover:bg-base-content/5"
                                         }
                                     `}
                                 >
@@ -82,12 +92,22 @@ export default function Layout({ children }: LayoutProps) {
                     {/* Right Actions */}
                     <div className="hidden md:flex items-center gap-3">
                         <div className="flex items-center gap-2 pr-4 border-r border-base-content/10 mr-1">
-                            {/* Theme Toggle */}
-                            <label className="swap swap-rotate btn btn-ghost btn-circle btn-sm">
-                                <input type="checkbox" className="theme-controller" value="antigravity" />
-                                <Sun className="swap-off fill-current w-5 h-5" />
-                                <Moon className="swap-on fill-current w-5 h-5" />
-                            </label>
+                            {/* Theme Switcher */}
+                            <div className="dropdown dropdown-end">
+                                <div tabIndex={0} role="button" className="btn btn-ghost btn-sm btn-circle">
+                                    {(() => { const Icon = currentThemeIcon; return <Icon className="w-5 h-5" />; })()}
+                                </div>
+                                <ul tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-44 mt-4 border border-base-content/10">
+                                    {themeOptions.map((opt) => (
+                                        <li key={opt.mode}>
+                                            <a onClick={() => setThemeMode(opt.mode)} className={themeMode === opt.mode ? "active" : ""}>
+                                                <opt.icon className="w-4 h-4" />
+                                                {opt.label}
+                                            </a>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
 
                             {/* Language Switcher */}
                             <div className="dropdown dropdown-end">
