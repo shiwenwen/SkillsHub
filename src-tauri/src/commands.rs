@@ -752,12 +752,56 @@ pub struct CustomToolConfig {
     pub project_path: Option<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SecurityScanRecord {
+    pub skill: String,
+    pub scanned_at: u64,
+    pub risk: String,
+    pub findings: usize,
+    pub source: String,
+}
+
 /// Get the path to custom tools config file
 fn custom_tools_config_path() -> Result<PathBuf, String> {
     let data_dir = dirs::data_local_dir()
         .or_else(|| dirs::home_dir().map(|h| h.join(".local").join("share")))
         .ok_or("Cannot determine data directory")?;
     Ok(data_dir.join("skillshub").join("custom_tools.json"))
+}
+
+/// Get the path to security scan records file
+fn security_scan_records_path() -> Result<PathBuf, String> {
+    let data_dir = dirs::data_local_dir()
+        .or_else(|| dirs::home_dir().map(|h| h.join(".local").join("share")))
+        .ok_or("Cannot determine data directory")?;
+    Ok(data_dir
+        .join("skillshub")
+        .join("security_scan_records.json"))
+}
+
+/// Load security scan records from file
+fn load_security_scan_records_from_file() -> Result<Vec<SecurityScanRecord>, String> {
+    let path = security_scan_records_path()?;
+    if !path.exists() {
+        return Ok(Vec::new());
+    }
+    let content = std::fs::read_to_string(&path)
+        .map_err(|e| format!("Failed to read security scan records: {}", e))?;
+    serde_json::from_str(&content)
+        .map_err(|e| format!("Failed to parse security scan records: {}", e))
+}
+
+/// Save security scan records to file
+fn save_security_scan_records_to_file(records: &[SecurityScanRecord]) -> Result<(), String> {
+    let path = security_scan_records_path()?;
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create config directory: {}", e))?;
+    }
+    let content = serde_json::to_string_pretty(records)
+        .map_err(|e| format!("Failed to serialize security scan records: {}", e))?;
+    std::fs::write(&path, content)
+        .map_err(|e| format!("Failed to write security scan records: {}", e))
 }
 
 /// Load custom tools from config file
@@ -856,6 +900,20 @@ pub async fn remove_custom_tool(id: String) -> Result<(), String> {
     }
 
     save_custom_tools_to_file(&tools)
+}
+
+/// Get recent security scan records
+#[tauri::command]
+pub async fn get_security_scan_records() -> Result<Vec<SecurityScanRecord>, String> {
+    load_security_scan_records_from_file()
+}
+
+/// Save recent security scan records
+#[tauri::command]
+pub async fn save_security_scan_records(records: Vec<SecurityScanRecord>) -> Result<(), String> {
+    // Keep at most 100 entries to avoid unbounded growth
+    let limited: Vec<SecurityScanRecord> = records.into_iter().take(100).collect();
+    save_security_scan_records_to_file(&limited)
 }
 
 // ============================================================================

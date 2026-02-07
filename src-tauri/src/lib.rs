@@ -30,6 +30,8 @@ pub fn run() {
             add_custom_tool,
             update_custom_tool,
             remove_custom_tool,
+            get_security_scan_records,
+            save_security_scan_records,
             // Registry commands
             search_skills,
             list_registries,

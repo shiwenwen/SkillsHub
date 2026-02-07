@@ -23,6 +23,12 @@ interface RegistryConfig {
     registry_type: string;
 }
 
+interface AppConfig {
+    scan_before_install: boolean;
+    block_high_risk: boolean;
+    auto_sync_on_install: boolean;
+}
+
 export default function Discover() {
     const t = useTranslation();
     const [query, setQuery] = useState("");
@@ -74,11 +80,9 @@ export default function Discover() {
         setInstallingSkills(prev => new Set(prev).add(skillId));
 
         try {
-            // 检查是否需要安装前扫描
-            const scanBeforeInstall = localStorage.getItem("skillshub_scanBeforeInstall");
-            const blockHighRisk = localStorage.getItem("skillshub_blockHighRisk");
+            const config = await invoke<AppConfig>("get_app_config");
 
-            if (scanBeforeInstall === "true" || scanBeforeInstall === null) {
+            if (config.scan_before_install) {
                 // 执行安全扫描
                 try {
                     const scanResult = await invoke<{ overall_risk: string; findings: unknown[] }>("scan_skill", {
@@ -86,7 +90,7 @@ export default function Discover() {
                     });
 
                     // 如果启用了阻止高风险且扫描结果为高风险，则阻止安装
-                    if ((blockHighRisk === "true" || blockHighRisk === null) && scanResult.overall_risk === "high") {
+                    if (config.block_high_risk && scanResult.overall_risk === "high") {
                         alert(`安装被阻止：Skill "${skillId}" 被检测为高风险。`);
                         return;
                     }
@@ -105,8 +109,7 @@ export default function Discover() {
             setInstalledSkills(prev => new Set(prev).add(skillId));
 
             // 检查是否需要自动同步
-            const autoSync = localStorage.getItem("skillshub_autoSyncOnInstall");
-            if (autoSync === "true" || autoSync === null) {
+            if (config.auto_sync_on_install) {
                 // 默认开启自动同步
                 try {
                     await invoke("full_sync_skills");

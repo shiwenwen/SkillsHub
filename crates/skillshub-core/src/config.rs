@@ -68,6 +68,18 @@ pub struct AppConfig {
     #[serde(default = "default_true")]
     pub block_high_risk: bool,
 
+    /// Require manual confirmation for medium risk findings
+    #[serde(default = "default_true")]
+    pub require_confirm_medium: bool,
+
+    /// Auto approve low risk findings
+    #[serde(default = "default_false")]
+    pub auto_approve_low: bool,
+
+    /// Trusted skill sources that can bypass strict policy evaluation
+    #[serde(default = "default_trusted_sources")]
+    pub trusted_sources: Vec<String>,
+
     /// Cloud sync configuration
     #[serde(default)]
     pub cloud_sync: CloudSyncConfig,
@@ -75,6 +87,17 @@ pub struct AppConfig {
 
 fn default_true() -> bool {
     true
+}
+
+fn default_false() -> bool {
+    false
+}
+
+fn default_trusted_sources() -> Vec<String> {
+    vec![
+        "github.com/official-skills".to_string(),
+        "skillshub.io/curated".to_string(),
+    ]
 }
 
 impl Default for AppConfig {
@@ -86,6 +109,9 @@ impl Default for AppConfig {
             scan_before_install: true,
             scan_before_update: true,
             block_high_risk: true,
+            require_confirm_medium: true,
+            auto_approve_low: false,
+            trusted_sources: default_trusted_sources(),
             cloud_sync: CloudSyncConfig::default(),
         }
     }
@@ -158,6 +184,9 @@ mod tests {
         assert!(config.scan_before_install);
         assert!(config.scan_before_update);
         assert!(config.block_high_risk);
+        assert!(config.require_confirm_medium);
+        assert!(!config.auto_approve_low);
+        assert_eq!(config.trusted_sources, default_trusted_sources());
     }
 
     #[test]
@@ -177,5 +206,8 @@ mod tests {
         assert!(config.cloud_sync.enabled);
         assert_eq!(config.cloud_sync.provider, Some(CloudSyncProvider::ICloud));
         assert_eq!(config.cloud_sync.sync_folder, Some("~/Documents".to_string()));
+        assert!(config.require_confirm_medium);
+        assert!(!config.auto_approve_low);
+        assert_eq!(config.trusted_sources, default_trusted_sources());
     }
 }

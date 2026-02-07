@@ -23,24 +23,18 @@ interface UseUpdateCheckResult {
     isUpdating: string | null; // 正在更新的 skill ID
 }
 
+interface AppConfig {
+    check_updates_on_startup: boolean;
+    scan_before_update: boolean;
+    block_high_risk: boolean;
+}
+
 export function useUpdateCheck(): UseUpdateCheckResult {
     const [updates, setUpdates] = useState<UpdateCheckInfo[]>([]);
     const [isChecking, setIsChecking] = useState(false);
     const [lastChecked, setLastChecked] = useState<Date | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isUpdating, setIsUpdating] = useState<string | null>(null);
-
-    // 检查是否应该在启动时检查更新
-    useEffect(() => {
-        const shouldCheck = localStorage.getItem("skillshub_checkUpdatesOnStartup");
-        if (shouldCheck === "true" || shouldCheck === null) {
-            // 默认启用，延迟执行避免阻塞启动
-            const timer = setTimeout(() => {
-                checkUpdates();
-            }, 2000);
-            return () => clearTimeout(timer);
-        }
-    }, []);
 
     const checkUpdates = useCallback(async () => {
         setIsChecking(true);
@@ -58,15 +52,44 @@ export function useUpdateCheck(): UseUpdateCheckResult {
         }
     }, []);
 
+    // 检查是否应该在启动时检查更新
+    useEffect(() => {
+        let timer: ReturnType<typeof setTimeout> | null = null;
+        let isCancelled = false;
+
+        const loadAndMaybeCheck = async () => {
+            try {
+                const config = await invoke<AppConfig>("get_app_config");
+                if (config.check_updates_on_startup) {
+                    // 默认启用，延迟执行避免阻塞启动
+                    timer = setTimeout(() => {
+                        if (!isCancelled) {
+                            void checkUpdates();
+                        }
+                    }, 2000);
+                }
+            } catch (err) {
+                console.error("Failed to load app config for update check:", err);
+            }
+        };
+
+        void loadAndMaybeCheck();
+
+        return () => {
+            isCancelled = true;
+            if (timer) {
+                clearTimeout(timer);
+            }
+        };
+    }, [checkUpdates]);
+
     const updateSkill = useCallback(async (skillId: string): Promise<string> => {
         setIsUpdating(skillId);
 
         try {
-            // 检查是否需要更新前扫描
-            const scanBeforeUpdate = localStorage.getItem("skillshub_scanBeforeUpdate");
-            const blockHighRisk = localStorage.getItem("skillshub_blockHighRisk");
+            const config = await invoke<AppConfig>("get_app_config");
 
-            if (scanBeforeUpdate === "true" || scanBeforeUpdate === null) {
+            if (config.scan_before_update) {
                 // 执行安全扫描
                 try {
                     const scanResult = await invoke<{ overall_risk: string; findings: unknown[] }>("scan_skill", {
@@ -74,7 +97,7 @@ export function useUpdateCheck(): UseUpdateCheckResult {
                     });
 
                     // 如果启用了阻止高风险且扫描结果为高风险，则阻止更新
-                    if ((blockHighRisk === "true" || blockHighRisk === null) && scanResult.overall_risk === "high") {
+                    if (config.block_high_risk && scanResult.overall_risk === "high") {
                         throw new Error(`更新被阻止：Skill "${skillId}" 被检测为高风险。`);
                     }
                 } catch (scanError) {

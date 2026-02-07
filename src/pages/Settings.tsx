@@ -100,6 +100,9 @@ interface AppConfigPayload {
     scan_before_install: boolean;
     scan_before_update: boolean;
     block_high_risk: boolean;
+    require_confirm_medium: boolean;
+    auto_approve_low: boolean;
+    trusted_sources: string[];
     cloud_sync: {
         enabled: boolean;
         provider: string | null;
@@ -161,6 +164,12 @@ export default function Settings() {
     const [scanBeforeInstall, setScanBeforeInstall] = useState(true);
     const [scanBeforeUpdate, setScanBeforeUpdate] = useState(true);
     const [blockHighRisk, setBlockHighRisk] = useState(true);
+    const [requireConfirmMedium, setRequireConfirmMedium] = useState(true);
+    const [autoApproveLow, setAutoApproveLow] = useState(false);
+    const [trustedSources, setTrustedSources] = useState<string[]>([
+        "github.com/official-skills",
+        "skillshub.io/curated",
+    ]);
 
     // 存储信息
     const [storeInfo, setStoreInfo] = useState<StoreInfo | null>(null);
@@ -173,6 +182,9 @@ export default function Settings() {
             scan_before_install: scanBeforeInstall,
             scan_before_update: scanBeforeUpdate,
             block_high_risk: blockHighRisk,
+            require_confirm_medium: requireConfirmMedium,
+            auto_approve_low: autoApproveLow,
+            trusted_sources: trustedSources,
             cloud_sync: {
                 enabled: cloudSyncEnabled,
                 provider: cloudProvider,
@@ -185,13 +197,6 @@ export default function Settings() {
 
     const saveAppConfig = async (config: AppConfigPayload) => {
         await invoke("save_app_config", { config });
-        // Also save to localStorage for backward compatibility
-        localStorage.setItem("skillshub_defaultStrategy", config.default_sync_strategy);
-        localStorage.setItem("skillshub_checkUpdatesOnStartup", String(config.check_updates_on_startup));
-        localStorage.setItem("skillshub_autoSyncOnInstall", String(config.auto_sync_on_install));
-        localStorage.setItem("skillshub_scanBeforeInstall", String(config.scan_before_install));
-        localStorage.setItem("skillshub_scanBeforeUpdate", String(config.scan_before_update));
-        localStorage.setItem("skillshub_blockHighRisk", String(config.block_high_risk));
     };
 
     // 保存所有设置到后端
@@ -288,6 +293,9 @@ export default function Settings() {
                     scan_before_install: boolean;
                     scan_before_update: boolean;
                     block_high_risk: boolean;
+                    require_confirm_medium: boolean;
+                    auto_approve_low: boolean;
+                    trusted_sources: string[];
                     cloud_sync: CloudSyncConfig;
                 }>("get_app_config");
 
@@ -301,6 +309,9 @@ export default function Settings() {
                 setScanBeforeInstall(config.scan_before_install);
                 setScanBeforeUpdate(config.scan_before_update);
                 setBlockHighRisk(config.block_high_risk);
+                setRequireConfirmMedium(config.require_confirm_medium);
+                setAutoApproveLow(config.auto_approve_low);
+                setTrustedSources(config.trusted_sources);
 
                 // 加载云端同步配置
                 if (config.cloud_sync) {
@@ -319,6 +330,9 @@ export default function Settings() {
                         scan_before_install: config.scan_before_install,
                         scan_before_update: config.scan_before_update,
                         block_high_risk: config.block_high_risk,
+                        require_confirm_medium: config.require_confirm_medium,
+                        auto_approve_low: config.auto_approve_low,
+                        trusted_sources: config.trusted_sources,
                         cloud_sync: {
                             enabled: config.cloud_sync?.enabled ?? false,
                             provider,
@@ -562,6 +576,9 @@ export default function Settings() {
         scanBeforeInstall,
         scanBeforeUpdate,
         blockHighRisk,
+        requireConfirmMedium,
+        autoApproveLow,
+        trustedSources,
         cloudSyncEnabled,
         cloudProvider,
         cloudSyncFolder,
