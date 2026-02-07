@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- 修复设置页面存储位置、使用量、Skills 数量硬编码显示的问题：
+  - 后端新增 `get_store_info` 命令，动态获取存储路径和统计信息
+  - 前端从后端获取实际存储路径（macOS: `~/Library/Application Support/skillshub/store`，Linux: `~/.local/share/skillshub/store`，Windows: `AppData/Local/skillshub/store`）
+  - 存储位置旁的文件夹按钮现在可以打开对应目录
+
 ### Added
 - 云端同步功能（iCloud Drive / Google Drive / OneDrive）：
   - 新增 `CloudSyncProvider` 和 `CloudSyncConfig` 配置模型

@@ -46,6 +46,8 @@ pub fn run() {
             // Config commands
             get_app_config,
             save_app_config,
+            // Store info commands
+            get_store_info,
             // Cloud sync commands
             detect_cloud_drives,
             cloud_sync_push,

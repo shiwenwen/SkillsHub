@@ -58,6 +58,14 @@ const BUILTIN_TOOLS: ToolConfig[] = [
     { id: "windsurf", name: "Windsurf", globalPath: "~/.codeium/windsurf/skills/", projectPath: ".windsurf/skills/", detected: false, hasGlobalPath: true },
 ];
 
+// 存储信息
+interface StoreInfo {
+    path: string;
+    size_bytes: number;
+    size_display: string;
+    skill_count: number;
+}
+
 // 云端驱动器信息
 interface CloudDriveInfo {
     provider: string;
@@ -153,6 +161,9 @@ export default function Settings() {
     const [scanBeforeInstall, setScanBeforeInstall] = useState(true);
     const [scanBeforeUpdate, setScanBeforeUpdate] = useState(true);
     const [blockHighRisk, setBlockHighRisk] = useState(true);
+
+    // 存储信息
+    const [storeInfo, setStoreInfo] = useState<StoreInfo | null>(null);
 
     const buildAppConfig = (): AppConfigPayload => {
         return {
@@ -354,6 +365,19 @@ export default function Settings() {
             }
         };
         loadCustomTools();
+    }, []);
+
+    // 加载存储信息
+    useEffect(() => {
+        const loadStoreInfo = async () => {
+            try {
+                const info = await invoke<StoreInfo>("get_store_info");
+                setStoreInfo(info);
+            } catch (error) {
+                console.error("Failed to load store info:", error);
+            }
+        };
+        loadStoreInfo();
     }, []);
 
     // 检测云端驱动器
@@ -571,12 +595,12 @@ export default function Settings() {
             if (changedCustomTools.length > 0) {
                 await Promise.all(
                     changedCustomTools.map((tool) =>
-                    invoke("update_custom_tool", {
-                        id: tool.id,
-                        name: tool.name.trim(),
-                        globalPath: tool.globalPath.trim() || null,
-                        projectPath: tool.projectPath.trim() || null,
-                    })
+                        invoke("update_custom_tool", {
+                            id: tool.id,
+                            name: tool.name.trim(),
+                            globalPath: tool.globalPath.trim() || null,
+                            projectPath: tool.projectPath.trim() || null,
+                        })
                     )
                 );
                 setSavedCustomToolsSnapshot(buildCustomToolsSnapshot(customTools));
@@ -844,10 +868,14 @@ export default function Settings() {
                             <input
                                 type="text"
                                 className="input input-bordered join-item flex-1 font-mono text-sm"
-                                value="~/.local/share/skillshub/store"
+                                value={storeInfo?.path || t.common.loading}
                                 readOnly
                             />
-                            <button className="btn btn-ghost join-item">
+                            <button
+                                className="btn btn-ghost join-item"
+                                onClick={() => storeInfo?.path && invoke("open_directory", { path: storeInfo.path })}
+                                disabled={!storeInfo?.path}
+                            >
                                 <FolderOpen className="w-4 h-4" />
                             </button>
                         </div>
@@ -855,11 +883,11 @@ export default function Settings() {
                     <div className="stats bg-base-300 mt-4">
                         <div className="stat">
                             <div className="stat-title">{t.settings.storageUsed}</div>
-                            <div className="stat-value text-lg">24 MB</div>
+                            <div className="stat-value text-lg">{storeInfo?.size_display || "--"}</div>
                         </div>
                         <div className="stat">
                             <div className="stat-title">{t.settings.skillsStored}</div>
-                            <div className="stat-value text-lg">12</div>
+                            <div className="stat-value text-lg">{storeInfo?.skill_count ?? "--"}</div>
                         </div>
                     </div>
                 </div>

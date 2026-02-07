@@ -859,6 +859,86 @@ pub async fn remove_custom_tool(id: String) -> Result<(), String> {
 }
 
 // ============================================================================
+// Store Info Commands
+// ============================================================================
+
+#[derive(Debug, Serialize)]
+pub struct StoreInfo {
+    pub path: String,
+    pub size_bytes: u64,
+    pub size_display: String,
+    pub skill_count: usize,
+}
+
+/// Calculate directory size recursively
+fn calc_dir_size(path: &std::path::Path) -> u64 {
+    let mut size = 0u64;
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.filter_map(|e| e.ok()) {
+            let entry_path = entry.path();
+            if entry_path.is_file() {
+                size += entry.metadata().map(|m| m.len()).unwrap_or(0);
+            } else if entry_path.is_dir() {
+                size += calc_dir_size(&entry_path);
+            }
+        }
+    }
+    size
+}
+
+/// Format bytes to human-readable string
+fn format_size(bytes: u64) -> String {
+    const KB: u64 = 1024;
+    const MB: u64 = KB * 1024;
+    const GB: u64 = MB * 1024;
+
+    if bytes >= GB {
+        format!("{:.1} GB", bytes as f64 / GB as f64)
+    } else if bytes >= MB {
+        format!("{:.1} MB", bytes as f64 / MB as f64)
+    } else if bytes >= KB {
+        format!("{:.1} KB", bytes as f64 / KB as f64)
+    } else {
+        format!("{} B", bytes)
+    }
+}
+
+/// Get store path and stats
+#[tauri::command]
+pub async fn get_store_info() -> Result<StoreInfo, String> {
+    let store_dir = dirs::data_local_dir()
+        .unwrap_or_else(|| PathBuf::from("."))
+        .join("skillshub")
+        .join("store");
+
+    let path = store_dir.display().to_string();
+
+    // Calculate size
+    let size_bytes = if store_dir.exists() {
+        calc_dir_size(&store_dir)
+    } else {
+        0
+    };
+    let size_display = format_size(size_bytes);
+
+    // Count skills
+    let skill_count = if store_dir.join("skills").exists() {
+        std::fs::read_dir(store_dir.join("skills"))
+            .map(|entries| entries.filter_map(|e| e.ok()).filter(|e| e.path().is_dir()).count())
+            .unwrap_or(0)
+    } else {
+        0
+    };
+
+    Ok(StoreInfo {
+        path,
+        size_bytes,
+        size_display,
+        skill_count,
+    })
+}
+
+// ============================================================================
 // Configuration Management Commands
 // ============================================================================
 
