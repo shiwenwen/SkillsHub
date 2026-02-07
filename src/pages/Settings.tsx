@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
     Settings as SettingsIcon,
     FolderOpen,
@@ -85,6 +85,31 @@ interface RegistryConfig {
     tags: string[];
 }
 
+interface AppConfigPayload {
+    default_sync_strategy: string;
+    auto_sync_on_install: boolean;
+    check_updates_on_startup: boolean;
+    scan_before_install: boolean;
+    scan_before_update: boolean;
+    block_high_risk: boolean;
+    cloud_sync: {
+        enabled: boolean;
+        provider: string | null;
+        sync_folder: string | null;
+        auto_sync: boolean;
+        last_sync: string | null;
+    };
+}
+
+interface PersistedCustomTool {
+    name: string;
+    globalPath: string;
+    projectPath: string;
+}
+
+const VALID_SYNC_STRATEGIES = new Set(["auto", "link", "copy"]);
+const VALID_CLOUD_PROVIDERS = new Set(["ICloud", "GoogleDrive", "OneDrive", "Custom"]);
+
 export default function Settings() {
     const t = useTranslation();
     const { language, setLanguage } = useLanguage();
@@ -97,6 +122,10 @@ export default function Settings() {
     const [newToolGlobalPath, setNewToolGlobalPath] = useState("");
     const [newToolProjectPath, setNewToolProjectPath] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [isSavingSettings, setIsSavingSettings] = useState(false);
+    const [savedAppConfigSnapshot, setSavedAppConfigSnapshot] = useState("");
+    const [savedCustomToolsSnapshot, setSavedCustomToolsSnapshot] = useState<Record<string, PersistedCustomTool>>({});
+    const [customToolsLoaded, setCustomToolsLoaded] = useState(false);
 
     // 注册源状态
     const [registries, setRegistries] = useState<RegistryConfig[]>([]);
@@ -125,9 +154,8 @@ export default function Settings() {
     const [scanBeforeUpdate, setScanBeforeUpdate] = useState(true);
     const [blockHighRisk, setBlockHighRisk] = useState(true);
 
-    // 保存所有设置到后端
-    const saveAllSettings = async () => {
-        const config = {
+    const buildAppConfig = (): AppConfigPayload => {
+        return {
             default_sync_strategy: defaultStrategy,
             auto_sync_on_install: autoSyncOnInstall,
             check_updates_on_startup: checkUpdatesOnStartup,
@@ -142,20 +170,97 @@ export default function Settings() {
                 last_sync: cloudLastSync,
             },
         };
+    };
 
-        try {
-            await invoke("save_app_config", { config });
-        } catch (error) {
-            console.error("Failed to save settings:", error);
+    const saveAppConfig = async (config: AppConfigPayload) => {
+        await invoke("save_app_config", { config });
+        // Also save to localStorage for backward compatibility
+        localStorage.setItem("skillshub_defaultStrategy", config.default_sync_strategy);
+        localStorage.setItem("skillshub_checkUpdatesOnStartup", String(config.check_updates_on_startup));
+        localStorage.setItem("skillshub_autoSyncOnInstall", String(config.auto_sync_on_install));
+        localStorage.setItem("skillshub_scanBeforeInstall", String(config.scan_before_install));
+        localStorage.setItem("skillshub_scanBeforeUpdate", String(config.scan_before_update));
+        localStorage.setItem("skillshub_blockHighRisk", String(config.block_high_risk));
+    };
+
+    // 保存所有设置到后端
+    const saveAllSettings = async () => {
+        const config = buildAppConfig();
+        await saveAppConfig(config);
+        setSavedAppConfigSnapshot(serializeAppConfig(config));
+        return config;
+    };
+
+    const serializeAppConfig = (config: AppConfigPayload) =>
+        JSON.stringify({
+            ...config,
+            cloud_sync: {
+                ...config.cloud_sync,
+                // last_sync 由系统流程维护，不作为用户手动保存变更的一部分
+                last_sync: null,
+            },
+        });
+
+    const normalizeCustomTool = (tool: ToolConfig): PersistedCustomTool => ({
+        name: tool.name.trim(),
+        globalPath: tool.globalPath.trim(),
+        projectPath: tool.projectPath.trim(),
+    });
+
+    const buildCustomToolsSnapshot = (toolList: ToolConfig[]) =>
+        Object.fromEntries(toolList.map((tool) => [tool.id, normalizeCustomTool(tool)]));
+
+    const isAbsolutePath = (path: string) => {
+        return path.startsWith("/") || path.startsWith("~/") || /^[A-Za-z]:[\\/]/.test(path);
+    };
+
+    const hasInvalidPathChars = (path: string) => {
+        return path.includes("\0") || path.includes("\n") || path.includes("\r");
+    };
+
+    const validateBeforeSave = () => {
+        const errors: string[] = [];
+
+        if (!VALID_SYNC_STRATEGIES.has(defaultStrategy)) {
+            errors.push(t.settings.invalidSyncStrategy);
         }
 
-        // Also save to localStorage for backward compatibility
-        localStorage.setItem("skillshub_defaultStrategy", defaultStrategy);
-        localStorage.setItem("skillshub_checkUpdatesOnStartup", String(checkUpdatesOnStartup));
-        localStorage.setItem("skillshub_autoSyncOnInstall", String(autoSyncOnInstall));
-        localStorage.setItem("skillshub_scanBeforeInstall", String(scanBeforeInstall));
-        localStorage.setItem("skillshub_scanBeforeUpdate", String(scanBeforeUpdate));
-        localStorage.setItem("skillshub_blockHighRisk", String(blockHighRisk));
+        if (cloudSyncEnabled) {
+            if (!cloudProvider) {
+                errors.push(t.settings.cloudProviderRequired);
+            } else if (!VALID_CLOUD_PROVIDERS.has(cloudProvider)) {
+                errors.push(t.settings.invalidCloudProvider);
+            }
+
+            if (!cloudSyncFolder.trim()) {
+                errors.push(t.settings.cloudFolderRequired);
+            }
+        }
+
+        if (cloudSyncFolder.trim() && hasInvalidPathChars(cloudSyncFolder.trim())) {
+            errors.push(t.settings.invalidPathChars);
+        }
+
+        for (const tool of customTools) {
+            const normalized = normalizeCustomTool(tool);
+            if (!normalized.name) {
+                errors.push(t.settings.invalidCustomToolName);
+                continue;
+            }
+            if (normalized.globalPath && hasInvalidPathChars(normalized.globalPath)) {
+                errors.push(`${t.settings.invalidPathChars}: ${tool.name}`);
+                continue;
+            }
+            if (normalized.projectPath && hasInvalidPathChars(normalized.projectPath)) {
+                errors.push(`${t.settings.invalidPathChars}: ${tool.name}`);
+                continue;
+            }
+            if (normalized.projectPath && isAbsolutePath(normalized.projectPath)) {
+                errors.push(`${t.settings.invalidCustomToolProjectPath}: ${tool.name}`);
+            }
+        }
+
+        return errors;
     };
 
     // 标记是否已初始化（用于防止初次加载时触发保存）
@@ -177,6 +282,8 @@ export default function Settings() {
 
                 // 将后端的策略转换为前端格式
                 const strategy = config.default_sync_strategy.toLowerCase();
+                const syncFolder = config.cloud_sync?.sync_folder || "~/Documents";
+                const provider = config.cloud_sync?.provider || null;
                 setDefaultStrategy(strategy);
                 setAutoSyncOnInstall(config.auto_sync_on_install);
                 setCheckUpdatesOnStartup(config.check_updates_on_startup);
@@ -187,16 +294,35 @@ export default function Settings() {
                 // 加载云端同步配置
                 if (config.cloud_sync) {
                     setCloudSyncEnabled(config.cloud_sync.enabled);
-                    setCloudProvider(config.cloud_sync.provider);
-                    setCloudSyncFolder(config.cloud_sync.sync_folder || "~/Documents");
+                    setCloudProvider(provider);
+                    setCloudSyncFolder(syncFolder);
                     setCloudAutoSync(config.cloud_sync.auto_sync);
                     setCloudLastSync(config.cloud_sync.last_sync);
                 }
+
+                setSavedAppConfigSnapshot(
+                    serializeAppConfig({
+                        default_sync_strategy: strategy,
+                        auto_sync_on_install: config.auto_sync_on_install,
+                        check_updates_on_startup: config.check_updates_on_startup,
+                        scan_before_install: config.scan_before_install,
+                        scan_before_update: config.scan_before_update,
+                        block_high_risk: config.block_high_risk,
+                        cloud_sync: {
+                            enabled: config.cloud_sync?.enabled ?? false,
+                            provider,
+                            sync_folder: syncFolder,
+                            auto_sync: config.cloud_sync?.auto_sync ?? false,
+                            last_sync: config.cloud_sync?.last_sync ?? null,
+                        },
+                    })
+                );
 
                 // 标记为已初始化
                 setInitialized(true);
             } catch (error) {
                 console.error("Failed to load config:", error);
+                setSavedAppConfigSnapshot(serializeAppConfig(buildAppConfig()));
                 // 如果加载失败，仍然标记为已初始化，使用默认值
                 setInitialized(true);
             }
@@ -204,15 +330,6 @@ export default function Settings() {
 
         loadConfig();
     }, []);
-
-    // 保存设置到后端和 localStorage
-    useEffect(() => {
-        // 只在初始化完成后才保存
-        if (!initialized) return;
-
-        saveAllSettings();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [defaultStrategy, checkUpdatesOnStartup, autoSyncOnInstall, scanBeforeInstall, scanBeforeUpdate, blockHighRisk, cloudSyncEnabled, cloudProvider, cloudSyncFolder, cloudAutoSync, initialized]);
 
     // 加载已保存的自定义工具
     useEffect(() => {
@@ -229,8 +346,11 @@ export default function Settings() {
                     hasGlobalPath: !!t.global_path,
                 }));
                 setCustomTools(converted);
+                setSavedCustomToolsSnapshot(buildCustomToolsSnapshot(converted));
             } catch (error) {
                 console.error("Failed to load custom tools:", error);
+            } finally {
+                setCustomToolsLoaded(true);
             }
         };
         loadCustomTools();
@@ -393,6 +513,84 @@ export default function Settings() {
         ));
     };
 
+    const changedCustomTools = useMemo(() => {
+        return customTools.filter((tool) => {
+            const saved = savedCustomToolsSnapshot[tool.id];
+            const current = normalizeCustomTool(tool);
+            if (!saved) return true;
+            return (
+                saved.name !== current.name ||
+                saved.globalPath !== current.globalPath ||
+                saved.projectPath !== current.projectPath
+            );
+        });
+    }, [customTools, savedCustomToolsSnapshot]);
+
+    const appConfigChanged = useMemo(() => {
+        if (!initialized || !savedAppConfigSnapshot) return false;
+        return serializeAppConfig(buildAppConfig()) !== savedAppConfigSnapshot;
+    }, [
+        initialized,
+        savedAppConfigSnapshot,
+        defaultStrategy,
+        autoSyncOnInstall,
+        checkUpdatesOnStartup,
+        scanBeforeInstall,
+        scanBeforeUpdate,
+        blockHighRisk,
+        cloudSyncEnabled,
+        cloudProvider,
+        cloudSyncFolder,
+        cloudAutoSync,
+    ]);
+
+    const hasPendingChanges = initialized && customToolsLoaded && (appConfigChanged || changedCustomTools.length > 0);
+
+    // 手动保存发生变化的设置（包含自定义工具路径）
+    const handleSaveButton = async () => {
+        if (isSavingSettings) return;
+        if (!hasPendingChanges) {
+            alert(t.settings.noChangesToSave);
+            return;
+        }
+
+        const validationErrors = validateBeforeSave();
+        if (validationErrors.length > 0) {
+            alert(`${t.settings.validationTitle}\n- ${validationErrors.join("\n- ")}`);
+            return;
+        }
+
+        setIsSavingSettings(true);
+        try {
+            if (appConfigChanged) {
+                const nextConfig = buildAppConfig();
+                await saveAppConfig(nextConfig);
+                setSavedAppConfigSnapshot(serializeAppConfig(nextConfig));
+            }
+
+            if (changedCustomTools.length > 0) {
+                await Promise.all(
+                    changedCustomTools.map((tool) =>
+                    invoke("update_custom_tool", {
+                        id: tool.id,
+                        name: tool.name.trim(),
+                        globalPath: tool.globalPath.trim() || null,
+                        projectPath: tool.projectPath.trim() || null,
+                    })
+                    )
+                );
+                setSavedCustomToolsSnapshot(buildCustomToolsSnapshot(customTools));
+            }
+
+            alert(t.settings.saveSuccess);
+        } catch (error) {
+            console.error("Failed to save settings via button:", error);
+            alert(`${t.settings.saveFailed}: ${String(error)}`);
+        } finally {
+            setIsSavingSettings(false);
+        }
+    };
+
     // 添加自定义工具
     const addCustomTool = async () => {
         if (!newToolName.trim()) return;
@@ -415,7 +613,11 @@ export default function Settings() {
                 hasGlobalPath: !!result.global_path,
             };
 
-            setCustomTools(prev => [...prev, newTool]);
+            setCustomTools(prev => {
+                const next = [...prev, newTool];
+                setSavedCustomToolsSnapshot(buildCustomToolsSnapshot(next));
+                return next;
+            });
             setNewToolName("");
             setNewToolGlobalPath("");
             setNewToolProjectPath("");
@@ -431,7 +633,11 @@ export default function Settings() {
     const deleteCustomTool = async (toolId: string) => {
         try {
             await invoke("remove_custom_tool", { id: toolId });
-            setCustomTools(prev => prev.filter(tool => tool.id !== toolId));
+            setCustomTools(prev => {
+                const next = prev.filter(tool => tool.id !== toolId);
+                setSavedCustomToolsSnapshot(buildCustomToolsSnapshot(next));
+                return next;
+            });
         } catch (error) {
             console.error("Failed to delete custom tool:", error);
         }
@@ -922,9 +1128,18 @@ export default function Settings() {
 
             {/* Save Button */}
             <div className="flex justify-end">
-                <button className="btn btn-primary gap-2">
-                    <Check className="w-4 h-4" />
-                    {t.settings.saveSettings}
+                <button
+                    className="btn btn-primary gap-2"
+                    onClick={handleSaveButton}
+                    disabled={isSavingSettings || !initialized || !customToolsLoaded || !hasPendingChanges}
+                    type="button"
+                >
+                    {isSavingSettings ? (
+                        <span className="loading loading-spinner loading-sm"></span>
+                    ) : (
+                        <Check className="w-4 h-4" />
+                    )}
+                    {isSavingSettings ? t.common.loading : t.settings.saveSettings}
                 </button>
             </div>
 
