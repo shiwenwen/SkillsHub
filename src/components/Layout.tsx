@@ -6,13 +6,13 @@ import {
     RefreshCw,
     Shield,
     Settings,
-    Layers,
     Sun,
     Moon,
     Monitor,
     Languages,
     Menu
 } from "lucide-react";
+import logoImg from "../assets/logo.png";
 import { useTranslation, useLanguage } from "../i18n";
 import { useTheme, type ThemeMode } from "../theme";
 import { Button } from "./ui/Button";
@@ -50,9 +50,7 @@ export default function Layout({ children }: LayoutProps) {
                 <div className="container mx-auto h-full px-4 flex items-center justify-between">
                     {/* Logo Section */}
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/20">
-                            <Layers className="w-5 h-5 text-white" />
-                        </div>
+                        <img src={logoImg} alt="SkillsHub" className="w-8 h-8 rounded-lg shadow-lg shadow-primary/20" />
                         <div className="hidden md:block">
                             <h1 className="text-lg font-bold gradient-text tracking-tight">SkillsHub</h1>
                         </div>

@@ -14,7 +14,6 @@ import {
     Save,
     Info,
     Server,
-    LayoutGrid,
     Search,
     Sun,
     Moon,
@@ -26,6 +25,7 @@ import { useTheme, type ThemeMode } from "../theme";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { Card } from "../components/ui/Card";
+import logoImg from "../assets/logo.png";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 
@@ -1216,9 +1216,7 @@ export default function Settings() {
                 {/* About Tab */}
                 {activeTab === "about" && (
                     <div className="max-w-2xl mx-auto text-center space-y-8 py-12">
-                        <div className="w-24 h-24 bg-gradient-to-br from-primary to-secondary rounded-3xl mx-auto flex items-center justify-center shadow-2xl shadow-primary/30">
-                            <LayoutGrid className="w-12 h-12 text-white" />
-                        </div>
+                        <img src={logoImg} alt="SkillsHub" className="w-24 h-24 rounded-3xl mx-auto shadow-2xl shadow-primary/30" />
                         <div>
                             <h2 className="text-4xl font-bold mb-2">SkillsHub</h2>
                             <p className="text-xl text-base-content/60">Unified AI Skills Management</p>
