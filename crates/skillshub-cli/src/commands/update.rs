@@ -1,6 +1,8 @@
 //! Update command - update installed skills
 
 use colored::Colorize;
+use skillshub_core::models::SkillSource;
+use skillshub_core::registry::calculate_dir_hash;
 use skillshub_core::store::LocalStore;
 
 pub async fn run(skill: Option<&str>) -> anyhow::Result<()> {
@@ -32,8 +34,33 @@ pub async fn run(skill: Option<&str>) -> anyhow::Result<()> {
 
     for record in skills_to_update {
         println!("  {} Checking {}...", "•".cyan(), record.skill_id);
-        // TODO: Check for updates from source
-        println!("    {} Already up to date", "✓".green());
+
+        match &record.source {
+            SkillSource::Local { path } => {
+                if !path.exists() {
+                    println!("    {} Source path missing", "!".yellow());
+                    continue;
+                }
+
+                let current_hash = calculate_dir_hash(&path.to_path_buf())?;
+                if current_hash != record.version.content_hash
+                    && !record.version.content_hash.is_empty()
+                {
+                    println!(
+                        "    {} Source has changed, run reinstall to apply updates",
+                        "↑".yellow()
+                    );
+                } else {
+                    println!("    {} Already up to date", "✓".green());
+                }
+            }
+            SkillSource::Git { .. } | SkillSource::Registry { .. } | SkillSource::Http { .. } => {
+                println!(
+                    "    {} Remote update check is not available yet, skip",
+                    "!".yellow()
+                );
+            }
+        }
     }
 
     println!();
