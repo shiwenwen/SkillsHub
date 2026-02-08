@@ -1048,9 +1048,18 @@ export default function Settings() {
                                             onChange={(e) => handleCloudProviderChange(e.target.value)}
                                         >
                                             <option value="" disabled>{t.settings.selectProvider}</option>
-                                            {detectedDrives.map(d => (
-                                                <option key={d.provider} value={d.provider}>{d.display_name}</option>
-                                            ))}
+                                            {[
+                                                { value: "ICloud", label: "iCloud Drive" },
+                                                { value: "GoogleDrive", label: "Google Drive" },
+                                                { value: "OneDrive", label: "OneDrive" },
+                                            ].map((p) => {
+                                                const detected = detectedDrives.find(d => d.provider === p.value);
+                                                return (
+                                                    <option key={p.value} value={p.value}>
+                                                        {detected ? detected.display_name : p.label}
+                                                    </option>
+                                                );
+                                            })}
                                             <option value="Custom">{t.settings.customFolder}</option>
                                         </select>
                                     </div>
