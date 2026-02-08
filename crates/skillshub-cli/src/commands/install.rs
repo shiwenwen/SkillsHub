@@ -5,7 +5,8 @@ use indicatif::{ProgressBar, ProgressStyle};
 use std::path::PathBuf;
 
 use skillshub_core::adapters::create_default_adapters;
-use skillshub_core::models::{SyncStrategy, ToolType};
+use skillshub_core::models::{SkillSource, SyncStrategy, ToolType};
+use skillshub_core::registry::{GitRegistry, LocalRegistry, RegistryProvider};
 use skillshub_core::scanner::SecurityScanner;
 use skillshub_core::store::LocalStore;
 use skillshub_core::sync::SyncEngine;
@@ -19,14 +20,12 @@ pub async fn run(
     println!("{} Installing skill: {}", "📦".green(), skill.bold());
     println!();
 
-    // Parse sync strategy
     let strategy = match sync_strategy {
         "link" => SyncStrategy::Link,
         "copy" => SyncStrategy::Copy,
         _ => SyncStrategy::Auto,
     };
 
-    // Parse target tools
     let target_tools: Vec<ToolType> = if let Some(tools_str) = tools {
         tools_str
             .split(',')
@@ -47,7 +46,6 @@ pub async fn run(
         ]
     };
 
-    // Create progress bar
     let pb = ProgressBar::new(100);
     pb.set_style(
         ProgressStyle::default_bar()
@@ -56,33 +54,73 @@ pub async fn run(
             .progress_chars("█▓░"),
     );
 
-    // Step 1: Resolve skill source
     pb.set_message("Resolving skill source...");
     pb.set_position(10);
 
-    let skill_path = if skill.starts_with("http") || skill.starts_with("git@") {
-        // TODO: Fetch from remote
-        println!("{}", "Remote sources coming soon!".yellow());
-        return Ok(());
+    let mut store = LocalStore::default_store()?;
+
+    // Resolve/install source into local store and return installed skill_id.
+    let skill_id = if skill.starts_with("http://")
+        || skill.starts_with("https://")
+        || skill.starts_with("git@")
+        || skill.ends_with(".git")
+    {
+        let registry = GitRegistry::new("remote", skill, None);
+        let remote_skill_id = skill
+            .trim_end_matches('/')
+            .rsplit('/')
+            .next()
+            .unwrap_or("skill")
+            .trim_end_matches(".git")
+            .to_string();
+
+        let meta = registry.get_skill(&remote_skill_id).await?;
+        let temp_dir = std::env::temp_dir().join(format!("skillshub-install-{}", remote_skill_id));
+        let source_path = registry.fetch(&remote_skill_id, &temp_dir).await?;
+
+        store.import_skill(&meta, &source_path).await?;
+        meta.id
     } else if PathBuf::from(skill).exists() {
-        PathBuf::from(skill)
+        let source_path = PathBuf::from(skill);
+        let skill_id = source_path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("local-skill")
+            .to_string();
+
+        let pseudo_skill = skillshub_core::models::Skill {
+            id: skill_id.clone(),
+            name: skill_id.clone(),
+            description: String::new(),
+            author: None,
+            tags: Vec::new(),
+            compatible_tools: Vec::new(),
+            version: skillshub_core::models::SkillVersion::new("0.0.0", String::new()),
+            source: SkillSource::Local {
+                path: source_path.clone(),
+            },
+            skill_md_path: source_path.join("SKILL.md"),
+            resources: Vec::new(),
+            metadata: std::collections::HashMap::new(),
+        };
+
+        store.import_skill(&pseudo_skill, &source_path).await?;
+        skill_id
     } else {
-        // Look in local registry
         let home = dirs::home_dir().ok_or_else(|| anyhow::anyhow!("Cannot find home directory"))?;
-        let local_path = home.join(".skillshub").join("local-registry").join(skill);
-        if local_path.exists() {
-            local_path
-        } else {
-            return Err(anyhow::anyhow!("Skill not found: {}", skill));
-        }
+        let local_registry = home.join(".skillshub").join("local-registry");
+        let registry = LocalRegistry::new("local", local_registry);
+        let meta = registry.get_skill(skill).await?;
+        let source_path = registry.fetch(skill, PathBuf::new().as_path()).await?;
+        store.import_skill(&meta, &source_path).await?;
+        meta.id
     };
 
-    // Step 2: Security scan
     pb.set_position(30);
     if !skip_scan {
         pb.set_message("Running security scan...");
         let scanner = SecurityScanner::new();
-        let report = scanner.scan(skill, &skill_path)?;
+        let report = scanner.scan(&skill_id, &store.skill_path(&skill_id))?;
 
         if !report.passed {
             pb.finish_with_message("Scan failed!");
@@ -98,40 +136,8 @@ pub async fn run(
             }
             return Err(anyhow::anyhow!("Security policy violation"));
         }
-
-        if report.summary.high > 0 || report.summary.medium > 0 {
-            println!();
-            println!("{} Security warnings:", "⚠️".yellow());
-            for finding in report.findings.iter().filter(|f| {
-                matches!(
-                    f.risk_level,
-                    skillshub_core::models::RiskLevel::High
-                        | skillshub_core::models::RiskLevel::Medium
-                )
-            }) {
-                println!(
-                    "  {} [{}] {}",
-                    "•".yellow(),
-                    finding.risk_level.to_string().yellow(),
-                    finding.description
-                );
-            }
-            println!();
-        }
     }
 
-    // Step 3: Import to local store
-    pb.set_position(50);
-    pb.set_message("Importing to local store...");
-
-    let store = LocalStore::default_store()?;
-    let skill_id = skill_path
-        .file_name()
-        .and_then(|n: &std::ffi::OsStr| n.to_str())
-        .unwrap_or(skill)
-        .to_string();
-
-    // Step 4: Sync to tools
     pb.set_position(70);
     pb.set_message("Syncing to tools...");
 
@@ -140,7 +146,6 @@ pub async fn run(
         engine.register_adapter(adapter);
     }
 
-    // Detect available tools
     let available_tools = engine.detect_tools();
     let tools_to_sync: Vec<ToolType> = target_tools
         .into_iter()

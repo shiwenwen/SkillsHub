@@ -21,6 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 全部 9 种语言国际化翻译适配
 
 ### Fixed
+- 修复 CLI 中存在的“假功能/占位实现”问题：
+  - `install` 命令已支持本地目录、本地注册源、Git/HTTP 仓库来源的真实安装流程（导入本地 Store 后再执行同步）
+  - `update` 命令不再一律输出“已是最新”，改为基于本地来源内容哈希执行真实变更检测，并对远程来源给出明确能力边界提示
+  - 注册源管理中 `http/curated` 类型不再返回空 Provider，已接入 `HttpRegistry` 查询实现
+  - `parse_skill_md` 移除占位 YAML 解析逻辑，改为可工作的前置信息解析实现
+
+### Fixed
 - 修复 Security 页面功能未实现的问题：
   - `scanAllSkills` 改为真实调用后端 `scan_all_skills` + `scan_skill` 执行全量扫描
   - 扫描策略开关（阻止高风险 / 中风险需确认 / 自动通过低风险）改为通过后端 `AppConfig` 持久化并参与扫描结果判定

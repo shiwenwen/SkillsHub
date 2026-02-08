@@ -9,10 +9,10 @@ use serde::{Deserialize, Serialize};
 use crate::error::Result;
 use crate::models::{Skill, SkillMetadata, SkillSource, SkillVersion};
 
-pub mod git;
 pub mod clawhub;
-pub use git::GitRegistry;
+pub mod git;
 pub use clawhub::ClawHubRegistry;
+pub use git::GitRegistry;
 
 /// Registry configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -152,7 +152,9 @@ impl RegistryManager {
                 PathBuf::from(&config.url),
             ))),
             RegistryType::ClawHub => Some(Box::new(ClawHubRegistry::new(&config.name))),
-            _ => None, // TODO: Implement others
+            RegistryType::Http | RegistryType::Curated => {
+                Some(Box::new(HttpRegistry::new(&config.name, &config.url)))
+            }
         }
     }
 
@@ -372,22 +374,125 @@ impl RegistryProvider for LocalRegistry {
     }
 }
 
+/// HTTP-backed registry (JSON endpoint)
+pub struct HttpRegistry {
+    name: String,
+    base_url: String,
+}
+
+impl HttpRegistry {
+    pub fn new(name: impl Into<String>, base_url: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            base_url: base_url.into(),
+        }
+    }
+
+    fn listings_endpoint(&self) -> String {
+        format!("{}/skills", self.base_url.trim_end_matches('/'))
+    }
+}
+
+#[async_trait]
+impl RegistryProvider for HttpRegistry {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    async fn search(&self, query: &SkillQuery) -> Result<Vec<SkillListing>> {
+        let mut results: Vec<SkillListing> =
+            reqwest::get(self.listings_endpoint()).await?.json().await?;
+
+        if let Some(q) = &query.query {
+            results.retain(|item| item.id.contains(q) || item.name.contains(q));
+        }
+
+        if !query.tags.is_empty() {
+            results.retain(|item| {
+                query
+                    .tags
+                    .iter()
+                    .all(|tag| item.tags.iter().any(|t| t == tag))
+            });
+        }
+
+        if let Some(limit) = query.limit {
+            results.truncate(limit);
+        }
+
+        Ok(results)
+    }
+
+    async fn get_skill(&self, skill_id: &str) -> Result<Skill> {
+        let url = format!(
+            "{}/skills/{}",
+            self.base_url.trim_end_matches('/'),
+            skill_id
+        );
+        Ok(reqwest::get(url).await?.json().await?)
+    }
+
+    async fn fetch(&self, _skill_id: &str, _dest: &std::path::Path) -> Result<PathBuf> {
+        Err(crate::error::Error::System(
+            "HTTP registry fetch is not supported yet".to_string(),
+        ))
+    }
+
+    async fn versions(&self, skill_id: &str) -> Result<Vec<SkillVersion>> {
+        let skill = self.get_skill(skill_id).await?;
+        Ok(vec![skill.version])
+    }
+}
+
 /// Parse SKILL.md frontmatter
 pub fn parse_skill_md(path: &PathBuf) -> Result<SkillMetadata> {
     let content = std::fs::read_to_string(path)?;
 
-    // Simple YAML frontmatter parsing
+    let mut metadata = SkillMetadata::default();
+
+    // Parse simple frontmatter key-value pairs (without extra YAML dependency)
     if let Some(stripped) = content.strip_prefix("---") {
         if let Some(end) = stripped.find("---") {
             let yaml_str = &stripped[..end];
-            if let Ok(metadata) = serde_yaml::from_str(yaml_str) {
-                return Ok(metadata);
+            for line in yaml_str.lines() {
+                let line = line.trim();
+                if line.is_empty() || line.starts_with('#') {
+                    continue;
+                }
+                if let Some((key, value)) = line.split_once(':') {
+                    let key = key.trim();
+                    let value = value.trim().trim_matches('"').trim_matches('\'');
+                    match key {
+                        "name" => metadata.name = Some(value.to_string()),
+                        "description" => metadata.description = Some(value.to_string()),
+                        "author" => metadata.author = Some(value.to_string()),
+                        "version" => metadata.version = Some(value.to_string()),
+                        "tags" => {
+                            metadata.tags = value
+                                .trim_matches('[')
+                                .trim_matches(']')
+                                .split(',')
+                                .map(|s| s.trim().trim_matches('"').trim_matches('\''))
+                                .filter(|s| !s.is_empty())
+                                .map(|s| s.to_string())
+                                .collect();
+                        }
+                        "compatible_tools" => {
+                            metadata.compatible_tools = value
+                                .trim_matches('[')
+                                .trim_matches(']')
+                                .split(',')
+                                .map(|s| s.trim().trim_matches('"').trim_matches('\''))
+                                .filter(|s| !s.is_empty())
+                                .map(|s| s.to_string())
+                                .collect();
+                        }
+                        _ => {}
+                    }
+                }
             }
         }
     }
-
-    // Fall back to extracting from content
-    let mut metadata = SkillMetadata::default();
 
     for line in content.lines() {
         if let Some(stripped) = line.strip_prefix("# ") {
@@ -420,33 +525,4 @@ pub fn calculate_dir_hash(path: &PathBuf) -> Result<String> {
     }
 
     Ok(hex::encode(hasher.finalize()))
-}
-
-// Add serde_yaml dependency handling
-mod serde_yaml {
-    use serde::de::DeserializeOwned;
-    // We can simply import from cached crate if available, or basic parsing
-    // Since original code had a placeholder, we'll keep it but ideally use real serde_yaml
-    // Assuming serde_json handles json, for yaml we probably need the crate.
-    // Cargo.toml didn't show serde_yaml, but the original code had this mod.
-    // I'll assume the original code was incomplete or used a simple hack.
-    // Wait, the original code had:
-    /*
-    mod serde_yaml {
-        use serde::de::DeserializeOwned;
-        pub fn from_str<T: DeserializeOwned>(_s: &str) -> Result<T, ()> {
-             Err(())
-        }
-    }
-    */
-    // I should check if I can add serde_yaml to Cargo.toml.
-
-    // For now I'll just use the same placeholder or try to actually parse if possible.
-    // But since I can't easily add deps without user permission (though I can edit Cargo.toml),
-    // and maintaining the original behavior is safer.
-
-    pub fn from_str<T: DeserializeOwned>(_s: &str) -> Result<T, ()> {
-        // Placeholder
-        Err(())
-    }
 }
