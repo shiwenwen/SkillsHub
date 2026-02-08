@@ -247,144 +247,118 @@ export default function Installed() {
             </div>
 
             {/* Main Content List */}
-            <Card className="min-h-[400px]" noPadding>
+            <div className="min-h-[400px]">
                 {loading ? (
                     <div className="flex items-center justify-center h-64">
                         <span className="loading loading-spinner loading-lg text-primary"></span>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="table w-full">
-                            <thead>
-                                <tr className="border-b border-base-content/5 text-base-content/50 text-xs uppercase">
-                                    <th className="bg-transparent pl-6">{t.installed.skillName}</th>
-                                    <th className="bg-transparent">{t.installed.details}</th>
-                                    <th className="bg-transparent">{t.installed.status}</th>
-                                    <th className="bg-transparent text-right pr-6">{t.installed.actions}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {/* HUB VIEW */}
-                                {activeTab === "hub" && filteredHub.map((skill) => (
-                                    <tr
-                                        key={skill.skill_id}
-                                        className="hover:bg-base-content/5 transition-colors group border-b border-base-content/5 last:border-0 cursor-pointer"
-                                        onClick={() => navigate(`/skill/${skill.skill_id}`)}
-                                    >
-                                        <td className="pl-6">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center">
-                                                    <Database className="w-4 h-4 text-primary" />
-                                                </div>
-                                                <span className="font-semibold">{skill.skill_id}</span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className="text-xs text-base-content/60 font-mono">{skill.hub_path}</div>
-                                            <div className="flex gap-1 mt-1">
-                                                {skill.synced_to.map(t => <Badge key={t} variant="success" className="opacity-80 text-[10px]">{t}</Badge>)}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            {skill.missing_in.length > 0 ? (
-                                                <Badge variant="warning">{t.installed.missingIn} {skill.missing_in.length}</Badge>
-                                            ) : (
-                                                <Badge variant="success">{t.installed.fullySynced}</Badge>
-                                            )}
-                                        </td>
-                                        <td className="text-right pr-6">
-                                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Button size="sm" variant="ghost" className="btn-xs" onClick={() => navigate(`/skill/${skill.skill_id}`)}>
-                                                    <Eye className="w-3 h-3 mr-1" /> {t.installed.view}
-                                                </Button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {/* HUB VIEW */}
+                        {activeTab === "hub" && filteredHub.map((skill) => (
+                            <Card
+                                key={skill.skill_id}
+                                className="flex flex-col hover:shadow-md transition-shadow cursor-pointer"
+                                onClick={() => navigate(`/skill/${skill.skill_id}`)}
+                            >
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                        <Database className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <span className="font-semibold break-all">{skill.skill_id}</span>
+                                </div>
+                                <div className="text-xs text-base-content/60 font-mono break-all mb-2">{skill.hub_path}</div>
+                                <div className="flex gap-1 flex-wrap mb-3">
+                                    {skill.synced_to.map(st => <Badge key={st} variant="success" className="opacity-80 text-[10px]">{st}</Badge>)}
+                                </div>
+                                <div className="mb-3">
+                                    {skill.missing_in.length > 0 ? (
+                                        <Badge variant="warning">{t.installed.missingIn} {skill.missing_in.length}</Badge>
+                                    ) : (
+                                        <Badge variant="success">{t.installed.fullySynced}</Badge>
+                                    )}
+                                </div>
+                                <div className="mt-auto pt-3 border-t border-base-content/5 flex justify-end">
+                                    <Button size="sm" variant="ghost" className="btn-xs" onClick={(e) => { e.stopPropagation(); navigate(`/skill/${skill.skill_id}`); }}>
+                                        <Eye className="w-3 h-3 mr-1" /> {t.installed.view}
+                                    </Button>
+                                </div>
+                            </Card>
+                        ))}
 
-                                {/* SCANNED VIEW */}
-                                {activeTab === "scanned" && filteredScanned.map((skill) => (
-                                    <tr key={skill.id} className="hover:bg-base-content/5 transition-colors group border-b border-base-content/5 last:border-0">
-                                        <td className="pl-6">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded bg-secondary/10 flex items-center justify-center">
-                                                    <Package className="w-4 h-4 text-secondary" />
-                                                </div>
-                                                <span className="font-semibold">{skill.id}</span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className="flex gap-1 flex-wrap">
-                                                {skill.tools.map((t, idx) => (
-                                                    <span key={idx} className="badge badge-ghost badge-sm gap-1 text-[10px]">
-                                                        {t.is_link && <Link2 className="w-3 h-3" />}
-                                                        {t.tool}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            {skill.in_hub ? (
-                                                <Badge variant="success">{t.installed.inHub}</Badge>
-                                            ) : (
-                                                <Badge variant="warning">{t.installed.notInHub}</Badge>
-                                            )}
-                                        </td>
-                                        <td className="text-right pr-6">
-                                            {/* Actions placeholder */}
-                                        </td>
-                                    </tr>
-                                ))}
+                        {/* SCANNED VIEW */}
+                        {activeTab === "scanned" && filteredScanned.map((skill) => (
+                            <Card key={skill.id} className="flex flex-col">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0">
+                                        <Package className="w-5 h-5 text-secondary" />
+                                    </div>
+                                    <span className="font-semibold break-all">{skill.id}</span>
+                                </div>
+                                <div className="flex gap-1 flex-wrap mb-3">
+                                    {skill.tools.map((toolItem, idx) => (
+                                        <span key={idx} className="badge badge-ghost badge-sm gap-1 text-[10px]">
+                                            {toolItem.is_link && <Link2 className="w-3 h-3" />}
+                                            {toolItem.tool}
+                                        </span>
+                                    ))}
+                                </div>
+                                <div className="mt-auto pt-3 border-t border-base-content/5 flex justify-between items-center">
+                                    {skill.in_hub ? (
+                                        <Badge variant="success">{t.installed.inHub}</Badge>
+                                    ) : (
+                                        <Badge variant="warning">{t.installed.notInHub}</Badge>
+                                    )}
+                                </div>
+                            </Card>
+                        ))}
 
-                                {/* PLUGINS VIEW */}
-                                {activeTab === "plugins" && filteredPlugins.map((skill) => (
-                                    <tr key={skill.id} className="hover:bg-base-content/5 transition-colors group border-b border-base-content/5 last:border-0">
-                                        <td className="pl-6">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded bg-accent/10 flex items-center justify-center">
-                                                    <Puzzle className="w-4 h-4 text-accent" />
-                                                </div>
-                                                <div>
-                                                    <div className="font-semibold">{skill.skill_name}</div>
-                                                    <div className="text-xs text-base-content/40">{skill.plugin_name}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className="flex items-center gap-2">
-                                                <Badge variant="accent">{skill.marketplace}</Badge>
-                                                <span className="text-xs text-base-content/40">v{skill.version}</span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className="text-xs text-base-content/60">
-                                                {new Date(skill.installed_at).toLocaleDateString(language)}
-                                            </div>
-                                        </td>
-                                        <td className="text-right pr-6">
-                                            {/* Actions */}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                        {/* PLUGINS VIEW */}
+                        {activeTab === "plugins" && filteredPlugins.map((skill) => (
+                            <Card key={skill.id} className="flex flex-col">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                                        <Puzzle className="w-5 h-5 text-accent" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="font-semibold break-all">{skill.skill_name}</div>
+                                        <div className="text-xs text-base-content/40 break-all">{skill.plugin_name}</div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 flex-wrap mb-3">
+                                    <Badge variant="accent">{skill.marketplace}</Badge>
+                                    <span className="text-xs text-base-content/40">v{skill.version}</span>
+                                </div>
+                                <div className="mt-auto pt-3 border-t border-base-content/5 flex justify-between items-center">
+                                    <div className="text-xs text-base-content/60">
+                                        {new Date(skill.installed_at).toLocaleDateString(language)}
+                                    </div>
+                                </div>
+                            </Card>
+                        ))}
 
                         {/* Empty States */}
-                        {!loading && activeTab === "hub" && filteredHub.length === 0 && (
-                            <div className="p-12 text-center text-base-content/40">
+                        {activeTab === "hub" && filteredHub.length === 0 && (
+                            <div className="col-span-full p-12 text-center text-base-content/40">
                                 <Database className="w-12 h-12 mx-auto mb-3 opacity-20" />
                                 <p>{t.installed.noSkillsInHub}</p>
                             </div>
                         )}
-                        {!loading && activeTab === "scanned" && filteredScanned.length === 0 && (
-                            <div className="p-12 text-center text-base-content/40">
+                        {activeTab === "scanned" && filteredScanned.length === 0 && (
+                            <div className="col-span-full p-12 text-center text-base-content/40">
                                 <Package className="w-12 h-12 mx-auto mb-3 opacity-20" />
                                 <p>{t.installed.noScannedSkills}</p>
                             </div>
                         )}
+                        {activeTab === "plugins" && filteredPlugins.length === 0 && (
+                            <div className="col-span-full p-12 text-center text-base-content/40">
+                                <Puzzle className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                                <p>{t.installed.noPlugins}</p>
+                            </div>
+                        )}
                     </div>
                 )}
-            </Card>
+            </div>
         </div>
     );
 }

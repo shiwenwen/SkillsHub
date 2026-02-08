@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- 已安装页面列表从表格布局改为卡片网格布局，移除横向滚动，内容超出自动换行，操作按钮放置在卡片底部
+- 新增插件空状态的独立翻译 key（`noPlugins`），中英文适配
+
 ### Added
 - 主题切换功能，支持三种模式：
   - **自动模式**：跟随系统偏好自动切换亮色/暗色主题

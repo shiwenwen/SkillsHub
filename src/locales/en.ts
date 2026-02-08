@@ -79,6 +79,7 @@ export const en = {
         notInHub: "Not in Hub",
         noSkillsInHub: "No skills found in Hub",
         noScannedSkills: "No scanned skills found",
+        noPlugins: "No plugins found",
         fullSyncing: "Performing full sync...",
         fullSyncSuccess: "Sync complete: Collected {collected} , Distributed {distributed}",
         fullSyncFailed: "Sync failed: {error}",

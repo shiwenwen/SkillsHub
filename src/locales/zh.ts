@@ -81,6 +81,7 @@ export const zh: Translations = {
         notInHub: "不在 Hub 中",
         noSkillsInHub: "Hub 中未找到 Skill",
         noScannedSkills: "未找到扫描到的 Skill",
+        noPlugins: "未找到已安装的插件",
         fullSyncing: "正在执行完整同步...",
         fullSyncSuccess: "同步完成: 收集 {collected} 个, 分发 {distributed} 次",
         fullSyncFailed: "同步失败: {error}",
