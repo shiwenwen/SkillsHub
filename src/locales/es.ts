@@ -218,6 +218,14 @@ export const es: Translations = {
         cloudSyncSuccess: "Sincronización en la nube completada",
         skillsPushed: "habilidades enviadas",
         skillsPulled: "habilidades recibidas",
+        theme: "Tema",
+        themeDescription: "Elige tu esquema de colores preferido",
+        themeAuto: "Auto",
+        themeLight: "Claro",
+        themeDark: "Oscuro",
+        themeAutoDescription: "Seguir la configuración del sistema",
+        themeLightDescription: "Esquema de colores claro",
+        themeDarkDescription: "Esquema de colores oscuro",
     },
 
     skillDetail: {

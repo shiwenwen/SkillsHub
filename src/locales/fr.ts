@@ -218,6 +218,14 @@ export const fr: Translations = {
         cloudSyncSuccess: "Synchronisation cloud terminée",
         skillsPushed: "compétences envoyées",
         skillsPulled: "compétences récupérées",
+        theme: "Thème",
+        themeDescription: "Choisissez votre schéma de couleurs préféré",
+        themeAuto: "Auto",
+        themeLight: "Clair",
+        themeDark: "Sombre",
+        themeAutoDescription: "Suivre les paramètres système",
+        themeLightDescription: "Schéma de couleurs clair",
+        themeDarkDescription: "Schéma de couleurs sombre",
     },
 
     skillDetail: {

@@ -247,6 +247,14 @@ export const zh: Translations = {
         cloudSyncSuccess: "云端同步完成",
         skillsPushed: "个技能已推送",
         skillsPulled: "个技能已拉取",
+        theme: "主题",
+        themeDescription: "选择你喜欢的配色方案",
+        themeAuto: "自动",
+        themeLight: "日间",
+        themeDark: "夜间",
+        themeAutoDescription: "跟随系统设置",
+        themeLightDescription: "亮色配色方案",
+        themeDarkDescription: "暗色配色方案",
     },
 
     // 技能详情页面

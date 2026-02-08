@@ -218,6 +218,14 @@ export const ja: Translations = {
         cloudSyncSuccess: "クラウド同期完了",
         skillsPushed: "件のスキルをプッシュ",
         skillsPulled: "件のスキルをプル",
+        theme: "テーマ",
+        themeDescription: "お好みの配色を選択してください",
+        themeAuto: "自動",
+        themeLight: "ライト",
+        themeDark: "ダーク",
+        themeAutoDescription: "システム設定に従う",
+        themeLightDescription: "ライトカラースキーム",
+        themeDarkDescription: "ダークカラースキーム",
     },
 
     skillDetail: {

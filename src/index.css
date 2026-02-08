@@ -29,11 +29,20 @@ body {
 
 /* Glass effect enhancement */
 .glass-card {
-  @apply bg-base-200/60 backdrop-blur-md border border-white/5 rounded-2xl shadow-xl;
+  @apply bg-base-200/60 backdrop-blur-md border border-base-content/5 rounded-2xl shadow-xl;
 }
 
 .glass-panel {
-    @apply bg-base-100/80 backdrop-blur-xl border-b border-white/5;
+    @apply bg-base-100/80 backdrop-blur-xl border-b border-base-content/5;
+}
+
+/* Light theme adjustments */
+[data-theme="skillshub-light"] .glass-card {
+  @apply bg-base-200/80 shadow-lg shadow-base-content/5;
+}
+
+[data-theme="skillshub-light"] .glass-panel {
+    @apply bg-base-100/90 shadow-sm;
 }
 
 /* Gradient text */

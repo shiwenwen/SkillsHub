@@ -245,6 +245,14 @@ export const en = {
         cloudSyncSuccess: "Cloud sync completed",
         skillsPushed: "skills pushed",
         skillsPulled: "skills pulled",
+        theme: "Theme",
+        themeDescription: "Choose your preferred color scheme",
+        themeAuto: "Auto",
+        themeLight: "Light",
+        themeDark: "Dark",
+        themeAutoDescription: "Follow system setting",
+        themeLightDescription: "Light color scheme",
+        themeDarkDescription: "Dark color scheme",
     },
 
     // 技能详情页面
