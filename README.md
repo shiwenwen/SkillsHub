@@ -22,7 +22,7 @@ Install once. Sync everywhere.
 
 SkillsHub is a centralized management platform for **Agent Skills** — the reusable instruction sets that enhance AI coding assistants. It lets you maintain a single collection of Skills and automatically distribute them to every AI coding tool you use.
 
-Instead of manually copying Skill files into each tool's directory, SkillsHub acts as a central hub: install a Skill once, and it syncs to Claude Code, Cursor, Gemini CLI, and 15+ other tools simultaneously.
+Instead of manually copying Skill files into each tool's directory, SkillsHub acts as a central hub: install a Skill once, and it syncs to Claude Code, OpenClaw, Cursor, Gemini CLI, and 15+ other tools simultaneously.
 
 ### The Problem
 
@@ -50,23 +50,22 @@ Sync Skills to 19 built-in tool adapters with two strategies:
 - **Link** (recommended) — creates symlinks; instant updates, saves disk space
 - **Copy** — duplicates files; better compatibility for tools that don't support symlinks
 
+Beyond built-in adapters, you can add **custom tools** with user-defined Skills directories, so any AI coding tool can be integrated into the sync workflow.
+
 ### Security Scanning
-Every Skill is scanned before installation against 8 security rules covering destructive commands, privilege escalation, data exfiltration, credential access, and more. Configure risk-level policies (block / confirm / allow) and manage trusted sources.
+Every Skill is scanned before installation against a set of built-in security rules covering destructive commands, privilege escalation, data exfiltration, credential access, and more. The rule set is continuously expanding. You can configure risk-level policies (block / confirm / allow) and manage trusted sources.
 
 ### Drift Detection
 SkillsHub continuously monitors sync state across all tools. When a Skill file gets modified or deleted outside of SkillsHub, drift detection flags the inconsistency and offers one-click repair.
 
 ### Multi-Registry Discovery
-Search and install Skills from multiple registries (Git repositories, HTTP endpoints, ClawHub). Default registries include anthropics, obra, ComposioHQ, and vercel-labs.
+Search and install Skills from multiple registries (Git repositories, HTTP endpoints, ClawHub). Default registries include ClawHub, anthropics, obra, ComposioHQ, and vercel-labs. You can also add your own **custom registries** — any Git repository or HTTP endpoint can serve as a Skills source.
 
 ### Cloud Sync
 Sync your Skills collection across machines via iCloud Drive, Google Drive, or OneDrive. Auto-detects installed cloud storage providers.
 
-### Multilingual Interface
-Full UI available in 9 languages: English, 中文, 日本語, 한국어, Français, Deutsch, Español, Português, Русский.
-
-### Theme System
-Auto (follows OS), Light, and Dark modes with smooth switching and system preference detection.
+### Multilingual & Theming
+9-language UI (English, 中文, 日本語, 한국어, Français, Deutsch, Español, Português, Русский) with Auto / Light / Dark theme modes.
 
 ## Architecture
 
@@ -84,20 +83,20 @@ graph TB
     subgraph Core["Core Library (skillshub-core)"]
         Store["Local Store<br/>Central Skills repository"]
         Sync["Sync Engine<br/>Link / Copy strategies"]
-        Scanner["Security Scanner<br/>8 rules, risk policies"]
+        Scanner["Security Scanner<br/>Built-in rules, risk policies"]
         Registry["Registry System<br/>Git / HTTP / ClawHub"]
         Cloud["Cloud Sync<br/>iCloud / GDrive / OneDrive"]
         Plugins["Plugin System<br/>Claude plugin scanning"]
         Config["Config Manager<br/>Persistent AppConfig"]
     end
 
-    subgraph Adapters["Tool Adapters (19 built-in)"]
+    subgraph Adapters["Tool Adapters (19 built-in + custom)"]
         direction LR
         A1["Claude Code"]
-        A2["Cursor"]
-        A3["Gemini CLI"]
-        A4["GitHub Copilot"]
-        A5["Windsurf"]
+        A2["OpenClaw"]
+        A3["Cursor"]
+        A4["Gemini CLI"]
+        A5["GitHub Copilot"]
         A6["+ 14 more"]
     end
 
@@ -116,25 +115,25 @@ graph TB
 
 | Tool | Skills Path | Status |
 |------|------------|--------|
-| Amp | `~/.config/agents/skills` | Supported |
-| Antigravity | `~/.gemini/antigravity/skills` | Supported |
-| Claude Code | `~/.claude/skills` | Supported |
-| CodeBuddy | `~/.codebuddy/skills` | Supported |
-| Codex | `~/.codex/skills` | Supported |
-| Cursor | `~/.cursor/skills` | Supported |
-| Droid / Factory | `~/.factory/skills` | Supported |
-| Gemini CLI | `~/.gemini/skills` | Supported |
-| GitHub Copilot | `~/.copilot/skills` | Supported |
-| Goose | `~/.config/goose/skills` | Supported |
-| Kilo Code | `~/.kilocode/skills` | Supported |
-| Kimi CLI | `~/.kimi/skills` | Supported |
-| OpenClaw | `~/.openclaw/workspace/skills` | Supported |
-| OpenCode | `~/.config/opencode/skills` | Supported |
-| Qwen Code | `~/.qwen/skills` | Supported |
-| Roo Code | `~/.roo/skills` | Supported |
-| Trae | `.trae/skills` | Supported |
-| Windsurf | `~/.codeium/windsurf/skills` | Supported |
-| Custom Tools | User-defined paths | Supported |
+| Claude Code | `~/.claude/skills` | Supported ✅ |
+| OpenClaw | `~/.openclaw/workspace/skills` | Supported ✅ |
+| Cursor | `~/.cursor/skills` | Supported ✅ |
+| Gemini CLI | `~/.gemini/skills` | Supported ✅ |
+| GitHub Copilot | `~/.copilot/skills` | Supported ✅ |
+| Amp | `~/.config/agents/skills` | Supported ✅ |
+| Antigravity | `~/.gemini/antigravity/skills` | Supported ✅ |
+| CodeBuddy | `~/.codebuddy/skills` | Supported ✅ |
+| Codex | `~/.codex/skills` | Supported ✅ |
+| Droid / Factory | `~/.factory/skills` | Supported ✅ |
+| Goose | `~/.config/goose/skills` | Supported ✅ |
+| Kilo Code | `~/.kilocode/skills` | Supported ✅ |
+| Kimi CLI | `~/.kimi/skills` | Supported ✅ |
+| OpenCode | `~/.config/opencode/skills` | Supported ✅ |
+| Qwen Code | `~/.qwen/skills` | Supported ✅ |
+| Roo Code | `~/.roo/skills` | Supported ✅ |
+| Trae | `.trae/skills` | Supported ✅ |
+| Windsurf | `~/.codeium/windsurf/skills` | Supported ✅ |
+| Custom Tools | User-defined paths | Supported ✅ |
 
 ## Installation
 
@@ -224,6 +223,8 @@ skillshub registry add my-registry --url https://github.com/org/skills-repo.git
 
 ## Security Scanning Rules
 
+SkillsHub includes a growing set of built-in security rules. Current rules:
+
 | Rule ID | Description | Risk Level |
 |---------|------------|------------|
 | CMD001 | Destructive commands (`rm -rf`, etc.) | HIGH |
@@ -234,6 +235,8 @@ skillshub registry add my-registry --url https://github.com/org/skills-repo.git
 | PATH001 | System path access (`/etc`, `/usr`, etc.) | MEDIUM |
 | FILE001 | Binary executables | BLOCK |
 | FILE002 | Shell scripts | MEDIUM |
+
+More rules will be added in future releases.
 
 ## Local Development
 

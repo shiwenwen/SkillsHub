@@ -22,7 +22,7 @@
 
 SkillsHub 是一个集中式的 **Agent Skills** 管理平台。Skills 是增强 AI 编码助手能力的可复用指令集，SkillsHub 让你只需维护一份 Skills 集合，即可自动分发到你使用的所有 AI 编码工具。
 
-无需手动将 Skill 文件逐一复制到每个工具的目录中。SkillsHub 充当中央仓库：安装一次 Skill，它会同时同步到 Claude Code、Cursor、Gemini CLI 等 15+ 工具。
+无需手动将 Skill 文件逐一复制到每个工具的目录中。SkillsHub 充当中央仓库：安装一次 Skill，它会同时同步到 Claude Code、OpenClaw、Cursor、Gemini CLI 等 15+ 工具。
 
 ### 痛点
 
@@ -50,23 +50,22 @@ SkillsHub 提供：
 - **Link（推荐）** — 创建符号链接；即时更新，节省磁盘空间
 - **Copy** — 复制完整文件；兼容性更好，适用于不支持符号链接的工具
 
+除内置适配器外，还支持添加**自定义工具**并配置自定义 Skills 目录，让任何 AI 编码工具都能纳入同步工作流。
+
 ### 安全扫描
-每个 Skill 在安装前都会经过 8 条安全规则扫描，覆盖破坏性命令、权限提升、数据外泄、凭据访问等风险。支持配置风险级别策略（阻止 / 确认 / 允许）和管理可信来源。
+每个 Skill 在安装前都会经过一组内置安全规则扫描，覆盖破坏性命令、权限提升、数据外泄、凭据访问等风险。规则集持续扩展中。支持配置风险级别策略（阻止 / 确认 / 允许）和管理可信来源。
 
 ### 漂移检测
 SkillsHub 持续监控所有工具的同步状态。当 Skill 文件在 SkillsHub 之外被修改或删除时，漂移检测会标记不一致并提供一键修复。
 
 ### 多注册源发现
-从多个注册源（Git 仓库、HTTP 端点、ClawHub）搜索和安装 Skills。默认注册源包括 anthropics、obra、ComposioHQ 和 vercel-labs。
+从多个注册源（Git 仓库、HTTP 端点、ClawHub）搜索和安装 Skills。默认注册源包括 ClawHub、anthropics、obra、ComposioHQ 和 vercel-labs。同时支持添加**自定义注册源** — 任何 Git 仓库或 HTTP 端点都可以作为 Skills 来源。
 
 ### 云端同步
 通过 iCloud Drive、Google Drive 或 OneDrive 在多台设备间同步 Skills 集合。自动检测已安装的云存储服务。
 
-### 多语言界面
-完整的 UI 支持 9 种语言：English、中文、日本語、한국어、Français、Deutsch、Español、Português、Русский。
-
-### 主题系统
-自动（跟随系统）、亮色、暗色三种模式，支持平滑切换和系统偏好实时检测。
+### 多语言与主题
+9 语言 UI（English、中文、日本語、한국어、Français、Deutsch、Español、Português、Русский），支持自动 / 亮色 / 暗色主题模式。
 
 ## 架构
 
@@ -84,20 +83,20 @@ graph TB
     subgraph Core["核心库 (skillshub-core)"]
         Store["本地存储<br/>Skills 中央仓库"]
         Sync["同步引擎<br/>Link / Copy 策略"]
-        Scanner["安全扫描器<br/>8 条规则，风险策略"]
+        Scanner["安全扫描器<br/>内置规则，风险策略"]
         Registry["注册源系统<br/>Git / HTTP / ClawHub"]
         Cloud["云端同步<br/>iCloud / GDrive / OneDrive"]
         Plugins["插件系统<br/>Claude 插件扫描"]
         Config["配置管理<br/>持久化 AppConfig"]
     end
 
-    subgraph Adapters["工具适配器（19 种内置）"]
+    subgraph Adapters["工具适配器（19 种内置 + 自定义）"]
         direction LR
         A1["Claude Code"]
-        A2["Cursor"]
-        A3["Gemini CLI"]
-        A4["GitHub Copilot"]
-        A5["Windsurf"]
+        A2["OpenClaw"]
+        A3["Cursor"]
+        A4["Gemini CLI"]
+        A5["GitHub Copilot"]
         A6["+ 其他 14 种"]
     end
 
@@ -116,25 +115,25 @@ graph TB
 
 | 工具 | Skills 路径 | 状态 |
 |------|------------|------|
-| Amp | `~/.config/agents/skills` | 已支持 |
-| Antigravity | `~/.gemini/antigravity/skills` | 已支持 |
-| Claude Code | `~/.claude/skills` | 已支持 |
-| CodeBuddy | `~/.codebuddy/skills` | 已支持 |
-| Codex | `~/.codex/skills` | 已支持 |
-| Cursor | `~/.cursor/skills` | 已支持 |
-| Droid / Factory | `~/.factory/skills` | 已支持 |
-| Gemini CLI | `~/.gemini/skills` | 已支持 |
-| GitHub Copilot | `~/.copilot/skills` | 已支持 |
-| Goose | `~/.config/goose/skills` | 已支持 |
-| Kilo Code | `~/.kilocode/skills` | 已支持 |
-| Kimi CLI | `~/.kimi/skills` | 已支持 |
-| OpenClaw | `~/.openclaw/workspace/skills` | 已支持 |
-| OpenCode | `~/.config/opencode/skills` | 已支持 |
-| Qwen Code | `~/.qwen/skills` | 已支持 |
-| Roo Code | `~/.roo/skills` | 已支持 |
-| Trae | `.trae/skills` | 已支持 |
-| Windsurf | `~/.codeium/windsurf/skills` | 已支持 |
-| 自定义工具 | 用户自定义路径 | 已支持 |
+| Claude Code | `~/.claude/skills` | 已支持 ✅ |
+| OpenClaw | `~/.openclaw/workspace/skills` | 已支持 ✅ |
+| Cursor | `~/.cursor/skills` | 已支持 ✅ |
+| Gemini CLI | `~/.gemini/skills` | 已支持 ✅ |
+| GitHub Copilot | `~/.copilot/skills` | 已支持 ✅ |
+| Amp | `~/.config/agents/skills` | 已支持 ✅ |
+| Antigravity | `~/.gemini/antigravity/skills` | 已支持 ✅ |
+| CodeBuddy | `~/.codebuddy/skills` | 已支持 ✅ |
+| Codex | `~/.codex/skills` | 已支持 ✅ |
+| Droid / Factory | `~/.factory/skills` | 已支持 ✅ |
+| Goose | `~/.config/goose/skills` | 已支持 ✅ |
+| Kilo Code | `~/.kilocode/skills` | 已支持 ✅ |
+| Kimi CLI | `~/.kimi/skills` | 已支持 ✅ |
+| OpenCode | `~/.config/opencode/skills` | 已支持 ✅ |
+| Qwen Code | `~/.qwen/skills` | 已支持 ✅ |
+| Roo Code | `~/.roo/skills` | 已支持 ✅ |
+| Trae | `.trae/skills` | 已支持 ✅ |
+| Windsurf | `~/.codeium/windsurf/skills` | 已支持 ✅ |
+| 自定义工具 | 用户自定义路径 | 已支持 ✅ |
 
 ## 安装
 
@@ -224,6 +223,8 @@ skillshub registry add my-registry --url https://github.com/org/skills-repo.git
 
 ## 安全扫描规则
 
+SkillsHub 内置了一组持续扩展的安全规则。当前规则：
+
 | 规则 ID | 描述 | 风险等级 |
 |---------|------|----------|
 | CMD001 | 破坏性命令（`rm -rf` 等） | HIGH |
@@ -234,6 +235,8 @@ skillshub registry add my-registry --url https://github.com/org/skills-repo.git
 | PATH001 | 系统路径访问（`/etc`、`/usr` 等） | MEDIUM |
 | FILE001 | 二进制可执行文件 | BLOCK |
 | FILE002 | Shell 脚本 | MEDIUM |
+
+更多规则将在后续版本中持续添加。
 
 ## 本地开发
 
