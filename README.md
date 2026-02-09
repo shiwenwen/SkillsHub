@@ -67,6 +67,30 @@ Sync your Skills collection across machines via iCloud Drive, Google Drive, or O
 ### Multilingual & Theming
 9-language UI (English, 中文, 日本語, 한국어, Français, Deutsch, Español, Português, Русский) with Auto / Light / Dark theme modes.
 
+## Supported Tools
+
+| Tool | Skills Path | Status |
+|------|------------|--------|
+| Claude Code | `~/.claude/skills` | Supported ✅ |
+| OpenClaw | `~/.openclaw/workspace/skills` | Supported ✅ |
+| Cursor | `~/.cursor/skills` | Supported ✅ |
+| Gemini CLI | `~/.gemini/skills` | Supported ✅ |
+| GitHub Copilot | `~/.copilot/skills` | Supported ✅ |
+| Amp | `~/.config/agents/skills` | Supported ✅ |
+| Antigravity | `~/.gemini/antigravity/skills` | Supported ✅ |
+| CodeBuddy | `~/.codebuddy/skills` | Supported ✅ |
+| Codex | `~/.codex/skills` | Supported ✅ |
+| Droid / Factory | `~/.factory/skills` | Supported ✅ |
+| Goose | `~/.config/goose/skills` | Supported ✅ |
+| Kilo Code | `~/.kilocode/skills` | Supported ✅ |
+| Kimi CLI | `~/.kimi/skills` | Supported ✅ |
+| OpenCode | `~/.config/opencode/skills` | Supported ✅ |
+| Qwen Code | `~/.qwen/skills` | Supported ✅ |
+| Roo Code | `~/.roo/skills` | Supported ✅ |
+| Trae | `.trae/skills` | Supported ✅ |
+| Windsurf | `~/.codeium/windsurf/skills` | Supported ✅ |
+| Custom Tools | User-defined paths | Supported ✅ |
+
 ## Architecture
 
 ```mermaid
@@ -110,30 +134,6 @@ graph TB
     Cloud --> Store
     Config --> Core
 ```
-
-## Supported Tools
-
-| Tool | Skills Path | Status |
-|------|------------|--------|
-| Claude Code | `~/.claude/skills` | Supported ✅ |
-| OpenClaw | `~/.openclaw/workspace/skills` | Supported ✅ |
-| Cursor | `~/.cursor/skills` | Supported ✅ |
-| Gemini CLI | `~/.gemini/skills` | Supported ✅ |
-| GitHub Copilot | `~/.copilot/skills` | Supported ✅ |
-| Amp | `~/.config/agents/skills` | Supported ✅ |
-| Antigravity | `~/.gemini/antigravity/skills` | Supported ✅ |
-| CodeBuddy | `~/.codebuddy/skills` | Supported ✅ |
-| Codex | `~/.codex/skills` | Supported ✅ |
-| Droid / Factory | `~/.factory/skills` | Supported ✅ |
-| Goose | `~/.config/goose/skills` | Supported ✅ |
-| Kilo Code | `~/.kilocode/skills` | Supported ✅ |
-| Kimi CLI | `~/.kimi/skills` | Supported ✅ |
-| OpenCode | `~/.config/opencode/skills` | Supported ✅ |
-| Qwen Code | `~/.qwen/skills` | Supported ✅ |
-| Roo Code | `~/.roo/skills` | Supported ✅ |
-| Trae | `.trae/skills` | Supported ✅ |
-| Windsurf | `~/.codeium/windsurf/skills` | Supported ✅ |
-| Custom Tools | User-defined paths | Supported ✅ |
 
 ## Installation
 

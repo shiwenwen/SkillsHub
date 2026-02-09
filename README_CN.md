@@ -67,6 +67,30 @@ SkillsHub 持续监控所有工具的同步状态。当 Skill 文件在 SkillsHu
 ### 多语言与主题
 9 语言 UI（English、中文、日本語、한국어、Français、Deutsch、Español、Português、Русский），支持自动 / 亮色 / 暗色主题模式。
 
+## 支持的工具
+
+| 工具 | Skills 路径 | 状态 |
+|------|------------|------|
+| Claude Code | `~/.claude/skills` | 已支持 ✅ |
+| OpenClaw | `~/.openclaw/workspace/skills` | 已支持 ✅ |
+| Cursor | `~/.cursor/skills` | 已支持 ✅ |
+| Gemini CLI | `~/.gemini/skills` | 已支持 ✅ |
+| GitHub Copilot | `~/.copilot/skills` | 已支持 ✅ |
+| Amp | `~/.config/agents/skills` | 已支持 ✅ |
+| Antigravity | `~/.gemini/antigravity/skills` | 已支持 ✅ |
+| CodeBuddy | `~/.codebuddy/skills` | 已支持 ✅ |
+| Codex | `~/.codex/skills` | 已支持 ✅ |
+| Droid / Factory | `~/.factory/skills` | 已支持 ✅ |
+| Goose | `~/.config/goose/skills` | 已支持 ✅ |
+| Kilo Code | `~/.kilocode/skills` | 已支持 ✅ |
+| Kimi CLI | `~/.kimi/skills` | 已支持 ✅ |
+| OpenCode | `~/.config/opencode/skills` | 已支持 ✅ |
+| Qwen Code | `~/.qwen/skills` | 已支持 ✅ |
+| Roo Code | `~/.roo/skills` | 已支持 ✅ |
+| Trae | `.trae/skills` | 已支持 ✅ |
+| Windsurf | `~/.codeium/windsurf/skills` | 已支持 ✅ |
+| 自定义工具 | 用户自定义路径 | 已支持 ✅ |
+
 ## 架构
 
 ```mermaid
@@ -110,30 +134,6 @@ graph TB
     Cloud --> Store
     Config --> Core
 ```
-
-## 支持的工具
-
-| 工具 | Skills 路径 | 状态 |
-|------|------------|------|
-| Claude Code | `~/.claude/skills` | 已支持 ✅ |
-| OpenClaw | `~/.openclaw/workspace/skills` | 已支持 ✅ |
-| Cursor | `~/.cursor/skills` | 已支持 ✅ |
-| Gemini CLI | `~/.gemini/skills` | 已支持 ✅ |
-| GitHub Copilot | `~/.copilot/skills` | 已支持 ✅ |
-| Amp | `~/.config/agents/skills` | 已支持 ✅ |
-| Antigravity | `~/.gemini/antigravity/skills` | 已支持 ✅ |
-| CodeBuddy | `~/.codebuddy/skills` | 已支持 ✅ |
-| Codex | `~/.codex/skills` | 已支持 ✅ |
-| Droid / Factory | `~/.factory/skills` | 已支持 ✅ |
-| Goose | `~/.config/goose/skills` | 已支持 ✅ |
-| Kilo Code | `~/.kilocode/skills` | 已支持 ✅ |
-| Kimi CLI | `~/.kimi/skills` | 已支持 ✅ |
-| OpenCode | `~/.config/opencode/skills` | 已支持 ✅ |
-| Qwen Code | `~/.qwen/skills` | 已支持 ✅ |
-| Roo Code | `~/.roo/skills` | 已支持 ✅ |
-| Trae | `.trae/skills` | 已支持 ✅ |
-| Windsurf | `~/.codeium/windsurf/skills` | 已支持 ✅ |
-| 自定义工具 | 用户自定义路径 | 已支持 ✅ |
 
 ## 安装
 
