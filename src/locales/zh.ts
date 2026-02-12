@@ -256,6 +256,13 @@ export const zh: Translations = {
         themeAutoDescription: "跟随系统设置",
         themeLightDescription: "亮色配色方案",
         themeDarkDescription: "暗色配色方案",
+        aboutSubtitle: "统一 AI Skills 管理",
+        aboutVersion: "v0.1.0",
+        aboutAuthorLabel: "作者",
+        aboutOpenSourceLabel: "开源地址",
+        aboutOpenSourceAction: "查看代码",
+        aboutCheckUpdate: "检查更新",
+        aboutCopyright: "© 2026 SkillsHub. 版权所有。",
     },
 
     // 技能详情页面

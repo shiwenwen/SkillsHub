@@ -254,6 +254,13 @@ export const en = {
         themeAutoDescription: "Follow system setting",
         themeLightDescription: "Light color scheme",
         themeDarkDescription: "Dark color scheme",
+        aboutSubtitle: "Unified AI Skills Management",
+        aboutVersion: "v0.1.0",
+        aboutAuthorLabel: "Author",
+        aboutOpenSourceLabel: "Open Source",
+        aboutOpenSourceAction: "View Code",
+        aboutCheckUpdate: "Check for Updates",
+        aboutCopyright: "© 2026 SkillsHub. All rights reserved.",
     },
 
     // 技能详情页面
