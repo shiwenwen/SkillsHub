@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **CI/CD**: GitHub Actions workflow for cross-platform build and auto-publish to GitHub Releases
+  - Supports macOS (ARM64 + x64), Windows (x64), Linux (x64)
+  - Tag-triggered release (`v*` format)
+  - Uses `tauri-apps/tauri-action` for Tauri build and artifact upload
+
 ## [1.0.0] - 2025-02-09
 
 ### Added
