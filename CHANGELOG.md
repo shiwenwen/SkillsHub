@@ -9,8 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - 修复日间模式下页面顶部导航栏仍然显示为暗色的问题：移除 `index.html` 中硬编码的 `data-theme="skillshub-dark"`，改为内联脚本在页面加载前从 `localStorage` 读取用户主题偏好并立即应用，避免主题闪烁
+- 一次性补齐 `de/es/fr/ja/ko/pt/ru` 语言包中 `installed` 分组缺失字段，修复 `Translations` 类型不匹配导致的 `tsc` 构建失败
 
 ### Changed
+- 设置页面「关于」标签页 UI 重构为深色渐变卡片风格，新增作者/开源入口信息卡、技术栈标签与更新按钮，并移除“公众号”和“支持作者”相关区块
 - 已安装页面列表从表格布局改为卡片网格布局，移除横向滚动，内容超出自动换行，操作按钮放置在卡片底部
 - 新增插件空状态的独立翻译 key（`noPlugins`），中英文适配
 
