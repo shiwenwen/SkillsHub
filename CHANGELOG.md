@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Tag-triggered release (`v*` format)
   - Uses `tauri-apps/tauri-action` for Tauri build and artifact upload
 
+### Fixed
+
+- **CI/CD**: Fixed GitHub Actions release workflow runner/action configuration
+  - Replaced unsupported runner label `macos-13-us-default` usage with supported `macos-14` (ARM64 lane)
+  - Replaced unavailable `dtolnay/rust-action/setup` action with `dtolnay/rust-toolchain@stable`
+
 ## [1.0.0] - 2025-02-09
 
 ### Added
