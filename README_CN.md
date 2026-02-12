@@ -4,9 +4,12 @@
 
 **统一的 Agent Skills 管理与共享平台**
 
-一次安装，处处同步。
+🖥️ 跨平台桌面应用 — 一次安装，处处同步。
 
 [![Version](https://img.shields.io/badge/version-1.0.0-6366f1?style=flat-square)](CHANGELOG.md)
+[![macOS](https://img.shields.io/badge/macOS-000000?style=flat-square&logo=apple&logoColor=white)](https://github.com/shiwenwen/SkillsHub/releases)
+[![Windows](https://img.shields.io/badge/Windows-0078D4?style=flat-square&logo=windows&logoColor=white)](https://github.com/shiwenwen/SkillsHub/releases)
+[![Linux](https://img.shields.io/badge/Linux-FCC624?style=flat-square&logo=linux&logoColor=black)](https://github.com/shiwenwen/SkillsHub/releases)
 [![Rust](https://img.shields.io/badge/Rust-1.70+-orange?style=flat-square&logo=rust)](https://www.rust-lang.org/)
 [![Tauri](https://img.shields.io/badge/Tauri-2.0-blue?style=flat-square&logo=tauri)](https://tauri.app/)
 [![React](https://img.shields.io/badge/React-18-61dafb?style=flat-square&logo=react)](https://react.dev/)
@@ -27,6 +30,7 @@ SkillsHub 是一个集中式的 **Agent Skills** 管理平台。Skills 是增强
 ### 痛点
 
 AI 编码工具各自维护独立的 Skills 目录。如果你使用多个工具，就会面临：
+
 - 在 `~/.claude/skills`、`~/.cursor/skills`、`~/.gemini/skills` 等目录间重复复制相同的 Skills
 - 更新 Skill 时需要手动保持各处同步
 - 无法直观了解哪些工具拥有哪些 Skills
@@ -35,6 +39,7 @@ AI 编码工具各自维护独立的 Skills 目录。如果你使用多个工具
 ### 解决方案
 
 SkillsHub 提供：
+
 - **统一存储** — 所有 Skills 的中央仓库
 - **自动同步** — 通过符号链接或文件复制自动分发到每个检测到的工具
 - **安全扫描** — 安装前检测危险模式
@@ -43,53 +48,61 @@ SkillsHub 提供：
 ## 功能特性
 
 ### 统一 Skills 管理
+
 在一个地方管理所有 Skills。通过直观的桌面 GUI 或功能完整的 CLI 进行安装、更新、卸载和组织。
 
 ### 多工具同步
+
 支持 19 种内置工具适配器，提供两种同步策略：
+
 - **Link（推荐）** — 创建符号链接；即时更新，节省磁盘空间
 - **Copy** — 复制完整文件；兼容性更好，适用于不支持符号链接的工具
 
 除内置适配器外，还支持添加**自定义工具**并配置自定义 Skills 目录，让任何 AI 编码工具都能纳入同步工作流。
 
 ### 安全扫描
+
 每个 Skill 在安装前都会经过一组内置安全规则扫描，覆盖破坏性命令、权限提升、数据外泄、凭据访问等风险。规则集持续扩展中。支持配置风险级别策略（阻止 / 确认 / 允许）和管理可信来源。
 
 ### 漂移检测
+
 SkillsHub 持续监控所有工具的同步状态。当 Skill 文件在 SkillsHub 之外被修改或删除时，漂移检测会标记不一致并提供一键修复。
 
 ### 多注册源发现
+
 从多个注册源（Git 仓库、HTTP 端点、ClawHub）搜索和安装 Skills。默认注册源包括 ClawHub、anthropics、obra、ComposioHQ 和 vercel-labs。同时支持添加**自定义注册源** — 任何 Git 仓库或 HTTP 端点都可以作为 Skills 来源。
 
 ### 云端同步
+
 通过 iCloud Drive、Google Drive 或 OneDrive 在多台设备间同步 Skills 集合。自动检测已安装的云存储服务。
 
 ### 多语言与主题
+
 9 语言 UI（English、中文、日本語、한국어、Français、Deutsch、Español、Português、Русский），支持自动 / 亮色 / 暗色主题模式。
 
 ## 支持的工具
 
-| 工具 | Skills 路径 | 状态 |
-|------|------------|------|
-| Claude Code | `~/.claude/skills` | 已支持 ✅ |
-| OpenClaw | `~/.openclaw/workspace/skills` | 已支持 ✅ |
-| Cursor | `~/.cursor/skills` | 已支持 ✅ |
-| Gemini CLI | `~/.gemini/skills` | 已支持 ✅ |
-| GitHub Copilot | `~/.copilot/skills` | 已支持 ✅ |
-| Amp | `~/.config/agents/skills` | 已支持 ✅ |
-| Antigravity | `~/.gemini/antigravity/skills` | 已支持 ✅ |
-| CodeBuddy | `~/.codebuddy/skills` | 已支持 ✅ |
-| Codex | `~/.codex/skills` | 已支持 ✅ |
-| Droid / Factory | `~/.factory/skills` | 已支持 ✅ |
-| Goose | `~/.config/goose/skills` | 已支持 ✅ |
-| Kilo Code | `~/.kilocode/skills` | 已支持 ✅ |
-| Kimi CLI | `~/.kimi/skills` | 已支持 ✅ |
-| OpenCode | `~/.config/opencode/skills` | 已支持 ✅ |
-| Qwen Code | `~/.qwen/skills` | 已支持 ✅ |
-| Roo Code | `~/.roo/skills` | 已支持 ✅ |
-| Trae | `.trae/skills` | 已支持 ✅ |
-| Windsurf | `~/.codeium/windsurf/skills` | 已支持 ✅ |
-| 自定义工具 | 用户自定义路径 | 已支持 ✅ |
+| 工具            | Skills 路径                    | 状态      |
+| --------------- | ------------------------------ | --------- |
+| Claude Code     | `~/.claude/skills`             | 已支持 ✅ |
+| OpenClaw        | `~/.openclaw/workspace/skills` | 已支持 ✅ |
+| Cursor          | `~/.cursor/skills`             | 已支持 ✅ |
+| Gemini CLI      | `~/.gemini/skills`             | 已支持 ✅ |
+| GitHub Copilot  | `~/.copilot/skills`            | 已支持 ✅ |
+| Amp             | `~/.config/agents/skills`      | 已支持 ✅ |
+| Antigravity     | `~/.gemini/antigravity/skills` | 已支持 ✅ |
+| CodeBuddy       | `~/.codebuddy/skills`          | 已支持 ✅ |
+| Codex           | `~/.codex/skills`              | 已支持 ✅ |
+| Droid / Factory | `~/.factory/skills`            | 已支持 ✅ |
+| Goose           | `~/.config/goose/skills`       | 已支持 ✅ |
+| Kilo Code       | `~/.kilocode/skills`           | 已支持 ✅ |
+| Kimi CLI        | `~/.kimi/skills`               | 已支持 ✅ |
+| OpenCode        | `~/.config/opencode/skills`    | 已支持 ✅ |
+| Qwen Code       | `~/.qwen/skills`               | 已支持 ✅ |
+| Roo Code        | `~/.roo/skills`                | 已支持 ✅ |
+| Trae            | `.trae/skills`                 | 已支持 ✅ |
+| Windsurf        | `~/.codeium/windsurf/skills`   | 已支持 ✅ |
+| 自定义工具      | 用户自定义路径                 | 已支持 ✅ |
 
 ## 架构
 
@@ -137,17 +150,11 @@ graph TB
 
 ## 安装
 
+SkillsHub 支持 **macOS**（Apple Silicon 和 Intel）、**Windows**（x64）和 **Linux**（x64）。
+
 ### 预编译安装包（推荐）
 
 从 [Releases](https://github.com/shiwenwen/SkillsHub/releases) 页面下载对应平台的最新版本。
-
-| 平台 | 桌面应用 | CLI |
-|------|---------|-----|
-| macOS (Apple Silicon) | `SkillsHub_x.x.x_aarch64.dmg` | `skillshub-cli-aarch64-apple-darwin` |
-| macOS (Intel) | `SkillsHub_x.x.x_x64.dmg` | `skillshub-cli-x86_64-apple-darwin` |
-| Windows | `SkillsHub_x.x.x_x64-setup.exe` | `skillshub-cli-x86_64-pc-windows-msvc.exe` |
-| Linux (deb) | `skillshub_x.x.x_amd64.deb` | `skillshub-cli-x86_64-unknown-linux-gnu` |
-| Linux (AppImage) | `SkillsHub_x.x.x_amd64.AppImage` | — |
 
 #### macOS
 
@@ -225,16 +232,16 @@ skillshub registry add my-registry --url https://github.com/org/skills-repo.git
 
 SkillsHub 内置了一组持续扩展的安全规则。当前规则：
 
-| 规则 ID | 描述 | 风险等级 |
-|---------|------|----------|
-| CMD001 | 破坏性命令（`rm -rf` 等） | HIGH |
-| CMD002 | 权限提升（`sudo` 等） | HIGH |
-| NET001 | 数据外泄（携带敏感数据的出站网络请求） | HIGH |
-| CRED001 | 凭据访问（读取密钥、令牌、密码） | HIGH |
-| EVAL001 | 动态代码执行（`eval`、`exec` 等） | MEDIUM |
-| PATH001 | 系统路径访问（`/etc`、`/usr` 等） | MEDIUM |
-| FILE001 | 二进制可执行文件 | BLOCK |
-| FILE002 | Shell 脚本 | MEDIUM |
+| 规则 ID | 描述                                   | 风险等级 |
+| ------- | -------------------------------------- | -------- |
+| CMD001  | 破坏性命令（`rm -rf` 等）              | HIGH     |
+| CMD002  | 权限提升（`sudo` 等）                  | HIGH     |
+| NET001  | 数据外泄（携带敏感数据的出站网络请求） | HIGH     |
+| CRED001 | 凭据访问（读取密钥、令牌、密码）       | HIGH     |
+| EVAL001 | 动态代码执行（`eval`、`exec` 等）      | MEDIUM   |
+| PATH001 | 系统路径访问（`/etc`、`/usr` 等）      | MEDIUM   |
+| FILE001 | 二进制可执行文件                       | BLOCK    |
+| FILE002 | Shell 脚本                             | MEDIUM   |
 
 更多规则将在后续版本中持续添加。
 
@@ -310,16 +317,16 @@ SkillsHub/
 
 ### 技术栈
 
-| 层级 | 技术 |
-|------|------|
-| 桌面框架 | Tauri 2.2 |
-| 前端 | React 18、TypeScript 5.5、Tailwind CSS 3.4、DaisyUI 4 |
-| 构建工具 | Vite 5.4 |
-| 后端语言 | Rust（2021 edition） |
-| 异步运行时 | Tokio |
-| CLI 框架 | Clap 4.5 |
-| HTTP 客户端 | Reqwest 0.12 |
-| 图标库 | Lucide React |
+| 层级        | 技术                                                  |
+| ----------- | ----------------------------------------------------- |
+| 桌面框架    | Tauri 2.2                                             |
+| 前端        | React 18、TypeScript 5.5、Tailwind CSS 3.4、DaisyUI 4 |
+| 构建工具    | Vite 5.4                                              |
+| 后端语言    | Rust（2021 edition）                                  |
+| 异步运行时  | Tokio                                                 |
+| CLI 框架    | Clap 4.5                                              |
+| HTTP 客户端 | Reqwest 0.12                                          |
+| 图标库      | Lucide React                                          |
 
 ## 参与贡献
 
