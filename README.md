@@ -1,264 +1,330 @@
-# SkillsHub
-
 <div align="center">
 
-![SkillsHub Logo](https://img.shields.io/badge/SkillsHub-Agent%20Skills%20Manager-6366f1?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWdvbiBwb2ludHM9IjEyIDIgMiA3IDEyIDEyIDIyIDcgMTIgMiI+PC9wb2x5Z29uPjxwb2x5bGluZSBwb2ludHM9IjIgMTcgMTIgMjIgMjIgMTciPjwvcG9seWxpbmU+PHBvbHlsaW5lIHBvaW50cz0iMiAxMiAxMiAxNyAyMiAxMiI+PC9wb2x5bGluZT48L3N2Zz4=)
+# SkillsHub
 
-**统一的 Agent Skills 管理与共享平台**
+**A unified Agent Skills management and sharing platform**
 
+Install once. Sync everywhere.
+
+[![Version](https://img.shields.io/badge/version-1.0.0-6366f1?style=flat-square)](CHANGELOG.md)
 [![Rust](https://img.shields.io/badge/Rust-1.70+-orange?style=flat-square&logo=rust)](https://www.rust-lang.org/)
 [![Tauri](https://img.shields.io/badge/Tauri-2.0-blue?style=flat-square&logo=tauri)](https://tauri.app/)
 [![React](https://img.shields.io/badge/React-18-61dafb?style=flat-square&logo=react)](https://react.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
-[English](#english) | [中文](#中文)
+[English](README.md) | [中文](README_CN.md)
 
 </div>
 
 ---
 
-## 中文
+## What is SkillsHub?
 
-### 简介
+SkillsHub is a centralized management platform for **Agent Skills** — the reusable instruction sets that enhance AI coding assistants. It lets you maintain a single collection of Skills and automatically distribute them to every AI coding tool you use.
 
-SkillsHub 是一个统一的 Agent Skills 管理平台，让您可以用同一套 skills 同时服务多个 Agent 工具（Claude Code、Cursor、Gemini CLI、OpenCode 等）。
+Instead of manually copying Skill files into each tool's directory, SkillsHub acts as a central hub: install a Skill once, and it syncs to Claude Code, OpenClaw, Cursor, Gemini CLI, and 15+ other tools simultaneously.
 
-### ✨ 核心特性
+### The Problem
 
-- 🎯 **统一管理** - 一处安装，多工具同步
-- 🔗 **Link-first 同步** - 符号链接优先，节省空间，实时更新
-- 🛡️ **安全扫描** - 安装前自动检测危险命令、凭据访问、数据外泄风险
-- 🖥️ **可视化界面** - Tauri 桌面应用，美观易用
-- ⌨️ **CLI 支持** - 完整的命令行工具，适合自动化和脚本化
-- 🔄 **漂移检测** - 自动检测不一致并修复
-- 🧩 **Claude Plugins 支持** - 扫描、同步 Claude 插件技能
-- 🧰 **自定义工具** - 支持添加自定义 AI 编码工具与路径
-- 🌍 **多语言界面** - 内置 9 种语言（中/英/日/韩/法/德/西/葡/俄）
+AI coding tools each maintain their own Skills directory. If you use multiple tools, you end up:
+- Duplicating the same Skills across `~/.claude/skills`, `~/.cursor/skills`, `~/.gemini/skills`, etc.
+- Manually keeping them in sync when you update a Skill
+- Having no visibility into which tools have which Skills
+- Running unknown Skill code without any security review
 
-### 🏗️ 架构
+### The Solution
 
+SkillsHub provides:
+- **One central store** for all your Skills
+- **Automatic sync** to every detected tool via symlinks or file copies
+- **Security scanning** before installation to detect dangerous patterns
+- **A desktop app and CLI** so you can work however you prefer
+
+## Features
+
+### Unified Skills Management
+Manage all your Skills from a single location. Install, update, uninstall, and organize Skills through an intuitive desktop GUI or a full-featured CLI.
+
+### Multi-Tool Sync
+Sync Skills to 19 built-in tool adapters with two strategies:
+- **Link** (recommended) — creates symlinks; instant updates, saves disk space
+- **Copy** — duplicates files; better compatibility for tools that don't support symlinks
+
+Beyond built-in adapters, you can add **custom tools** with user-defined Skills directories, so any AI coding tool can be integrated into the sync workflow.
+
+### Security Scanning
+Every Skill is scanned before installation against a set of built-in security rules covering destructive commands, privilege escalation, data exfiltration, credential access, and more. The rule set is continuously expanding. You can configure risk-level policies (block / confirm / allow) and manage trusted sources.
+
+### Drift Detection
+SkillsHub continuously monitors sync state across all tools. When a Skill file gets modified or deleted outside of SkillsHub, drift detection flags the inconsistency and offers one-click repair.
+
+### Multi-Registry Discovery
+Search and install Skills from multiple registries (Git repositories, HTTP endpoints, ClawHub). Default registries include ClawHub, anthropics, obra, ComposioHQ, and vercel-labs. You can also add your own **custom registries** — any Git repository or HTTP endpoint can serve as a Skills source.
+
+### Cloud Sync
+Sync your Skills collection across machines via iCloud Drive, Google Drive, or OneDrive. Auto-detects installed cloud storage providers.
+
+### Multilingual & Theming
+9-language UI (English, 中文, 日本語, 한국어, Français, Deutsch, Español, Português, Русский) with Auto / Light / Dark theme modes.
+
+## Supported Tools
+
+| Tool | Skills Path | Status |
+|------|------------|--------|
+| Claude Code | `~/.claude/skills` | Supported ✅ |
+| OpenClaw | `~/.openclaw/workspace/skills` | Supported ✅ |
+| Cursor | `~/.cursor/skills` | Supported ✅ |
+| Gemini CLI | `~/.gemini/skills` | Supported ✅ |
+| GitHub Copilot | `~/.copilot/skills` | Supported ✅ |
+| Amp | `~/.config/agents/skills` | Supported ✅ |
+| Antigravity | `~/.gemini/antigravity/skills` | Supported ✅ |
+| CodeBuddy | `~/.codebuddy/skills` | Supported ✅ |
+| Codex | `~/.codex/skills` | Supported ✅ |
+| Droid / Factory | `~/.factory/skills` | Supported ✅ |
+| Goose | `~/.config/goose/skills` | Supported ✅ |
+| Kilo Code | `~/.kilocode/skills` | Supported ✅ |
+| Kimi CLI | `~/.kimi/skills` | Supported ✅ |
+| OpenCode | `~/.config/opencode/skills` | Supported ✅ |
+| Qwen Code | `~/.qwen/skills` | Supported ✅ |
+| Roo Code | `~/.roo/skills` | Supported ✅ |
+| Trae | `.trae/skills` | Supported ✅ |
+| Windsurf | `~/.codeium/windsurf/skills` | Supported ✅ |
+| Custom Tools | User-defined paths | Supported ✅ |
+
+## Architecture
+
+```mermaid
+graph TB
+    subgraph Client["Client Layer"]
+        UI["Desktop App<br/>(React + Tailwind + DaisyUI)"]
+        CLI["CLI Tool<br/>(Clap + Colored + Indicatif)"]
+    end
+
+    subgraph Tauri["Tauri Bridge"]
+        CMD["60+ IPC Commands"]
+    end
+
+    subgraph Core["Core Library (skillshub-core)"]
+        Store["Local Store<br/>Central Skills repository"]
+        Sync["Sync Engine<br/>Link / Copy strategies"]
+        Scanner["Security Scanner<br/>Built-in rules, risk policies"]
+        Registry["Registry System<br/>Git / HTTP / ClawHub"]
+        Cloud["Cloud Sync<br/>iCloud / GDrive / OneDrive"]
+        Plugins["Plugin System<br/>Claude plugin scanning"]
+        Config["Config Manager<br/>Persistent AppConfig"]
+    end
+
+    subgraph Adapters["Tool Adapters (19 built-in + custom)"]
+        direction LR
+        A1["Claude Code"]
+        A2["OpenClaw"]
+        A3["Cursor"]
+        A4["Gemini CLI"]
+        A5["GitHub Copilot"]
+        A6["+ 14 more"]
+    end
+
+    UI -->|Tauri IPC| CMD
+    CLI -->|Direct calls| Core
+    CMD --> Core
+    Store --> Sync
+    Sync --> Adapters
+    Registry --> Store
+    Scanner --> Store
+    Cloud --> Store
+    Config --> Core
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                         SkillsHub                           │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
-│  │  Tauri UI   │  │    CLI      │  │     Core Library    │ │
-│  │  (React +   │  │  (clap)     │  │  ┌───────────────┐  │ │
-│  │  DaisyUI)   │  │             │  │  │   Registry    │  │ │
-│  └──────┬──────┘  └──────┬──────┘  │  ├───────────────┤  │ │
-│         │                │         │  │  Local Store  │  │ │
-│         └────────┬───────┘         │  ├───────────────┤  │ │
-│                  │                 │  │    Scanner    │  │ │
-│                  ▼                 │  ├───────────────┤  │ │
-│         ┌────────────────┐         │  │  Sync Engine  │  │ │
-│         │   Rust Core    │◄────────┤  └───────────────┘  │ │
-│         └────────────────┘         └─────────────────────┘ │
-│                  │                                          │
-│    ┌─────────────┼─────────────┬─────────────┐             │
-│    ▼             ▼             ▼             ▼             │
-│ ┌──────┐    ┌──────┐    ┌──────────┐    ┌──────────┐      │
-│ │Claude│    │Cursor│    │ Gemini   │    │ OpenCode │      │
-│ │ Code │    │      │    │   CLI    │    │          │      │
-│ └──────┘    └──────┘    └──────────┘    └──────────┘      │
-└─────────────────────────────────────────────────────────────┘
+
+## Installation
+
+### Pre-built Binaries (Recommended)
+
+Download the latest release for your platform from the [Releases](https://github.com/shiwenwen/SkillsHub/releases) page.
+
+| Platform | Desktop App | CLI |
+|----------|------------|-----|
+| macOS (Apple Silicon) | `SkillsHub_x.x.x_aarch64.dmg` | `skillshub-cli-aarch64-apple-darwin` |
+| macOS (Intel) | `SkillsHub_x.x.x_x64.dmg` | `skillshub-cli-x86_64-apple-darwin` |
+| Windows | `SkillsHub_x.x.x_x64-setup.exe` | `skillshub-cli-x86_64-pc-windows-msvc.exe` |
+| Linux (deb) | `skillshub_x.x.x_amd64.deb` | `skillshub-cli-x86_64-unknown-linux-gnu` |
+| Linux (AppImage) | `SkillsHub_x.x.x_amd64.AppImage` | — |
+
+#### macOS
+
+```bash
+# Install the desktop app
+# Download and open the .dmg file, drag SkillsHub to Applications
+
+# Or install the CLI only
+curl -L -o skillshub https://github.com/shiwenwen/SkillsHub/releases/latest/download/skillshub-cli-aarch64-apple-darwin
+chmod +x skillshub
+sudo mv skillshub /usr/local/bin/
 ```
 
-### 📦 安装
+#### Windows
 
-#### 前置要求
+Download and run the `.exe` installer. The CLI can be added to your PATH manually.
+
+#### Linux
+
+```bash
+# Debian / Ubuntu
+sudo dpkg -i skillshub_x.x.x_amd64.deb
+
+# Or use the AppImage
+chmod +x SkillsHub_x.x.x_amd64.AppImage
+./SkillsHub_x.x.x_amd64.AppImage
+
+# CLI only
+curl -L -o skillshub https://github.com/shiwenwen/SkillsHub/releases/latest/download/skillshub-cli-x86_64-unknown-linux-gnu
+chmod +x skillshub
+sudo mv skillshub /usr/local/bin/
+```
+
+### Build from Source
+
+See the [Local Development](#local-development) section below.
+
+## Quick Start
+
+### Desktop App
+
+1. Launch SkillsHub — the **Installed** page shows your current Skills
+2. Go to **Discover** to search and install Skills from registries
+3. Check **Sync Dashboard** for sync status and drift detection
+4. Use **Security Center** to scan Skills and configure trust policies
+5. Configure tool paths, registries, and cloud sync in **Settings**
+
+### CLI
+
+```bash
+# Detect which AI coding tools are installed
+skillshub tools detect
+
+# Search for Skills
+skillshub discover "code review"
+
+# Install a Skill (auto-syncs to all detected tools)
+skillshub install my-skill
+
+# Sync all Skills to all tools
+skillshub sync
+
+# List installed Skills
+skillshub list
+
+# Run a security scan
+skillshub scan my-skill
+
+# Manage registries
+skillshub registry list
+skillshub registry add my-registry --url https://github.com/org/skills-repo.git
+```
+
+## Security Scanning Rules
+
+SkillsHub includes a growing set of built-in security rules. Current rules:
+
+| Rule ID | Description | Risk Level |
+|---------|------------|------------|
+| CMD001 | Destructive commands (`rm -rf`, etc.) | HIGH |
+| CMD002 | Privilege escalation (`sudo`, etc.) | HIGH |
+| NET001 | Data exfiltration (outbound network calls with sensitive data) | HIGH |
+| CRED001 | Credential access (reading keys, tokens, passwords) | HIGH |
+| EVAL001 | Dynamic code execution (`eval`, `exec`, etc.) | MEDIUM |
+| PATH001 | System path access (`/etc`, `/usr`, etc.) | MEDIUM |
+| FILE001 | Binary executables | BLOCK |
+| FILE002 | Shell scripts | MEDIUM |
+
+More rules will be added in future releases.
+
+## Local Development
+
+### Prerequisites
 
 - [Rust](https://rustup.rs/) 1.70+
 - [Node.js](https://nodejs.org/) 18+
-- [pnpm](https://pnpm.io/) 或 npm
+- npm (bundled with Node.js) or [pnpm](https://pnpm.io/)
+- Platform-specific dependencies for Tauri — see [Tauri Prerequisites](https://v2.tauri.app/start/prerequisites/)
 
-#### 从源码构建
+### Setup
 
 ```bash
-# 克隆仓库
-git clone https://github.com/skillshub/skillshub.git
-cd skillshub
+# Clone the repository
+git clone https://github.com/shiwenwen/SkillsHub.git
+cd SkillsHub
 
-# 安装前端依赖
+# Install frontend dependencies
 npm install
 
-# 构建 CLI
-cargo build --release --package skillshub-cli
-
-# 运行桌面应用 (开发模式)
+# Run the desktop app in development mode (hot-reload enabled)
 npm run tauri dev
 
-# 构建桌面应用
+# Build the desktop app for production
 npm run tauri build
+
+# Build the CLI only
+cargo build --release --package skillshub-cli
+
+# Run tests
+cargo test --workspace
 ```
 
-### 🚀 快速开始
-
-#### CLI 使用
-
-```bash
-# 检测已安装的工具
-skillshub tools detect
-
-# 搜索技能
-skillshub discover "code review"
-
-# 安装技能
-skillshub install my-skill --tools claude,cursor
-
-# 同步到所有工具
-skillshub sync
-
-# 查看已安装的技能
-skillshub list
-
-# 安全扫描
-skillshub scan my-skill
-```
-
-#### 桌面应用
-
-1. 启动应用后，进入 **Installed** 页面查看已安装的技能
-2. 使用 **Discover** 页面搜索和安装新技能
-3. 在 **Sync Dashboard** 查看同步状态和漂移检测
-4. 通过 **Security Center** 一键扫描所有 Skills，并管理扫描策略与可信来源
-5. 在 **Settings** 中配置工具路径和同步策略
-
-### 📁 项目结构
+### Project Structure
 
 ```
 SkillsHub/
 ├── crates/
-│   ├── skillshub-core/     # 核心库
-│   │   ├── src/
-│   │   │   ├── models/     # 数据模型
-│   │   │   ├── adapters/   # 工具适配器
-│   │   │   ├── store.rs    # 本地存储
-│   │   │   ├── registry.rs # 注册表
-│   │   │   ├── scanner.rs  # 安全扫描
-│   │   │   └── sync.rs     # 同步引擎
-│   │   └── Cargo.toml
-│   └── skillshub-cli/      # CLI 工具
-│       ├── src/
-│       │   ├── main.rs
-│       │   └── commands/   # 命令实现
-│       └── Cargo.toml
-├── src-tauri/              # Tauri 后端
-│   ├── src/
-│   │   ├── lib.rs
-│   │   └── commands.rs     # Tauri 命令
-│   └── tauri.conf.json
-├── src/                    # React 前端
-│   ├── components/
-│   ├── pages/
-│   └── App.tsx
-├── Cargo.toml              # Rust 工作空间
-├── package.json
-├── tailwind.config.js
-└── README.md
+│   ├── skillshub-core/          # Core library (shared by desktop app and CLI)
+│   │   └── src/
+│   │       ├── adapters/        # 19 tool adapters
+│   │       ├── models/          # Data models (Skill, Tool, SyncState, ScanReport)
+│   │       ├── store.rs         # Local Skills storage
+│   │       ├── sync.rs          # Sync engine (Link / Copy)
+│   │       ├── scanner.rs       # Security scanner
+│   │       ├── registry.rs      # Registry providers
+│   │       ├── cloud_sync.rs    # Cloud sync integration
+│   │       ├── plugins.rs       # Claude plugin support
+│   │       ├── config.rs        # Configuration management
+│   │       └── update.rs        # Update checker
+│   └── skillshub-cli/           # CLI tool
+│       └── src/
+│           ├── main.rs
+│           └── commands/        # CLI command handlers
+├── src/                         # React frontend
+│   ├── pages/                   # Page components
+│   ├── components/              # Shared UI components
+│   ├── locales/                 # 9 language files
+│   ├── i18n.tsx                 # Internationalization context
+│   ├── theme.tsx                # Theme context
+│   └── App.tsx                  # Router and app shell
+├── src-tauri/                   # Tauri backend
+│   └── src/
+│       ├── commands.rs          # 60+ IPC command handlers
+│       └── lib.rs               # Tauri app setup
+├── Cargo.toml                   # Rust workspace configuration
+├── package.json                 # Node.js dependencies
+├── tailwind.config.js           # Tailwind CSS + DaisyUI themes
+└── vite.config.ts               # Vite build configuration
 ```
 
-### 🔧 支持的工具
+### Tech Stack
 
-| 工具 | 技能目录 | 状态 |
-|------|----------|------|
-| Amp | `~/.config/agents/skills` | ✅ 支持 |
-| Antigravity | `~/.gemini/antigravity/skills` | ✅ 支持 |
-| Claude Code | `~/.claude/skills` | ✅ 支持 |
-| Codex | `~/.codex/skills` | ✅ 支持 |
-| CodeBuddy | `~/.codebuddy/skills` | ✅ 支持 |
-| Cursor | `~/.cursor/skills` | ✅ 支持 |
-| Droid/Factory | `~/.factory/skills` | ✅ 支持 |
-| Gemini CLI | `~/.gemini/skills` | ✅ 支持 |
-| GitHub Copilot | `~/.copilot/skills` | ✅ 支持 |
-| Goose | `~/.config/goose/skills` | ✅ 支持 |
-| Kilo Code | `~/.kilocode/skills` | ✅ 支持 |
-| Kimi CLI | `~/.kimi/skills` | ✅ 支持 |
-| OpenCode | `~/.config/opencode/skills` | ✅ 支持 |
-| Qwen Code | `~/.qwen/skills` | ✅ 支持 |
-| Roo Code | `~/.roo/skills` | ✅ 支持 |
-| Trae | `.trae/skills` | ✅ 支持 |
-| Windsurf | `~/.codeium/windsurf/skills` | ✅ 支持 |
-| 自定义工具 | 用户自定义 | ✅ 支持 |
+| Layer | Technology |
+|-------|-----------|
+| Desktop Framework | Tauri 2.2 |
+| Frontend | React 18, TypeScript 5.5, Tailwind CSS 3.4, DaisyUI 4 |
+| Build Tool | Vite 5.4 |
+| Backend Language | Rust (2021 edition) |
+| Async Runtime | Tokio |
+| CLI Framework | Clap 4.5 |
+| HTTP Client | Reqwest 0.12 |
+| Icons | Lucide React |
 
-### 🛡️ 安全扫描规则
+## Contributing
 
-| 规则 ID | 名称 | 风险等级 |
-|---------|------|----------|
-| CMD001 | 破坏性命令 (rm -rf 等) | HIGH |
-| CMD002 | 权限提升 (sudo 等) | HIGH |
-| NET001 | 数据外泄 | HIGH |
-| CRED001 | 凭据访问 | HIGH |
-| EVAL001 | 动态代码执行 | MEDIUM |
-| PATH001 | 系统路径访问 | MEDIUM |
-| FILE001 | 二进制可执行文件 | BLOCK |
-| FILE002 | Shell 脚本 | MEDIUM |
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-### 🔄 同步策略
-
-- **Link (推荐)**: 使用符号链接，所有工具共享同一份源文件
-  - ✅ 即时更新
-  - ✅ 节省空间
-  - ✅ 易于回滚
-  
-- **Copy**: 复制完整文件到各工具目录
-  - ✅ 更好的兼容性
-  - ✅ 隔离性强
-  - ⚠️ 占用更多空间
-
-### 🤝 贡献
-
-欢迎贡献！请查看 [CONTRIBUTING.md](CONTRIBUTING.md) 了解如何参与。
-
-### 📄 许可证
-
-[MIT License](LICENSE)
-
----
-
-## English
-
-### Introduction
-
-SkillsHub is a unified Agent Skills management platform that allows you to use the same set of skills across multiple Agent tools (Claude Code, Cursor, Gemini CLI, OpenCode, etc.).
-
-### ✨ Key Features
-
-- 🎯 **Unified Management** - Install once, sync to multiple tools
-- 🔗 **Link-first Sync** - Symlinks first, saving space with instant updates
-- 🛡️ **Security Scanning** - Auto-detect dangerous commands, credential access, data exfiltration
-- 🖥️ **Visual Interface** - Beautiful Tauri desktop application
-- ⌨️ **CLI Support** - Full command-line tool for automation
-- 🔄 **Drift Detection** - Automatically detect and repair inconsistencies
-- 🧩 **Claude Plugins Support** - Scan and sync Claude plugin skills
-- 🧰 **Custom Tools** - Add custom AI coding tools and paths
-- 🌍 **Multilingual UI** - Built-in 9 languages
-
-### 🚀 Quick Start
-
-```bash
-# Detect installed tools
-skillshub tools detect
-
-# Search for skills
-skillshub discover "code review"
-
-# Install a skill
-skillshub install my-skill --tools claude,cursor
-
-# Sync to all tools
-skillshub sync
-
-# List installed skills
-skillshub list
-
-# Scan a skill for security risks
-skillshub scan my-skill
-```
-
-### 🔧 Supported Tools
-
-Amp, Antigravity, Claude Code, Codex, CodeBuddy, Cursor, Droid/Factory, Gemini CLI, GitHub Copilot, Goose, Kilo Code, Kimi CLI, OpenCode, Qwen Code, Roo Code, Trae, Windsurf, plus custom tools.
-
-### 📄 License
+## License
 
 [MIT License](LICENSE)
