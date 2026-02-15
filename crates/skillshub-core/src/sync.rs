@@ -545,7 +545,10 @@ impl SyncEngine {
 
     /// Distribute skills from hub to all tools
     /// Creates symlinks (or copies if symlinks fail) in each tool's skills directory
-    pub fn distribute_from_hub(&mut self, strategy: SyncStrategy) -> Result<Vec<(String, ToolType, bool)>> {
+    pub fn distribute_from_hub(
+        &mut self,
+        strategy: SyncStrategy,
+    ) -> Result<Vec<(String, ToolType, bool)>> {
         let hub_skill_ids = self.get_hub_skill_ids();
         let mut results = Vec::new();
 

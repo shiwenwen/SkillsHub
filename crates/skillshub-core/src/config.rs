@@ -195,8 +195,14 @@ mod tests {
         let json = serde_json::to_string(&config).unwrap();
         let deserialized: AppConfig = serde_json::from_str(&json).unwrap();
 
-        assert!(matches!(deserialized.default_sync_strategy, SyncStrategy::Auto));
-        assert_eq!(deserialized.auto_sync_on_install, config.auto_sync_on_install);
+        assert!(matches!(
+            deserialized.default_sync_strategy,
+            SyncStrategy::Auto
+        ));
+        assert_eq!(
+            deserialized.auto_sync_on_install,
+            config.auto_sync_on_install
+        );
     }
 
     #[test]
@@ -205,7 +211,10 @@ mod tests {
         let config: AppConfig = serde_json::from_str(json).unwrap();
         assert!(config.cloud_sync.enabled);
         assert_eq!(config.cloud_sync.provider, Some(CloudSyncProvider::ICloud));
-        assert_eq!(config.cloud_sync.sync_folder, Some("~/Documents".to_string()));
+        assert_eq!(
+            config.cloud_sync.sync_folder,
+            Some("~/Documents".to_string())
+        );
         assert!(config.require_confirm_medium);
         assert!(!config.auto_approve_low);
         assert_eq!(config.trusted_sources, default_trusted_sources());
