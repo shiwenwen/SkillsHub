@@ -131,4 +131,3 @@ impl ToolAdapter for OpenClawAdapter {
         dirs::home_dir().map(|home| home.join(".openclaw"))
     }
 }
-
