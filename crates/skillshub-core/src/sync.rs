@@ -545,10 +545,14 @@ impl SyncEngine {
 
     /// Distribute skills from hub to all tools
     /// Creates symlinks (or copies if symlinks fail) in each tool's skills directory
-    pub fn distribute_from_hub(
+    /// `strategy_resolver` returns the effective strategy for a given tool type
+    pub fn distribute_from_hub<F>(
         &mut self,
-        strategy: SyncStrategy,
-    ) -> Result<Vec<(String, ToolType, bool)>> {
+        strategy_resolver: F,
+    ) -> Result<Vec<(String, ToolType, bool)>>
+    where
+        F: Fn(ToolType) -> SyncStrategy,
+    {
         let hub_skill_ids = self.get_hub_skill_ids();
         let mut results = Vec::new();
 
@@ -572,7 +576,8 @@ impl SyncEngine {
                         let _ = fs::create_dir_all(parent);
                     }
 
-                    // Apply sync strategy
+                    // Apply per-tool sync strategy
+                    let strategy = strategy_resolver(adapter.tool_type());
                     let success = match strategy {
                         SyncStrategy::Auto => {
                             // Try symlink first, fall back to copy
@@ -598,9 +603,13 @@ impl SyncEngine {
     }
 
     /// Full sync: collect from tools, then distribute to all tools
-    pub fn full_sync(&mut self, strategy: SyncStrategy) -> Result<FullSyncResult> {
+    /// `strategy_resolver` returns the effective strategy for a given tool type
+    pub fn full_sync<F>(&mut self, strategy_resolver: F) -> Result<FullSyncResult>
+    where
+        F: Fn(ToolType) -> SyncStrategy,
+    {
         let collected = self.collect_to_hub()?;
-        let distributed = self.distribute_from_hub(strategy)?;
+        let distributed = self.distribute_from_hub(strategy_resolver)?;
 
         Ok(FullSyncResult {
             collected_count: collected.len(),

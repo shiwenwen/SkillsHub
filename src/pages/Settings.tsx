@@ -119,6 +119,7 @@ interface AppConfigPayload {
     require_confirm_medium: boolean;
     auto_approve_low: boolean;
     trusted_sources: string[];
+    tool_sync_strategies: Record<string, string>;
     cloud_sync: {
         enabled: boolean;
         provider: string | null;
@@ -155,6 +156,7 @@ export default function Settings() {
 
     // Config State
     const [defaultStrategy, setDefaultStrategy] = useState("auto");
+    const [toolSyncStrategies, setToolSyncStrategies] = useState<Record<string, string>>({});
     const [tools, setTools] = useState<ToolConfig[]>(BUILTIN_TOOLS);
     const [customTools, setCustomTools] = useState<ToolConfig[]>([]);
     const [expandedTools, setExpandedTools] = useState<Set<string>>(new Set());
@@ -237,6 +239,14 @@ export default function Settings() {
     // --- Helpers & Logic ---
 
     const buildAppConfig = (): AppConfigPayload => {
+        // Only include non-empty (non-default) per-tool strategies
+        const filteredStrategies: Record<string, string> = {};
+        for (const [key, value] of Object.entries(toolSyncStrategies)) {
+            if (value && value !== "") {
+                filteredStrategies[key] = value;
+            }
+        }
+
         return {
             default_sync_strategy: defaultStrategy,
             auto_sync_on_install: autoSyncOnInstall,
@@ -247,6 +257,7 @@ export default function Settings() {
             require_confirm_medium: requireConfirmMedium,
             auto_approve_low: autoApproveLow,
             trusted_sources: trustedSources,
+            tool_sync_strategies: filteredStrategies,
             cloud_sync: {
                 enabled: cloudSyncEnabled,
                 provider: cloudProvider,
@@ -345,6 +356,7 @@ export default function Settings() {
                     require_confirm_medium: boolean;
                     auto_approve_low: boolean;
                     trusted_sources: string[];
+                    tool_sync_strategies: Record<string, string>;
                     cloud_sync: CloudSyncConfig;
                 }>("get_app_config");
 
@@ -353,6 +365,7 @@ export default function Settings() {
                 const provider = config.cloud_sync?.provider || null;
 
                 setDefaultStrategy(strategy);
+                setToolSyncStrategies(config.tool_sync_strategies || {});
                 setAutoSyncOnInstall(config.auto_sync_on_install);
                 setCheckUpdatesOnStartup(config.check_updates_on_startup);
                 setScanBeforeInstall(config.scan_before_install);
@@ -381,6 +394,7 @@ export default function Settings() {
                         require_confirm_medium: config.require_confirm_medium,
                         auto_approve_low: config.auto_approve_low,
                         trusted_sources: config.trusted_sources,
+                        tool_sync_strategies: config.tool_sync_strategies || {},
                         cloud_sync: {
                             enabled: config.cloud_sync?.enabled ?? false,
                             provider,
@@ -594,6 +608,7 @@ export default function Settings() {
         initialized,
         savedAppConfigSnapshot,
         defaultStrategy,
+        toolSyncStrategies,
         autoSyncOnInstall,
         checkUpdatesOnStartup,
         scanBeforeInstall,
@@ -793,6 +808,36 @@ export default function Settings() {
                                     <FolderOpen className="w-4 h-4" />
                                 </button>
                             </div>
+                        </div>
+
+                        {/* Per-tool Sync Strategy */}
+                        <div className="form-control">
+                            <label className="label py-1">
+                                <span className="label-text text-xs font-medium text-base-content/60 uppercase tracking-wider">
+                                    {t.settings.toolSyncStrategy}
+                                </span>
+                            </label>
+                            <select
+                                className="select select-bordered select-sm w-full bg-base-100"
+                                value={toolSyncStrategies[tool.id] || ""}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setToolSyncStrategies(prev => {
+                                        const next = { ...prev };
+                                        if (value === "") {
+                                            delete next[tool.id];
+                                        } else {
+                                            next[tool.id] = value;
+                                        }
+                                        return next;
+                                    });
+                                }}
+                            >
+                                <option value="">{t.settings.useGlobalStrategy}</option>
+                                <option value="auto">{t.settings.autoLinkFirst}</option>
+                                <option value="link">{t.settings.alwaysLink}</option>
+                                <option value="copy">{t.settings.alwaysCopy}</option>
+                            </select>
                         </div>
                     </div>
                 )}

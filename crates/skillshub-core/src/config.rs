@@ -1,5 +1,6 @@
 //! Configuration management for SkillsHub
 
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 
@@ -80,6 +81,11 @@ pub struct AppConfig {
     #[serde(default = "default_trusted_sources")]
     pub trusted_sources: Vec<String>,
 
+    /// Per-tool sync strategy overrides (tool_type_lowercase -> strategy)
+    /// When set, overrides default_sync_strategy for the specific tool
+    #[serde(default)]
+    pub tool_sync_strategies: HashMap<String, SyncStrategy>,
+
     /// Cloud sync configuration
     #[serde(default)]
     pub cloud_sync: CloudSyncConfig,
@@ -112,6 +118,7 @@ impl Default for AppConfig {
             require_confirm_medium: true,
             auto_approve_low: false,
             trusted_sources: default_trusted_sources(),
+            tool_sync_strategies: HashMap::new(),
             cloud_sync: CloudSyncConfig::default(),
         }
     }
@@ -168,6 +175,15 @@ impl AppConfig {
     /// Load or create default configuration
     pub fn load_or_default() -> Self {
         Self::load().unwrap_or_default()
+    }
+
+    /// Get the effective sync strategy for a specific tool.
+    /// Returns the per-tool override if set, otherwise the global default.
+    pub fn strategy_for_tool(&self, tool_key: &str) -> SyncStrategy {
+        self.tool_sync_strategies
+            .get(tool_key)
+            .copied()
+            .unwrap_or(self.default_sync_strategy)
     }
 }
 

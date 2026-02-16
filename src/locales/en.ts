@@ -189,6 +189,8 @@ export const en = {
         autoLinkFirst: "Auto (Link-first)",
         alwaysLink: "Always Link",
         alwaysCopy: "Always Copy",
+        toolSyncStrategy: "Sync Strategy",
+        useGlobalStrategy: "Use Global Default",
         autoSyncOnInstall: "Auto-sync on install",
         checkUpdatesOnStartup: "Check for updates on startup",
         storage: "Storage",

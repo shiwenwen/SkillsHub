@@ -465,7 +465,11 @@ pub async fn sync_skills(
                 _ => continue,
             };
 
-            let result = engine.sync_skill(&skill_id, tool, SyncStrategy::Auto);
+            let config = AppConfig::load_or_default();
+            let tool_key = format!("{:?}", tool).to_lowercase();
+            let strategy = config.strategy_for_tool(&tool_key);
+
+            let result = engine.sync_skill(&skill_id, tool, strategy);
             if result.is_ok() {
                 successful_tools_by_skill
                     .entry(skill_id.clone())
@@ -525,7 +529,6 @@ pub async fn sync_single_skill(skill_id: String) -> Result<Vec<SyncResult>, Stri
     let adapters = create_default_adapters();
 
     let config = AppConfig::load_or_default();
-    let strategy = config.default_sync_strategy;
 
     let mut results = Vec::new();
     let mut synced_tools = Vec::new();
@@ -535,7 +538,8 @@ pub async fn sync_single_skill(skill_id: String) -> Result<Vec<SyncResult>, Stri
             let tool = adapter.tool_type();
             let tool_name = format!("{:?}", tool).to_lowercase();
 
-            let result = engine.sync_skill(&skill_id, tool, strategy.clone());
+            let strategy = config.strategy_for_tool(&tool_name);
+            let result = engine.sync_skill(&skill_id, tool, strategy);
             let success = result.is_ok();
             if success {
                 synced_tools.push(tool_name.clone());
@@ -614,7 +618,8 @@ pub async fn toggle_skill_tool_sync(
         }
 
         let config = AppConfig::load_or_default();
-        let strategy = config.default_sync_strategy;
+        let tool_key = tool_type.to_lowercase();
+        let strategy = config.strategy_for_tool(&tool_key);
 
         let result = engine.sync_skill(&skill_id, tool, strategy);
 
@@ -985,7 +990,11 @@ pub async fn sync_plugin_skill(
             continue;
         }
 
-        let result = engine.sync_plugin_skill(&source, &skillId, tool, SyncStrategy::Auto);
+        let config = AppConfig::load_or_default();
+        let tool_key = format!("{:?}", tool).to_lowercase();
+        let strategy = config.strategy_for_tool(&tool_key);
+
+        let result = engine.sync_plugin_skill(&source, &skillId, tool, strategy);
         let success = result.is_ok();
         if success {
             synced_tools.push(tool_str.clone());
@@ -1042,11 +1051,15 @@ pub async fn full_sync_skills() -> Result<FullSyncResponse, String> {
         engine.register_adapter(adapter);
     }
 
-    // Load configuration to get default sync strategy
+    // Load configuration to resolve per-tool sync strategies
     let config = AppConfig::load_or_default();
-    let strategy = config.default_sync_strategy;
 
-    let result = engine.full_sync(strategy).map_err(|e| e.to_string())?;
+    let result = engine
+        .full_sync(|tool| {
+            let tool_key = format!("{:?}", tool).to_lowercase();
+            config.strategy_for_tool(&tool_key)
+        })
+        .map_err(|e| e.to_string())?;
 
     Ok(FullSyncResponse {
         collected_count: result.collected_count,

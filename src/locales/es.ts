@@ -184,6 +184,8 @@ export const es: Translations = {
         autoLinkFirst: "Auto (Enlace primero)",
         alwaysLink: "Siempre enlazar",
         alwaysCopy: "Siempre copiar",
+        toolSyncStrategy: "Estrategia de sincronización",
+        useGlobalStrategy: "Usar predeterminado global",
         autoSyncOnInstall: "Auto-sync al instalar",
         checkUpdatesOnStartup: "Buscar actualizaciones al iniciar",
         storage: "Almacenamiento",
