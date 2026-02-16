@@ -184,6 +184,8 @@ export const ko: Translations = {
         autoLinkFirst: "자동 (링크 우선)",
         alwaysLink: "항상 링크",
         alwaysCopy: "항상 복사",
+        toolSyncStrategy: "동기화 방식",
+        useGlobalStrategy: "글로벌 기본값 사용",
         autoSyncOnInstall: "설치 시 자동 동기화",
         checkUpdatesOnStartup: "시작 시 업데이트 확인",
         storage: "저장소",

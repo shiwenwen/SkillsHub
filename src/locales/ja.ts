@@ -184,6 +184,8 @@ export const ja: Translations = {
         autoLinkFirst: "自動（リンク優先）",
         alwaysLink: "常にリンク",
         alwaysCopy: "常にコピー",
+        toolSyncStrategy: "同期方式",
+        useGlobalStrategy: "グローバルデフォルトを使用",
         autoSyncOnInstall: "インストール時に自動同期",
         checkUpdatesOnStartup: "起動時にアップデートを確認",
         storage: "ストレージ",

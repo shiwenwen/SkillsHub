@@ -191,6 +191,8 @@ export const zh: Translations = {
         autoLinkFirst: "自动（优先链接）",
         alwaysLink: "始终链接",
         alwaysCopy: "始终复制",
+        toolSyncStrategy: "同步策略",
+        useGlobalStrategy: "使用全局默认",
         autoSyncOnInstall: "安装时自动同步",
         checkUpdatesOnStartup: "启动时检查更新",
         storage: "存储",

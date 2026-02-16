@@ -184,6 +184,8 @@ export const ru: Translations = {
         autoLinkFirst: "Авто (Ссылка приоритет)",
         alwaysLink: "Всегда ссылка",
         alwaysCopy: "Всегда копия",
+        toolSyncStrategy: "Стратегия синхронизации",
+        useGlobalStrategy: "Использовать глобальную по умолчанию",
         autoSyncOnInstall: "Автосинхронизация при установке",
         checkUpdatesOnStartup: "Проверять обновления при запуске",
         storage: "Хранилище",

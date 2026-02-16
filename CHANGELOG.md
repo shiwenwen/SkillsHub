@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Per-tool Sync Strategy**: Each tool can now have its own sync strategy (Auto/Link/Copy) that overrides the global default, configurable in Settings > Tool Configuration
+
+### Changed
+
+- **OpenClaw Adapter**: Removed node_modules installation path from skills scanning and syncing directories, now only scans workspace directory (`~/.openclaw/workspace/skills/`)
+
 ## [1.0.1] - 2026-02-15
 
 ### Added
