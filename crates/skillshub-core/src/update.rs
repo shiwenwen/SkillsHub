@@ -87,16 +87,16 @@ pub async fn check_skill_update(
     current_version: &SkillVersion,
     registry: &AggregatedRegistry,
 ) -> UpdateInfo {
-    // Try to get versions from registry
-    match registry.get_skill(skill_id).await {
-        Ok(remote_skill) => {
+    // Try to get versions from registry, tracking which registry it came from
+    match registry.get_skill_with_source(skill_id).await {
+        Ok((remote_skill, source_registry)) => {
             // Compare content hashes - this is the most reliable method
             if remote_skill.version.content_hash != current_version.content_hash {
                 UpdateInfo::with_update(
                     skill_id,
                     current_version,
                     &remote_skill.version,
-                    None, // TODO: track source registry
+                    Some(source_registry),
                 )
             } else {
                 UpdateInfo::no_update(skill_id, current_version)

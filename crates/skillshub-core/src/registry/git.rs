@@ -99,6 +99,8 @@ impl RegistryProvider for GitRegistry {
 
         let mut results = Vec::new();
         let cache_dir = self.cache_dir.clone();
+        let repo_url = self.url.clone();
+        let repo_branch = self.branch.clone();
 
         // Scan for SKILL.md files
         // We use spawn_blocking for blocking IO
@@ -125,7 +127,7 @@ impl RegistryProvider for GitRegistry {
                     };
 
                     items.push(SkillListing {
-                        id,
+                        id: id.clone(),
                         name: metadata.name.unwrap_or_default(),
                         description: metadata.description.unwrap_or_default(),
                         author: metadata.author,
@@ -134,9 +136,9 @@ impl RegistryProvider for GitRegistry {
                         downloads: None,
                         rating: None,
                         source: SkillSource::Git {
-                            url: "TODO: passed in closure".to_string(), // we'll fix this in the main loop
-                            branch: None,
-                            path: None,
+                            url: repo_url.clone(),
+                            branch: repo_branch.clone(),
+                            path: Some(id),
                         },
                     });
                 }
@@ -146,15 +148,8 @@ impl RegistryProvider for GitRegistry {
         .await
         .map_err(|e| Error::System(e.to_string()))??;
 
-        // Fix up the source URL and filter
-        for mut listing in listings {
-            listing.source = SkillSource::Git {
-                url: self.url.clone(),
-                branch: self.branch.clone(),
-                path: Some(listing.id.clone()), // Assuming skill ID is directory name
-            };
-
-            // Apply query filter
+        // Apply query filter
+        for listing in listings {
             let matches = query
                 .query
                 .as_ref()
