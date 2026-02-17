@@ -14,6 +14,7 @@ use std::path::{Path, PathBuf};
 
 use crate::error::{Error, Result};
 use crate::models::{Skill, SkillSource, SkillVersion};
+use crate::registry::calculate_dir_hash;
 
 /// Source of a marketplace (GitHub or Git URL)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -154,6 +155,8 @@ impl PluginSkill {
         let content = fs::read_to_string(&skill_md_path)?;
         let (name, description) = parse_skill_md_header(&content);
 
+        let content_hash = calculate_dir_hash(&self.skill_path).unwrap_or_default();
+
         Ok(Skill {
             id: self.id(),
             name: name.unwrap_or_else(|| self.skill_name.clone()),
@@ -164,7 +167,7 @@ impl PluginSkill {
             version: SkillVersion {
                 version: self.version.clone(),
                 commit: self.commit_sha.clone(),
-                content_hash: String::new(), // TODO: calculate hash
+                content_hash,
                 timestamp: Some(self.installed_at.clone()),
             },
             source: SkillSource::Local {

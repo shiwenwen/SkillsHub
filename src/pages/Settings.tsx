@@ -1,152 +1,38 @@
 import { useState, useEffect, useMemo } from "react";
 import {
     Settings as SettingsIcon,
-    FolderOpen,
-    Globe,
     Shield,
-    RefreshCw,
-    Plus,
-    Trash2,
-    Languages,
-    ChevronDown,
-    ChevronUp,
-    Cloud,
     Save,
     Info,
     Server,
-    Search,
-    Sun,
-    Moon,
-    Monitor,
-    Palette,
-    UserRound,
-    Github,
-    Box,
-    ExternalLink,
+    Cloud,
 } from "lucide-react";
-import { useTranslation, useLanguage, type Language } from "../i18n";
-import { useTheme, type ThemeMode } from "../theme";
+import { useTranslation, useLanguage } from "../i18n";
+import { useTheme } from "../theme";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
-import { Card } from "../components/ui/Card";
-import logoImg from "../assets/logo.png";
-import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 
-// 后端自定义工具配置类型
-interface CustomToolBackend {
-    id: string;
-    name: string;
-    global_path: string | null;
-    project_path: string | null;
-}
+import type {
+    CustomToolBackend,
+    ToolConfig,
+    StoreInfo,
+    CloudDriveInfo,
+    CloudSyncConfig,
+    RegistryConfig,
+    AppConfigPayload,
+    PersistedCustomTool,
+    DetectedToolInfo,
+} from "./settings/types";
+import { BUILTIN_TOOLS, VALID_SYNC_STRATEGIES, VALID_CLOUD_PROVIDERS } from "./settings/types";
 
-// 工具配置类型
-interface ToolConfig {
-    id: string;
-    name: string;
-    globalPath: string;
-    projectPath: string;
-    detected: boolean;
-    isCustom?: boolean;
-    hasGlobalPath?: boolean; // 是否有全局路径
-}
-
-// 预置工具列表
-const BUILTIN_TOOLS: ToolConfig[] = [
-    { id: "amp", name: "Amp", globalPath: "~/.config/agents/skills/", projectPath: ".agents/skills/", detected: false, hasGlobalPath: true },
-    { id: "antigravity", name: "Antigravity", globalPath: "~/.gemini/antigravity/skills/", projectPath: ".agent/skills/", detected: true, hasGlobalPath: true },
-    { id: "claude", name: "Claude Code", globalPath: "~/.claude/skills/", projectPath: ".claude/skills/", detected: true, hasGlobalPath: true },
-    { id: "codex", name: "Codex", globalPath: "~/.codex/skills/", projectPath: ".codex/skills/", detected: false, hasGlobalPath: true },
-    { id: "cursor", name: "Cursor", globalPath: "~/.cursor/skills/", projectPath: ".cursor/skills/", detected: true, hasGlobalPath: true },
-    { id: "codebuddy", name: "CodeBuddy", globalPath: "~/.codebuddy/skills/", projectPath: ".codebuddy/skills/", detected: false, hasGlobalPath: true },
-    { id: "factory", name: "Droid/Factory", globalPath: "~/.factory/skills/", projectPath: ".factory/skills/", detected: false, hasGlobalPath: true },
-    { id: "gemini", name: "Gemini CLI", globalPath: "~/.gemini/skills/", projectPath: ".gemini/skills/", detected: true, hasGlobalPath: true },
-    { id: "copilot", name: "GitHub Copilot", globalPath: "~/.copilot/skills/", projectPath: ".github/skills/", detected: false, hasGlobalPath: true },
-    { id: "goose", name: "Goose", globalPath: "~/.config/goose/skills/", projectPath: ".goose/skills/", detected: false, hasGlobalPath: true },
-    { id: "kilocode", name: "Kilo Code", globalPath: "~/.kilocode/skills/", projectPath: ".kilocode/skills/", detected: false, hasGlobalPath: true },
-    { id: "kimi", name: "Kimi CLI", globalPath: "~/.kimi/skills/", projectPath: ".kimi/skills/", detected: false, hasGlobalPath: true },
-    { id: "opencode", name: "OpenCode", globalPath: "~/.config/opencode/skills/", projectPath: ".opencode/skills/", detected: false, hasGlobalPath: true },
-    { id: "openclaw", name: "OpenClaw", globalPath: "~/.openclaw/workspace/skills/", projectPath: ".openclaw/skills/", detected: false, hasGlobalPath: true },
-    { id: "qwen", name: "Qwen Code", globalPath: "~/.qwen/skills/", projectPath: ".qwen/skills/", detected: false, hasGlobalPath: true },
-    { id: "roocode", name: "Roo Code", globalPath: "~/.roo/skills/", projectPath: ".roo/skills/", detected: false, hasGlobalPath: true },
-    { id: "trae", name: "Trae", globalPath: "", projectPath: ".trae/skills/", detected: false, hasGlobalPath: false },
-    { id: "windsurf", name: "Windsurf", globalPath: "~/.codeium/windsurf/skills/", projectPath: ".windsurf/skills/", detected: false, hasGlobalPath: true },
-];
-
-// 存储信息
-interface StoreInfo {
-    path: string;
-    size_bytes: number;
-    size_display: string;
-    skill_count: number;
-}
-
-// 云端驱动器信息
-interface CloudDriveInfo {
-    provider: string;
-    path: string;
-    display_name: string;
-}
-
-// 云端同步配置
-interface CloudSyncConfig {
-    enabled: boolean;
-    provider: string | null;
-    sync_folder: string | null;
-    auto_sync: boolean;
-    last_sync: string | null;
-}
-
-// 注册源配置类型
-interface RegistryConfig {
-    name: string;
-    url: string;
-    branch: string | null;
-    description: string | null;
-    enabled: boolean;
-    registry_type: string;
-    tags: string[];
-}
-
-interface AppConfigPayload {
-    default_sync_strategy: string;
-    auto_sync_on_install: boolean;
-    check_updates_on_startup: boolean;
-    scan_before_install: boolean;
-    scan_before_update: boolean;
-    block_high_risk: boolean;
-    require_confirm_medium: boolean;
-    auto_approve_low: boolean;
-    trusted_sources: string[];
-    tool_sync_strategies: Record<string, string>;
-    cloud_sync: {
-        enabled: boolean;
-        provider: string | null;
-        sync_folder: string | null;
-        auto_sync: boolean;
-        last_sync: string | null;
-    };
-}
-
-interface PersistedCustomTool {
-    name: string;
-    globalPath: string;
-    projectPath: string;
-}
-
-
-interface DetectedToolInfo {
-    name: string;
-    tool_type: string;
-    detected: boolean;
-    skills_dir: string | null;
-    skills_dirs: string[];
-    skill_count: number;
-}
-
-const VALID_SYNC_STRATEGIES = new Set(["auto", "link", "copy"]);
-const VALID_CLOUD_PROVIDERS = new Set(["ICloud", "GoogleDrive", "OneDrive", "Custom"]);
+import GeneralTab from "./settings/GeneralTab";
+import ToolsTab from "./settings/ToolsTab";
+import CloudSyncTab from "./settings/CloudSyncTab";
+import SecurityTab from "./settings/SecurityTab";
+import AboutTab from "./settings/AboutTab";
+import AddToolModal from "./settings/AddToolModal";
+import AddRegistryModal from "./settings/AddRegistryModal";
 
 export default function Settings() {
     const t = useTranslation();
@@ -216,7 +102,7 @@ export default function Settings() {
     const [checkUpdatesOnStartup, setCheckUpdatesOnStartup] = useState(true);
     const [autoSyncOnInstall, setAutoSyncOnInstall] = useState(true);
 
-    // Cloud SYnc State
+    // Cloud Sync State
     const [cloudSyncEnabled, setCloudSyncEnabled] = useState(false);
     const [cloudProvider, setCloudProvider] = useState<string | null>(null);
     const [cloudSyncFolder, setCloudSyncFolder] = useState("~/Documents");
@@ -239,7 +125,6 @@ export default function Settings() {
     // --- Helpers & Logic ---
 
     const buildAppConfig = (): AppConfigPayload => {
-        // Only include non-empty (non-default) per-tool strategies
         const filteredStrategies: Record<string, string> = {};
         for (const [key, value] of Object.entries(toolSyncStrategies)) {
             if (value && value !== "") {
@@ -713,137 +598,7 @@ export default function Settings() {
         }
     };
 
-
-    // --- Render Components ---
-
-    const renderToolItem = (tool: ToolConfig) => {
-        const isExpanded = expandedTools.has(tool.id);
-        const matchesFilter = tool.name.toLowerCase().includes(toolFilter.toLowerCase());
-        if (!matchesFilter) return null;
-
-        return (
-            <div key={tool.id} className="bg-base-200/50 rounded-xl overflow-hidden border border-base-300/50 transition-all duration-200">
-                {/* Tool Header */}
-                <div
-                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-base-300/30 transition-colors"
-                    onClick={() => toggleToolExpand(tool.id)}
-                >
-                    <div className="flex items-center gap-3">
-                        <span className="font-semibold text-base">{tool.name}</span>
-                        <div className="flex gap-2">
-                            {tool.detected ? (
-                                <Badge variant="success" size="sm" className="hidden sm:inline-flex">{t.common.detected || "Detected"}</Badge>
-                            ) : (
-                                <Badge variant="neutral" size="sm" className="hidden sm:inline-flex">{t.common.notFound || "Not Found"}</Badge>
-                            )}
-                            {tool.isCustom && <Badge variant="primary" size="sm">{t.settings.customTool}</Badge>}
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {tool.isCustom && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-error hover:bg-error/10"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteCustomTool(tool.id);
-                                }}
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </Button>
-                        )}
-                        {isExpanded ? <ChevronUp className="w-4 h-4 opacity-50" /> : <ChevronDown className="w-4 h-4 opacity-50" />}
-                    </div>
-                </div>
-
-                {/* Expanded Content */}
-                {isExpanded && (
-                    <div className="px-4 pb-4 space-y-4 border-t border-base-300/50 pt-4 bg-base-300/10">
-                        {/* Global Path */}
-                        {tool.hasGlobalPath !== false && (
-                            <div className="form-control">
-                                <label className="label py-1">
-                                    <span className="label-text text-xs font-medium text-base-content/60 uppercase tracking-wider">
-                                        {t.settings.globalPath}
-                                    </span>
-                                </label>
-                                <div className="join w-full">
-                                    <input
-                                        type="text"
-                                        className="input input-bordered input-sm join-item flex-1 font-mono text-xs bg-base-100"
-                                        value={tool.globalPath}
-                                        onChange={(e) => updateToolPath(tool.id, 'globalPath', e.target.value)}
-                                        placeholder={t.settings.noGlobalPath}
-                                    />
-                                    <button
-                                        className="btn btn-ghost btn-sm join-item bg-base-200 border-base-300"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            selectDirectory((path) => updateToolPath(tool.id, 'globalPath', path));
-                                        }}
-                                    >
-                                        <FolderOpen className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Project Path */}
-                        <div className="form-control">
-                            <label className="label py-1">
-                                <span className="label-text text-xs font-medium text-base-content/60 uppercase tracking-wider">
-                                    {t.settings.projectPath}
-                                </span>
-                            </label>
-                            <div className="join w-full">
-                                <input
-                                    type="text"
-                                    className="input input-bordered input-sm join-item flex-1 font-mono text-xs bg-base-100"
-                                    value={tool.projectPath}
-                                    onChange={(e) => updateToolPath(tool.id, 'projectPath', e.target.value)}
-                                    placeholder=".tool/skills/"
-                                />
-                                <button className="btn btn-ghost btn-sm join-item bg-base-200 border-base-300">
-                                    <FolderOpen className="w-4 h-4" />
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Per-tool Sync Strategy */}
-                        <div className="form-control">
-                            <label className="label py-1">
-                                <span className="label-text text-xs font-medium text-base-content/60 uppercase tracking-wider">
-                                    {t.settings.toolSyncStrategy}
-                                </span>
-                            </label>
-                            <select
-                                className="select select-bordered select-sm w-full bg-base-100"
-                                value={toolSyncStrategies[tool.id] || ""}
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    setToolSyncStrategies(prev => {
-                                        const next = { ...prev };
-                                        if (value === "") {
-                                            delete next[tool.id];
-                                        } else {
-                                            next[tool.id] = value;
-                                        }
-                                        return next;
-                                    });
-                                }}
-                            >
-                                <option value="">{t.settings.useGlobalStrategy}</option>
-                                <option value="auto">{t.settings.autoLinkFirst}</option>
-                                <option value="link">{t.settings.alwaysLink}</option>
-                                <option value="copy">{t.settings.alwaysCopy}</option>
-                            </select>
-                        </div>
-                    </div>
-                )}
-            </div>
-        );
-    };
+    // --- Render ---
 
     const tabs = [
         { id: "general", label: t.settings.general, icon: SettingsIcon },
@@ -897,592 +652,113 @@ export default function Settings() {
 
             {/* Tab Content */}
             <div className="animate-fade-in">
-
-                {/* General Tab */}
                 {activeTab === "general" && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <Card title={t.settings.language} icon={<Languages className="w-5 h-5 text-primary" />}>
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text">{t.settings.languageDescription}</span>
-                                </label>
-                                <select
-                                    className="select select-bordered w-full"
-                                    value={language}
-                                    onChange={(e) => setLanguage(e.target.value as Language)}
-                                >
-                                    <option value="zh">{t.settings.chinese}</option>
-                                    <option value="en">{t.settings.english}</option>
-                                    <option value="ja">日本語</option>
-                                    <option value="ko">한국어</option>
-                                    <option value="fr">Français</option>
-                                    <option value="de">Deutsch</option>
-                                    <option value="es">Español</option>
-                                    <option value="pt">Português</option>
-                                    <option value="ru">Русский</option>
-                                </select>
-                            </div>
-                        </Card>
-
-                        <Card title={t.settings.theme} icon={<Palette className="w-5 h-5 text-accent" />}>
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text">{t.settings.themeDescription}</span>
-                                </label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {([
-                                        { mode: "auto" as ThemeMode, icon: Monitor, label: t.settings.themeAuto, desc: t.settings.themeAutoDescription },
-                                        { mode: "light" as ThemeMode, icon: Sun, label: t.settings.themeLight, desc: t.settings.themeLightDescription },
-                                        { mode: "dark" as ThemeMode, icon: Moon, label: t.settings.themeDark, desc: t.settings.themeDarkDescription },
-                                    ]).map((opt) => (
-                                        <button
-                                            key={opt.mode}
-                                            className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer ${
-                                                themeMode === opt.mode
-                                                    ? "border-primary bg-primary/10 text-primary"
-                                                    : "border-base-300 bg-base-200/50 text-base-content/60 hover:border-base-content/20"
-                                            }`}
-                                            onClick={() => setThemeMode(opt.mode)}
-                                        >
-                                            <opt.icon className="w-6 h-6" />
-                                            <span className="text-sm font-medium">{opt.label}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        </Card>
-
-                        <Card title={t.settings.general} icon={<SettingsIcon className="w-5 h-5 text-secondary" />}>
-                            <div className="space-y-4">
-                                <div className="form-control">
-                                    <label className="label">
-                                        <span className="label-text">{t.settings.defaultSyncStrategy}</span>
-                                    </label>
-                                    <select
-                                        className="select select-bordered w-full"
-                                        value={defaultStrategy}
-                                        onChange={(e) => setDefaultStrategy(e.target.value)}
-                                    >
-                                        <option value="auto">{t.settings.autoLinkFirst}</option>
-                                        <option value="link">{t.settings.alwaysLink}</option>
-                                        <option value="copy">{t.settings.alwaysCopy}</option>
-                                    </select>
-                                </div>
-                                <div className="form-control">
-                                    <label className="label cursor-pointer justify-start gap-4">
-                                        <input
-                                            type="checkbox"
-                                            className="toggle toggle-primary"
-                                            checked={autoSyncOnInstall}
-                                            onChange={(e) => setAutoSyncOnInstall(e.target.checked)}
-                                        />
-                                        <span className="label-text">{t.settings.autoSyncOnInstall}</span>
-                                    </label>
-                                </div>
-                                <div className="form-control">
-                                    <label className="label cursor-pointer justify-start gap-4">
-                                        <input
-                                            type="checkbox"
-                                            className="toggle toggle-primary"
-                                            checked={checkUpdatesOnStartup}
-                                            onChange={(e) => setCheckUpdatesOnStartup(e.target.checked)}
-                                        />
-                                        <span className="label-text">{t.settings.checkUpdatesOnStartup}</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </Card>
-
-                        <Card title={t.settings.storage} icon={<FolderOpen className="w-5 h-5 text-accent" />}>
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text">{t.settings.localStoreLocation}</span>
-                                </label>
-                                <div className="join w-full">
-                                    <input
-                                        type="text"
-                                        className="input input-bordered join-item flex-1 font-mono text-sm"
-                                        value={storeInfo?.path || t.common.loading}
-                                        readOnly
-                                    />
-                                    <Button
-                                        variant="ghost"
-                                        className="join-item border-base-300 bg-base-200"
-                                        onClick={() => storeInfo?.path && invoke("open_directory", { path: storeInfo.path })}
-                                        disabled={!storeInfo?.path}
-                                    >
-                                        <FolderOpen className="w-4 h-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4 mt-6">
-                                <div className="bg-base-200/50 p-4 rounded-xl text-center">
-                                    <div className="text-2xl font-bold">{storeInfo?.size_display || "--"}</div>
-                                    <div className="text-xs text-base-content/60 uppercase tracking-wide mt-1">{t.settings.storageUsed}</div>
-                                </div>
-                                <div className="bg-base-200/50 p-4 rounded-xl text-center">
-                                    <div className="text-2xl font-bold">{storeInfo?.skill_count ?? "--"}</div>
-                                    <div className="text-xs text-base-content/60 uppercase tracking-wide mt-1">{t.settings.skillsStored}</div>
-                                </div>
-                            </div>
-                        </Card>
-                    </div>
+                    <GeneralTab
+                        language={language}
+                        setLanguage={setLanguage}
+                        themeMode={themeMode}
+                        setThemeMode={setThemeMode}
+                        defaultStrategy={defaultStrategy}
+                        setDefaultStrategy={setDefaultStrategy}
+                        autoSyncOnInstall={autoSyncOnInstall}
+                        setAutoSyncOnInstall={setAutoSyncOnInstall}
+                        checkUpdatesOnStartup={checkUpdatesOnStartup}
+                        setCheckUpdatesOnStartup={setCheckUpdatesOnStartup}
+                        storeInfo={storeInfo}
+                        t={t}
+                    />
                 )}
 
-                {/* Tools Tab */}
                 {activeTab === "tools" && (
-                    <div className="space-y-6">
-                        <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-base-200/30 p-4 rounded-2xl border border-base-300/30 backdrop-blur-sm">
-                            <div className="relative w-full md:w-96">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-base-content/50" />
-                                <input
-                                    type="text"
-                                    className="input input-bordered pl-10 w-full bg-base-100"
-                                    placeholder={t.common.search || "Search tools..."}
-                                    value={toolFilter}
-                                    onChange={(e) => setToolFilter(e.target.value)}
-                                />
-                            </div>
-                            <Button
-                                variant="primary"
-                                onClick={() => setShowAddToolModal(true)}
-                                className="w-full md:w-auto"
-                            >
-                                <Plus className="w-4 h-4 mr-2" />
-                                {t.settings.addCustomTool}
-                            </Button>
-                        </div>
-
-                        <div className="space-y-4">
-                            {tools.map(renderToolItem)}
-                            {customTools.length > 0 && (
-                                <>
-                                    <div className="divider text-base-content/30 text-sm font-medium">{t.settings.customTools}</div>
-                                    {customTools.map(renderToolItem)}
-                                </>
-                            )}
-                        </div>
-                    </div>
+                    <ToolsTab
+                        tools={tools}
+                        customTools={customTools}
+                        toolFilter={toolFilter}
+                        setToolFilter={setToolFilter}
+                        expandedTools={expandedTools}
+                        toggleToolExpand={toggleToolExpand}
+                        updateToolPath={updateToolPath}
+                        toolSyncStrategies={toolSyncStrategies}
+                        setToolSyncStrategies={setToolSyncStrategies}
+                        deleteCustomTool={deleteCustomTool}
+                        setShowAddToolModal={setShowAddToolModal}
+                        selectDirectory={selectDirectory}
+                        t={t}
+                    />
                 )}
 
-                {/* Cloud & Sync Tab */}
                 {activeTab === "sync" && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Cloud Sync Config */}
-                        <Card title={t.settings.cloudSync} icon={<Cloud className="w-5 h-5 text-primary" />}>
-                            <div className="form-control mb-6">
-                                <label className="label cursor-pointer justify-start gap-4">
-                                    <input
-                                        type="checkbox"
-                                        className="toggle toggle-primary toggle-lg"
-                                        checked={cloudSyncEnabled}
-                                        onChange={(e) => setCloudSyncEnabled(e.target.checked)}
-                                    />
-                                    <div>
-                                        <span className="label-text font-medium block">{t.settings.cloudSync}</span>
-                                        <span className="label-text-alt text-base-content/60">{t.settings.cloudSyncDescription}</span>
-                                    </div>
-                                </label>
-                            </div>
-
-                            {cloudSyncEnabled && (
-                                <div className="space-y-4 bg-base-200/50 p-4 rounded-xl border border-base-300/50">
-                                    <div className="form-control">
-                                        <label className="label">
-                                            <span className="label-text">{t.settings.cloudProvider}</span>
-                                        </label>
-                                        <select
-                                            className="select select-bordered w-full"
-                                            value={cloudProvider || ""}
-                                            onChange={(e) => handleCloudProviderChange(e.target.value)}
-                                        >
-                                            <option value="" disabled>{t.settings.selectProvider}</option>
-                                            {[
-                                                { value: "ICloud", label: "iCloud Drive" },
-                                                { value: "GoogleDrive", label: "Google Drive" },
-                                                { value: "OneDrive", label: "OneDrive" },
-                                            ].map((p) => {
-                                                const detected = detectedDrives.find(d => d.provider === p.value);
-                                                return (
-                                                    <option key={p.value} value={p.value}>
-                                                        {detected ? detected.display_name : p.label}
-                                                    </option>
-                                                );
-                                            })}
-                                            <option value="Custom">{t.settings.customFolder}</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="form-control">
-                                        <label className="label">
-                                            <span className="label-text">{t.settings.cloudSyncFolder}</span>
-                                        </label>
-                                        <div className="flex gap-2 w-full">
-                                            <input
-                                                type="text"
-                                                className="input input-bordered flex-1 font-mono text-sm"
-                                                value={cloudSyncFolder}
-                                                onChange={(e) => setCloudSyncFolder(e.target.value)}
-                                                readOnly={!!detectedDrives.find(d => d.provider === cloudProvider)}
-                                            />
-                                            {!detectedDrives.find(d => d.provider === cloudProvider) && (
-                                                <Button
-                                                    variant="ghost"
-                                                    className="border-base-300 bg-base-100"
-                                                    onClick={() => selectDirectory(setCloudSyncFolder)}
-                                                >
-                                                    <FolderOpen className="w-4 h-4" />
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="form-control">
-                                        <label className="label cursor-pointer justify-start gap-3">
-                                            <input
-                                                type="checkbox"
-                                                className="toggle toggle-sm toggle-primary"
-                                                checked={cloudAutoSync}
-                                                onChange={(e) => setCloudAutoSync(e.target.checked)}
-                                            />
-                                            <span className="label-text">{t.settings.cloudAutoSync}</span>
-                                        </label>
-                                    </div>
-
-                                    <div className="divider my-2"></div>
-
-                                    <div className="flex items-center justify-between">
-                                        <div className="text-xs text-base-content/50">
-                                            {cloudLastSync ?
-                                                `${t.settings.lastCloudSync}: ${new Date(Number(cloudLastSync) * 1000).toLocaleString()}` :
-                                                "No sync history"}
-                                        </div>
-                                        <Button
-                                            variant="primary"
-                                            size="sm"
-                                            onClick={handleCloudSync}
-                                            disabled={cloudSyncing || !cloudSyncFolder}
-                                            loading={cloudSyncing}
-                                        >
-                                            <RefreshCw className="w-3 h-3 mr-2" />
-                                            {t.settings.syncNow}
-                                        </Button>
-                                    </div>
-                                </div>
-                            )}
-                        </Card>
-
-                        {/* Registries */}
-                        <Card title={t.settings.registries} icon={<Globe className="w-5 h-5 text-secondary" />}>
-                            <div className="flex justify-end mb-4">
-                                <Button size="sm" variant="outline" onClick={() => setShowAddRegistryModal(true)}>
-                                    <Plus className="w-4 h-4 mr-2" /> {t.settings.addRegistry}
-                                </Button>
-                            </div>
-                            <div className="space-y-3">
-                                {registries.length === 0 ? (
-                                    <div className="text-center py-8 text-base-content/50 bg-base-200/30 rounded-xl border border-dashed border-base-300">
-                                        {t.common.loading || "No registries configuration"}
-                                    </div>
-                                ) : (
-                                    registries.map((registry) => (
-                                        <div key={registry.name} className="flex items-start gap-4 p-4 bg-base-200/50 rounded-xl border border-base-300/50 hover:border-primary/30 transition-colors">
-                                            <input
-                                                type="checkbox"
-                                                className="toggle toggle-sm toggle-success mt-1"
-                                                checked={registry.enabled}
-                                                onChange={() => toggleRegistry(registry)}
-                                            />
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 flex-wrap">
-                                                    <span className="font-semibold">{registry.name}</span>
-                                                    {registry.tags.map(tag => (
-                                                        <Badge key={tag} variant="outline" size="xs">{tag}</Badge>
-                                                    ))}
-                                                </div>
-                                                <p className="text-xs text-base-content/60 font-mono mt-1 break-all select-all">
-                                                    {registry.url}
-                                                </p>
-                                                {registry.description && (
-                                                    <p className="text-xs text-base-content/50 mt-2 line-clamp-2">
-                                                        {registry.description}
-                                                    </p>
-                                                )}
-                                            </div>
-                                            <Button variant="ghost" size="sm" className="text-error" onClick={() => removeRegistry(registry.name)}>
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </Card>
-                    </div>
+                    <CloudSyncTab
+                        cloudSyncEnabled={cloudSyncEnabled}
+                        setCloudSyncEnabled={setCloudSyncEnabled}
+                        cloudProvider={cloudProvider}
+                        handleCloudProviderChange={handleCloudProviderChange}
+                        cloudSyncFolder={cloudSyncFolder}
+                        setCloudSyncFolder={setCloudSyncFolder}
+                        cloudAutoSync={cloudAutoSync}
+                        setCloudAutoSync={setCloudAutoSync}
+                        cloudLastSync={cloudLastSync}
+                        cloudSyncing={cloudSyncing}
+                        handleCloudSync={handleCloudSync}
+                        detectedDrives={detectedDrives}
+                        selectDirectory={selectDirectory}
+                        registries={registries}
+                        setShowAddRegistryModal={setShowAddRegistryModal}
+                        toggleRegistry={toggleRegistry}
+                        removeRegistry={removeRegistry}
+                        t={t}
+                    />
                 )}
 
-                {/* Security Tab */}
                 {activeTab === "security" && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <Card title={t.settings.security} icon={<Shield className="w-5 h-5 text-error" />}>
-                            <div className="space-y-4">
-                                <div className="form-control">
-                                    <label className="label cursor-pointer justify-start gap-4 p-3 bg-base-200/30 rounded-lg hover:bg-base-200/50 transition-colors">
-                                        <input
-                                            type="checkbox"
-                                            className="toggle toggle-primary"
-                                            checked={scanBeforeInstall}
-                                            onChange={(e) => setScanBeforeInstall(e.target.checked)}
-                                        />
-                                        <div>
-                                            <span className="label-text block font-medium">{t.settings.scanBeforeInstall}</span>
-                                            <span className="label-text-alt text-base-content/60">Scan code before adding to library</span>
-                                        </div>
-                                    </label>
-                                </div>
-                                <div className="form-control">
-                                    <label className="label cursor-pointer justify-start gap-4 p-3 bg-base-200/30 rounded-lg hover:bg-base-200/50 transition-colors">
-                                        <input
-                                            type="checkbox"
-                                            className="toggle toggle-primary"
-                                            checked={scanBeforeUpdate}
-                                            onChange={(e) => setScanBeforeUpdate(e.target.checked)}
-                                        />
-                                        <div>
-                                            <span className="label-text block font-medium">{t.settings.scanBeforeUpdate}</span>
-                                            <span className="label-text-alt text-base-content/60">Scan code before updating</span>
-                                        </div>
-                                    </label>
-                                </div>
-                                <div className="form-control">
-                                    <label className="label cursor-pointer justify-start gap-4 p-3 bg-error/10 rounded-lg hover:bg-error/20 transition-colors">
-                                        <input
-                                            type="checkbox"
-                                            className="toggle toggle-error"
-                                            checked={blockHighRisk}
-                                            onChange={(e) => setBlockHighRisk(e.target.checked)}
-                                        />
-                                        <div>
-                                            <span className="label-text block font-medium text-error">{t.settings.blockHighRisk}</span>
-                                            <span className="label-text-alt text-error/60">Automatically block high risk operations</span>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-                        </Card>
-                    </div>
+                    <SecurityTab
+                        scanBeforeInstall={scanBeforeInstall}
+                        setScanBeforeInstall={setScanBeforeInstall}
+                        scanBeforeUpdate={scanBeforeUpdate}
+                        setScanBeforeUpdate={setScanBeforeUpdate}
+                        blockHighRisk={blockHighRisk}
+                        setBlockHighRisk={setBlockHighRisk}
+                        t={t}
+                    />
                 )}
 
-                {/* About Tab */}
                 {activeTab === "about" && (
-                    <div className="max-w-6xl mx-auto py-8">
-                        <div className="relative overflow-hidden rounded-3xl border border-base-content/10 bg-gradient-to-br from-base-200/75 via-base-200/40 to-base-100/60 p-8 md:p-10 shadow-2xl">
-                            <div className="absolute inset-y-0 left-1/2 hidden w-80 -translate-x-1/2 bg-primary/10 blur-3xl md:block" />
-
-                            <div className="relative text-center space-y-6">
-                                <img src={logoImg} alt="SkillsHub" className="w-24 h-24 rounded-3xl mx-auto shadow-2xl shadow-primary/30" />
-                                <div>
-                                    <h2 className="text-4xl font-bold mb-2">SkillsHub</h2>
-                                    <p className="text-lg text-base-content/70">{t.settings.aboutSubtitle}</p>
-                                </div>
-
-                                <div className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-sm text-primary font-medium">
-                                    {t.common.version} {t.settings.aboutVersion}
-                                </div>
-
-                                <div className="grid gap-4 md:grid-cols-2 text-left">
-                                    <div className="rounded-2xl border border-base-content/10 bg-base-100/50 p-5">
-                                        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20 text-primary">
-                                            <UserRound className="h-6 w-6" />
-                                        </div>
-                                        <p className="text-sm text-base-content/60">{t.settings.aboutAuthorLabel}</p>
-                                        <p className="mt-1 text-2xl font-semibold">Ctrler</p>
-                                    </div>
-
-                                    <div className="rounded-2xl border border-base-content/10 bg-base-100/50 p-5">
-                                        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-secondary/20 text-secondary">
-                                            <Github className="h-6 w-6" />
-                                        </div>
-                                        <p className="text-sm text-base-content/60">{t.settings.aboutOpenSourceLabel}</p>
-                                        <a
-                                            href="https://github.com/100skills/SkillsHub"
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="mt-1 inline-flex items-center gap-1 text-xl font-semibold link link-hover"
-                                        >
-                                            {t.settings.aboutOpenSourceAction}
-                                            <ExternalLink className="h-4 w-4" />
-                                        </a>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
-                                    <Badge variant="ghost">Tauri v2</Badge>
-                                    <Badge variant="ghost">React 18</Badge>
-                                    <Badge variant="ghost">TypeScript</Badge>
-                                    <Badge variant="ghost">Rust</Badge>
-                                </div>
-
-                                <button type="button" className="btn btn-primary gap-2">
-                                    <Box className="h-4 w-4" />
-                                    {t.settings.aboutCheckUpdate}
-                                </button>
-
-                                <div className="pt-2 text-sm text-base-content/50">
-                                    {t.settings.aboutCopyright}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <AboutTab t={t} />
                 )}
             </div>
 
             {/* Modals */}
-            {/* Add Custom Tool Modal */}
             {showAddToolModal && (
-                <div className="modal modal-open">
-                    <div className="modal-box glass-panel">
-                        <h3 className="font-bold text-lg mb-6">{t.settings.addCustomTool}</h3>
-                        <div className="space-y-4">
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text">{t.settings.toolName}</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    className="input input-bordered"
-                                    placeholder={t.settings.toolNamePlaceholder}
-                                    value={newToolName}
-                                    onChange={(e) => setNewToolName(e.target.value)}
-                                />
-                            </div>
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text">{t.settings.globalPath}</span>
-                                </label>
-                                <div className="join w-full">
-                                    <input
-                                        type="text"
-                                        className="input input-bordered font-mono text-sm join-item flex-1"
-                                        placeholder="~/.tool/skills/"
-                                        value={newToolGlobalPath}
-                                        onChange={(e) => setNewToolGlobalPath(e.target.value)}
-                                    />
-                                    <button
-                                        className="btn btn-ghost join-item"
-                                        onClick={() => selectDirectory(setNewToolGlobalPath)}
-                                        type="button"
-                                    >
-                                        <FolderOpen className="w-4 h-4" />
-                                    </button>
-                                </div>
-                                <span className="label-text-alt text-base-content/50 mt-1">
-                                    {t.settings.globalPathHint}
-                                </span>
-                            </div>
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text">{t.settings.projectPath}</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    className="input input-bordered font-mono text-sm"
-                                    placeholder=".tool/skills/"
-                                    value={newToolProjectPath}
-                                    onChange={(e) => setNewToolProjectPath(e.target.value)}
-                                />
-                                <span className="label-text-alt text-base-content/50 mt-1">
-                                    {t.settings.projectPathHint}
-                                </span>
-                            </div>
-                        </div>
-                        <div className="modal-action">
-                            <Button variant="ghost" onClick={() => setShowAddToolModal(false)}>
-                                {t.common.cancel}
-                            </Button>
-                            <Button
-                                variant="primary"
-                                onClick={addCustomTool}
-                                disabled={!newToolName.trim() || isLoading}
-                                loading={isLoading}
-                            >
-                                {t.settings.addTool}
-                            </Button>
-                        </div>
-                    </div>
-                    <div className="modal-backdrop bg-base-100/80 backdrop-blur-sm" onClick={() => setShowAddToolModal(false)} />
-                </div>
+                <AddToolModal
+                    newToolName={newToolName}
+                    setNewToolName={setNewToolName}
+                    newToolGlobalPath={newToolGlobalPath}
+                    setNewToolGlobalPath={setNewToolGlobalPath}
+                    newToolProjectPath={newToolProjectPath}
+                    setNewToolProjectPath={setNewToolProjectPath}
+                    addCustomTool={addCustomTool}
+                    isLoading={isLoading}
+                    onClose={() => setShowAddToolModal(false)}
+                    selectDirectory={selectDirectory}
+                    t={t}
+                />
             )}
 
-            {/* Add Registry Modal */}
             {showAddRegistryModal && (
-                <div className="modal modal-open">
-                    <div className="modal-box glass-panel">
-                        <h3 className="font-bold text-lg mb-6">{t.settings.addRegistry}</h3>
-                        <div className="space-y-4">
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text">Name</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    className="input input-bordered"
-                                    placeholder="my-registry"
-                                    value={newRegistryName}
-                                    onChange={(e) => setNewRegistryName(e.target.value)}
-                                />
-                            </div>
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text">Git URL</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    className="input input-bordered font-mono text-sm"
-                                    placeholder="https://github.com/user/repo"
-                                    value={newRegistryUrl}
-                                    onChange={(e) => setNewRegistryUrl(e.target.value)}
-                                />
-                            </div>
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text">Branch (Optional)</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    className="input input-bordered font-mono text-sm"
-                                    placeholder="main"
-                                    value={newRegistryBranch}
-                                    onChange={(e) => setNewRegistryBranch(e.target.value)}
-                                />
-                            </div>
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text">Description (Optional)</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    className="input input-bordered"
-                                    placeholder="Description..."
-                                    value={newRegistryDescription}
-                                    onChange={(e) => setNewRegistryDescription(e.target.value)}
-                                />
-                            </div>
-                        </div>
-                        <div className="modal-action">
-                            <Button variant="ghost" onClick={() => setShowAddRegistryModal(false)}>
-                                {t.common.cancel}
-                            </Button>
-                            <Button
-                                variant="primary"
-                                onClick={addRegistry}
-                                disabled={!newRegistryName.trim() || !newRegistryUrl.trim() || isRegistryLoading}
-                                loading={isRegistryLoading}
-                            >
-                                {t.settings.addRegistry}
-                            </Button>
-                        </div>
-                    </div>
-                    <div className="modal-backdrop bg-base-100/80 backdrop-blur-sm" onClick={() => setShowAddRegistryModal(false)} />
-                </div>
+                <AddRegistryModal
+                    newRegistryName={newRegistryName}
+                    setNewRegistryName={setNewRegistryName}
+                    newRegistryUrl={newRegistryUrl}
+                    setNewRegistryUrl={setNewRegistryUrl}
+                    newRegistryBranch={newRegistryBranch}
+                    setNewRegistryBranch={setNewRegistryBranch}
+                    newRegistryDescription={newRegistryDescription}
+                    setNewRegistryDescription={setNewRegistryDescription}
+                    addRegistry={addRegistry}
+                    isRegistryLoading={isRegistryLoading}
+                    onClose={() => setShowAddRegistryModal(false)}
+                    t={t}
+                />
             )}
         </div>
     );

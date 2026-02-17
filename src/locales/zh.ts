@@ -29,6 +29,7 @@ export const zh: Translations = {
         add: "添加",
         about: "关于",
         scan: "扫描",
+        allSources: "所有来源",
     },
 
     // 导航
@@ -86,6 +87,7 @@ export const zh: Translations = {
         fullSyncSuccess: "同步完成: 收集 {collected} 个, 分发 {distributed} 次",
         fullSyncFailed: "同步失败: {error}",
         view: "查看",
+        loadFailed: "加载失败：{error}",
     },
 
     // 发现页面
@@ -100,6 +102,10 @@ export const zh: Translations = {
         curatedSkills: "社区精选 Skills",
         by: "作者",
         unknown: "未知",
+        installBlocked: "安装已阻止：Skill \"{skillId}\" 被检测为高风险。",
+        installFailed: "安装失败：{error}",
+        loadingMore: "加载更多 Skills...",
+        endOfResults: "已到末尾",
     },
 
     // 同步页面
@@ -132,6 +138,14 @@ export const zh: Translations = {
         linkDesc: "符号链接到共享源。即时更新，节省空间。",
         copy: "复制",
         copyDesc: "完整文件复制。更好的兼容性，更多存储。",
+        pathNotFound: "未找到路径",
+        notDetectedInStandard: "未在标准位置检测到",
+        builtIn: "内置",
+        status: "状态",
+        syncedSkills: "已同步 Skills",
+        pathCount: "{count} 个路径",
+        relativeFromProjectRoot: "（相对于项目根目录）",
+        noPathsConfigured: "此工具未配置路径",
     },
 
     // 安全页面
@@ -265,6 +279,19 @@ export const zh: Translations = {
         aboutOpenSourceAction: "查看代码",
         aboutCheckUpdate: "检查更新",
         aboutCopyright: "© 2026 SkillsHub. 版权所有。",
+        scanBeforeInstallDesc: "在添加到库之前扫描代码",
+        scanBeforeUpdateDesc: "在更新之前扫描代码",
+        blockHighRiskDesc: "自动阻止高风险操作",
+        noSyncHistory: "暂无同步记录",
+        registryName: "名称",
+        registryNamePlaceholder: "my-registry",
+        registryUrl: "Git URL",
+        registryUrlPlaceholder: "https://github.com/user/repo",
+        registryBranch: "分支（可选）",
+        registryBranchPlaceholder: "main",
+        registryDescription: "描述（可选）",
+        registryDescriptionPlaceholder: "描述...",
+        editCustomTool: "编辑自定义工具",
     },
 
     // 技能详情页面
@@ -305,5 +332,12 @@ export const zh: Translations = {
         passed: "已通过",
         lastScanned: "上次扫描",
         viewFullReport: "查看完整报告",
+        loadingSkillDetails: "正在加载 Skill 详情...",
+        skillNotFoundDesc: "未找到您要查找的 Skill。",
+        issuesDetected: "发现问题",
+        skillSafeToUse: "根据当前安全规则，此 Skill 可以安全使用。",
+        potentialIssuesFound: "发现 {count} 个潜在问题。风险等级：{risk}",
+        detailedFindings: "详细发现",
+        copyStrategy: "复制",
     },
 };

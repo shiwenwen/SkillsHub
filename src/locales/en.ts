@@ -27,6 +27,7 @@ export const en = {
         add: "Add",
         about: "About",
         scan: "Scan",
+        allSources: "All Sources",
     },
 
     // 导航
@@ -84,6 +85,7 @@ export const en = {
         fullSyncSuccess: "Sync complete: Collected {collected} , Distributed {distributed}",
         fullSyncFailed: "Sync failed: {error}",
         view: "View",
+        loadFailed: "Failed to load: {error}",
     },
 
     // 发现页面
@@ -98,6 +100,10 @@ export const en = {
         curatedSkills: "Curated skills from the community",
         by: "by",
         unknown: "Unknown",
+        installBlocked: "Installation blocked: Skill \"{skillId}\" detected as high risk.",
+        installFailed: "Installation failed: {error}",
+        loadingMore: "Loading more skills...",
+        endOfResults: "End of Results",
     },
 
     // 同步页面
@@ -130,6 +136,14 @@ export const en = {
         linkDesc: "Symbolic links to shared source. Instant updates, saves space.",
         copy: "Copy",
         copyDesc: "Full file copy. Better compatibility, more storage.",
+        pathNotFound: "Path not found",
+        notDetectedInStandard: "Not detected in standard locations",
+        builtIn: "Built-in",
+        status: "Status",
+        syncedSkills: "Synced Skills",
+        pathCount: "{count} paths",
+        relativeFromProjectRoot: "(Relative from project root)",
+        noPathsConfigured: "No paths configured for this tool",
     },
 
     // 安全页面
@@ -263,6 +277,19 @@ export const en = {
         aboutOpenSourceAction: "View Code",
         aboutCheckUpdate: "Check for Updates",
         aboutCopyright: "© 2026 SkillsHub. All rights reserved.",
+        scanBeforeInstallDesc: "Scan code before adding to library",
+        scanBeforeUpdateDesc: "Scan code before updating",
+        blockHighRiskDesc: "Automatically block high risk operations",
+        noSyncHistory: "No sync history",
+        registryName: "Name",
+        registryNamePlaceholder: "my-registry",
+        registryUrl: "Git URL",
+        registryUrlPlaceholder: "https://github.com/user/repo",
+        registryBranch: "Branch (Optional)",
+        registryBranchPlaceholder: "main",
+        registryDescription: "Description (Optional)",
+        registryDescriptionPlaceholder: "Description...",
+        editCustomTool: "Edit Custom Tool",
     },
 
     // 技能详情页面
@@ -303,6 +330,13 @@ export const en = {
         passed: "Passed",
         lastScanned: "Last scanned",
         viewFullReport: "View Full Report",
+        loadingSkillDetails: "Loading skill details...",
+        skillNotFoundDesc: "The skill you are looking for could not be found.",
+        issuesDetected: "Issues Detected",
+        skillSafeToUse: "This skill is safe to use according to current security rules.",
+        potentialIssuesFound: "Found {count} potential issues. Risk Level: {risk}",
+        detailedFindings: "Detailed Findings",
+        copyStrategy: "Copy",
     },
 };
 

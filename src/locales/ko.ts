@@ -28,6 +28,7 @@ export const ko: Translations = {
         add: "추가",
         about: "정보",
         scan: "스캔",
+        allSources: "모든 소스",
     },
 
     nav: {
@@ -83,6 +84,7 @@ export const ko: Translations = {
         fullSyncSuccess: "Sync complete: Collected {collected} , Distributed {distributed}",
         fullSyncFailed: "Sync failed: {error}",
         view: "View",
+        loadFailed: "로딩 실패: {error}",
     },
 
     discover: {
@@ -96,6 +98,10 @@ export const ko: Translations = {
         curatedSkills: "커뮤니티 엄선 Skills",
         by: "제작자",
         unknown: "알 수 없음",
+        installBlocked: "설치가 차단되었습니다: Skill \"{skillId}\"이(가) 고위험으로 감지되었습니다.",
+        installFailed: "설치 실패: {error}",
+        loadingMore: "더 많은 Skills 로딩 중...",
+        endOfResults: "결과 끝",
     },
 
     syncDashboard: {
@@ -127,6 +133,14 @@ export const ko: Translations = {
         linkDesc: "공유 소스에 대한 심볼릭 링크. 즉시 업데이트, 공간 절약.",
         copy: "복사",
         copyDesc: "전체 파일 복사. 호환성 우수, 저장 공간 더 사용.",
+        pathNotFound: "경로를 찾을 수 없음",
+        notDetectedInStandard: "표준 위치에서 감지되지 않음",
+        builtIn: "내장",
+        status: "상태",
+        syncedSkills: "동기화된 Skills",
+        pathCount: "{count}개 경로",
+        relativeFromProjectRoot: "(프로젝트 루트로부터의 상대 경로)",
+        noPathsConfigured: "이 도구에 구성된 경로가 없습니다",
     },
 
     security: {
@@ -258,6 +272,19 @@ export const ko: Translations = {
         aboutOpenSourceAction: "코드 보기",
         aboutCheckUpdate: "업데이트 확인",
         aboutCopyright: "© 2026 SkillsHub. All rights reserved.",
+        scanBeforeInstallDesc: "라이브러리에 추가하기 전에 코드 스캔",
+        scanBeforeUpdateDesc: "업데이트 전에 코드 스캔",
+        blockHighRiskDesc: "높은 위험 작업을 자동으로 차단",
+        noSyncHistory: "동기화 기록 없음",
+        registryName: "이름",
+        registryNamePlaceholder: "my-registry",
+        registryUrl: "Git URL",
+        registryUrlPlaceholder: "https://github.com/user/repo",
+        registryBranch: "브랜치 (선택사항)",
+        registryBranchPlaceholder: "main",
+        registryDescription: "설명 (선택사항)",
+        registryDescriptionPlaceholder: "설명...",
+        editCustomTool: "사용자 정의 도구 편집",
     },
 
     skillDetail: {
@@ -297,5 +324,12 @@ export const ko: Translations = {
         passed: "통과",
         lastScanned: "마지막 스캔",
         viewFullReport: "전체 보고서 보기",
+        loadingSkillDetails: "Skill 상세 정보 로딩 중...",
+        skillNotFoundDesc: "찾으시는 Skill을 찾을 수 없습니다.",
+        issuesDetected: "문제 감지됨",
+        skillSafeToUse: "현재 보안 규칙에 따르면 이 Skill은 안전하게 사용할 수 있습니다.",
+        potentialIssuesFound: "{count}개의 잠재적 문제가 발견되었습니다. 위험 수준: {risk}",
+        detailedFindings: "상세 발견 사항",
+        copyStrategy: "복사",
     },
 };

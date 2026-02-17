@@ -256,6 +256,16 @@ impl AggregatedRegistry {
         }
         Err(crate::error::Error::SkillNotFound(skill_id.to_string()))
     }
+
+    /// Get a skill along with the name of the registry it was found in
+    pub async fn get_skill_with_source(&self, skill_id: &str) -> Result<(Skill, String)> {
+        for registry in &self.registries {
+            if let Ok(skill) = registry.get_skill(skill_id).await {
+                return Ok((skill, registry.name().to_string()));
+            }
+        }
+        Err(crate::error::Error::SkillNotFound(skill_id.to_string()))
+    }
 }
 
 impl Default for AggregatedRegistry {

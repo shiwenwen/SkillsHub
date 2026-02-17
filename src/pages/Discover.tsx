@@ -82,7 +82,7 @@ export default function Discover() {
                     });
 
                     if (config.block_high_risk && scanResult.overall_risk === "high") {
-                        alert(`Installation blocked: Skill "${skillId}" detected as high risk.`);
+                        alert(t.discover.installBlocked.replace("{skillId}", skillId));
                         return;
                     }
                 } catch (scanError) {
@@ -107,7 +107,7 @@ export default function Discover() {
             }
         } catch (error) {
             console.error("Install failed:", error);
-            alert(`Installation failed: ${error}`);
+            alert(t.discover.installFailed.replace("{error}", String(error)));
         } finally {
             setInstallingSkills(prev => {
                 const next = new Set(prev);
@@ -240,7 +240,7 @@ export default function Discover() {
                             value={selectedSource}
                             onChange={(e) => setSelectedSource(e.target.value)}
                         >
-                            <option value="all">All Sources</option>
+                            <option value="all">{t.common.allSources}</option>
                             {registries.map(r => (
                                 <option key={r.name} value={r.name}>
                                     {r.name}
@@ -322,7 +322,7 @@ export default function Discover() {
                                     {installedSkills.has(skill.id) ? (
                                         <Button variant="ghost" size="sm" className="text-success cursor-default hover:bg-transparent px-2 h-8 min-h-0">
                                             <Check className="w-4 h-4 mr-1" />
-                                            Installed
+                                            {t.common.installed}
                                         </Button>
                                     ) : (
                                         <Button
@@ -334,7 +334,7 @@ export default function Discover() {
                                             loading={installingSkills.has(skill.id)}
                                         >
                                             <Download className="w-3.5 h-3.5 mr-1" />
-                                            Install
+                                            {t.common.install}
                                         </Button>
                                     )}
                                 </div>
@@ -349,11 +349,11 @@ export default function Discover() {
                 {loadingMore && (
                     <div className="flex flex-col items-center gap-2">
                         <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                        <span className="text-xs text-base-content/40">Loading more skills...</span>
+                        <span className="text-xs text-base-content/40">{t.discover.loadingMore}</span>
                     </div>
                 )}
                 {!hasMore && results.length > 0 && (
-                    <div className="divider text-xs text-base-content/30 w-full max-w-sm mx-auto">End of Results</div>
+                    <div className="divider text-xs text-base-content/30 w-full max-w-sm mx-auto">{t.discover.endOfResults}</div>
                 )}
             </div>
         </div>

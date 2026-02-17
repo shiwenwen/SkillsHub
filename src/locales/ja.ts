@@ -28,6 +28,7 @@ export const ja: Translations = {
         add: "追加",
         about: "について",
         scan: "スキャン",
+        allSources: "すべてのソース",
     },
 
     nav: {
@@ -83,6 +84,7 @@ export const ja: Translations = {
         fullSyncSuccess: "Sync complete: Collected {collected} , Distributed {distributed}",
         fullSyncFailed: "Sync failed: {error}",
         view: "View",
+        loadFailed: "読み込みに失敗しました：{error}",
     },
 
     discover: {
@@ -96,6 +98,10 @@ export const ja: Translations = {
         curatedSkills: "コミュニティ厳選 Skills",
         by: "作成者",
         unknown: "不明",
+        installBlocked: "インストールがブロックされました：Skill「{skillId}」が高リスクとして検出されました。",
+        installFailed: "インストールに失敗しました：{error}",
+        loadingMore: "さらに Skills を読み込み中...",
+        endOfResults: "最後の結果",
     },
 
     syncDashboard: {
@@ -127,6 +133,14 @@ export const ja: Translations = {
         linkDesc: "共有ソースへのシンボリックリンク。即時更新、省スペース。",
         copy: "コピー",
         copyDesc: "完全ファイルコピー。互換性が高く、ストレージ使用量が多い。",
+        pathNotFound: "パスが見つかりません",
+        notDetectedInStandard: "標準の場所で検出されませんでした",
+        builtIn: "組み込み",
+        status: "ステータス",
+        syncedSkills: "同期済み Skills",
+        pathCount: "{count} パス",
+        relativeFromProjectRoot: "（プロジェクトルートからの相対パス）",
+        noPathsConfigured: "このツールにはパスが設定されていません",
     },
 
     security: {
@@ -258,6 +272,19 @@ export const ja: Translations = {
         aboutOpenSourceAction: "コードを見る",
         aboutCheckUpdate: "アップデートを確認",
         aboutCopyright: "© 2026 SkillsHub. All rights reserved.",
+        scanBeforeInstallDesc: "ライブラリに追加する前にコードをスキャン",
+        scanBeforeUpdateDesc: "更新前にコードをスキャン",
+        blockHighRiskDesc: "高リスク操作を自動的にブロック",
+        noSyncHistory: "同期履歴なし",
+        registryName: "名前",
+        registryNamePlaceholder: "my-registry",
+        registryUrl: "Git URL",
+        registryUrlPlaceholder: "https://github.com/user/repo",
+        registryBranch: "ブランチ（任意）",
+        registryBranchPlaceholder: "main",
+        registryDescription: "説明（任意）",
+        registryDescriptionPlaceholder: "説明...",
+        editCustomTool: "カスタムツールを編集",
     },
 
     skillDetail: {
@@ -297,5 +324,12 @@ export const ja: Translations = {
         passed: "合格",
         lastScanned: "最終スキャン",
         viewFullReport: "完全なレポートを見る",
+        loadingSkillDetails: "Skill 詳細を読み込み中...",
+        skillNotFoundDesc: "お探しの Skill が見つかりませんでした。",
+        issuesDetected: "問題が検出されました",
+        skillSafeToUse: "現在のセキュリティルールに基づき、この Skill は安全に使用できます。",
+        potentialIssuesFound: "{count} 件の潜在的な問題が見つかりました。リスクレベル：{risk}",
+        detailedFindings: "詳細な検出結果",
+        copyStrategy: "コピー",
     },
 };

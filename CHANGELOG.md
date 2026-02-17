@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **OpenClaw Adapter**: Removed node_modules installation path from skills scanning and syncing directories, now only scans workspace directory (`~/.openclaw/workspace/skills/`)
+- **Settings Page Refactor**: Split the monolithic Settings page (~1490 lines) into 8 focused sub-components for improved maintainability (`types.ts`, `GeneralTab`, `ToolsTab`, `CloudSyncTab`, `SecurityTab`, `AboutTab`, `AddToolModal`, `AddRegistryModal`)
+- **i18n Full Coverage**: Replaced 40+ hardcoded UI strings across 7 pages/components with proper translation keys; added translations for all 9 supported languages (zh, en, ja, ko, fr, de, es, pt, ru). Extended coverage to SecurityTab, CloudSyncTab, AddRegistryModal, Discover, Installed, SkillDetail, and SyncDashboard with additional keys for descriptions, error messages, and modal labels
+
+### Fixed
+
+- **Plugin Content Hash**: Plugin skills now correctly calculate `content_hash` using directory hashing instead of leaving it empty, enabling proper update detection for plugin-sourced skills
+- **Git Registry Source URL**: Git registry search results now carry the correct repository URL and branch directly from the scanning closure, eliminating a redundant post-processing fixup step
+- **Update Source Registry Tracking**: Update checker now reports which registry a skill update was found in via `get_skill_with_source`, improving update transparency
 
 ## [1.0.2] - 2026-02-16
 

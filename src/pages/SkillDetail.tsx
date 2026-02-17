@@ -261,7 +261,7 @@ export default function SkillDetail() {
             <div className="flex justify-center items-center py-20">
                 <div className="flex flex-col items-center gap-4">
                     <span className="loading loading-spinner loading-lg text-primary"></span>
-                    <span className="text-base-content/50">Loading skill details...</span>
+                    <span className="text-base-content/50">{t.skillDetail.loadingSkillDetails}</span>
                 </div>
             </div>
         );
@@ -272,7 +272,7 @@ export default function SkillDetail() {
             <div className="flex flex-col items-center justify-center py-20">
                 <Package className="w-16 h-16 text-base-content/20 mb-4" />
                 <h2 className="text-2xl font-bold mb-2">{t.skillDetail.skillNotFound}</h2>
-                <p className="text-base-content/60 mb-6">The skill you are looking for could not be found.</p>
+                <p className="text-base-content/60 mb-6">{t.skillDetail.skillNotFoundDesc}</p>
                 <Link to="/">
                     <Button variant="primary">{t.skillDetail.back}</Button>
                 </Link>
@@ -521,7 +521,7 @@ export default function SkillDetail() {
                                                     ) : (
                                                         <span className="flex items-center gap-1.5 text-base-content/70">
                                                             <FileText className="w-3.5 h-3.5" />
-                                                            Copy
+                                                            {t.skillDetail.copyStrategy}
                                                         </span>
                                                     )}
                                                 </td>
@@ -580,12 +580,12 @@ export default function SkillDetail() {
                                         {scanResult.passed ? <ShieldCheck className="w-8 h-8" /> : <ShieldAlert className="w-8 h-8" />}
                                         <div>
                                             <h3 className="font-bold text-lg">
-                                                {scanResult.findings.length === 0 ? t.skillDetail.passedAllChecks : "Issues Detected"}
+                                                {scanResult.findings.length === 0 ? t.skillDetail.passedAllChecks : t.skillDetail.issuesDetected}
                                             </h3>
                                             <p className="opacity-80 text-sm">
                                                 {scanResult.findings.length === 0
-                                                    ? "This skill is safe to use according to current security rules."
-                                                    : `Found ${scanResult.findings.length} potential issues.Risk Level: ${scanResult.overall_risk} `}
+                                                    ? t.skillDetail.skillSafeToUse
+                                                    : t.skillDetail.potentialIssuesFound.replace("{count}", String(scanResult.findings.length)).replace("{risk}", scanResult.overall_risk)}
                                             </p>
                                         </div>
                                     </div>
@@ -598,7 +598,7 @@ export default function SkillDetail() {
 
                                 {scanResult.findings.length > 0 && (
                                     <div className="space-y-4">
-                                        <h4 className="font-bold border-b border-base-200/50 pb-2 mb-4">Detailed Findings</h4>
+                                        <h4 className="font-bold border-b border-base-200/50 pb-2 mb-4">{t.skillDetail.detailedFindings}</h4>
                                         {scanResult.findings.map((finding, index) => (
                                             <div
                                                 key={`${finding.rule_name} -${finding.file} -${finding.line ?? index} `}

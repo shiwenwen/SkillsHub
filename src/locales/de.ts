@@ -28,6 +28,7 @@ export const de: Translations = {
         add: "Hinzufügen",
         about: "Über",
         scan: "Scannen",
+        allSources: "Alle Quellen",
     },
 
     nav: {
@@ -83,6 +84,7 @@ export const de: Translations = {
         fullSyncSuccess: "Sync complete: Collected {collected} , Distributed {distributed}",
         fullSyncFailed: "Sync failed: {error}",
         view: "View",
+        loadFailed: "Laden fehlgeschlagen: {error}",
     },
 
     discover: {
@@ -96,6 +98,10 @@ export const de: Translations = {
         curatedSkills: "Von der Community ausgewählte Skills",
         by: "von",
         unknown: "Unbekannt",
+        installBlocked: "Installation blockiert: Skill \"{skillId}\" als hohes Risiko erkannt.",
+        installFailed: "Installation fehlgeschlagen: {error}",
+        loadingMore: "Weitere Skills werden geladen...",
+        endOfResults: "Ende der Ergebnisse",
     },
 
     syncDashboard: {
@@ -127,6 +133,14 @@ export const de: Translations = {
         linkDesc: "Symbolische Links zur gemeinsamen Quelle. Sofortige Updates, spart Speicher.",
         copy: "Kopie",
         copyDesc: "Vollständige Dateikopie. Bessere Kompatibilität, mehr Speicher.",
+        pathNotFound: "Pfad nicht gefunden",
+        notDetectedInStandard: "Nicht an Standardorten erkannt",
+        builtIn: "Integriert",
+        status: "Status",
+        syncedSkills: "Synchronisierte Skills",
+        pathCount: "{count} Pfade",
+        relativeFromProjectRoot: "(Relativ zum Projektstamm)",
+        noPathsConfigured: "Keine Pfade für dieses Tool konfiguriert",
     },
 
     security: {
@@ -258,6 +272,19 @@ export const de: Translations = {
         aboutOpenSourceAction: "Code ansehen",
         aboutCheckUpdate: "Nach Updates suchen",
         aboutCopyright: "© 2026 SkillsHub. Alle Rechte vorbehalten.",
+        scanBeforeInstallDesc: "Code vor dem Hinzufügen zur Bibliothek scannen",
+        scanBeforeUpdateDesc: "Code vor dem Update scannen",
+        blockHighRiskDesc: "Hochrisiko-Operationen automatisch blockieren",
+        noSyncHistory: "Kein Synchronisierungsverlauf",
+        registryName: "Name",
+        registryNamePlaceholder: "my-registry",
+        registryUrl: "Git URL",
+        registryUrlPlaceholder: "https://github.com/user/repo",
+        registryBranch: "Branch (Optional)",
+        registryBranchPlaceholder: "main",
+        registryDescription: "Beschreibung (Optional)",
+        registryDescriptionPlaceholder: "Beschreibung...",
+        editCustomTool: "Benutzerdefiniertes Tool bearbeiten",
     },
 
     skillDetail: {
@@ -297,5 +324,12 @@ export const de: Translations = {
         passed: "Bestanden",
         lastScanned: "Letzter Scan",
         viewFullReport: "Vollständigen Bericht anzeigen",
+        loadingSkillDetails: "Skill-Details werden geladen...",
+        skillNotFoundDesc: "Der gesuchte Skill konnte nicht gefunden werden.",
+        issuesDetected: "Probleme erkannt",
+        skillSafeToUse: "Dieser Skill kann gemäß den aktuellen Sicherheitsregeln sicher verwendet werden.",
+        potentialIssuesFound: "{count} potenzielle Probleme gefunden. Risikostufe: {risk}",
+        detailedFindings: "Detaillierte Ergebnisse",
+        copyStrategy: "Kopie",
     },
 };
