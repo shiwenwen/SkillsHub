@@ -36,48 +36,48 @@ export default function AddRegistryModal({
                 <div className="space-y-4">
                     <div className="form-control">
                         <label className="label">
-                            <span className="label-text">Name</span>
+                            <span className="label-text">{t.settings.registryName}</span>
                         </label>
                         <input
                             type="text"
                             className="input input-bordered"
-                            placeholder="my-registry"
+                            placeholder={t.settings.registryNamePlaceholder}
                             value={newRegistryName}
                             onChange={(e) => setNewRegistryName(e.target.value)}
                         />
                     </div>
                     <div className="form-control">
                         <label className="label">
-                            <span className="label-text">Git URL</span>
+                            <span className="label-text">{t.settings.registryUrl}</span>
                         </label>
                         <input
                             type="text"
                             className="input input-bordered font-mono text-sm"
-                            placeholder="https://github.com/user/repo"
+                            placeholder={t.settings.registryUrlPlaceholder}
                             value={newRegistryUrl}
                             onChange={(e) => setNewRegistryUrl(e.target.value)}
                         />
                     </div>
                     <div className="form-control">
                         <label className="label">
-                            <span className="label-text">Branch (Optional)</span>
+                            <span className="label-text">{t.settings.registryBranch}</span>
                         </label>
                         <input
                             type="text"
                             className="input input-bordered font-mono text-sm"
-                            placeholder="main"
+                            placeholder={t.settings.registryBranchPlaceholder}
                             value={newRegistryBranch}
                             onChange={(e) => setNewRegistryBranch(e.target.value)}
                         />
                     </div>
                     <div className="form-control">
                         <label className="label">
-                            <span className="label-text">Description (Optional)</span>
+                            <span className="label-text">{t.settings.registryDescription}</span>
                         </label>
                         <input
                             type="text"
                             className="input input-bordered"
-                            placeholder="Description..."
+                            placeholder={t.settings.registryDescriptionPlaceholder}
                             value={newRegistryDescription}
                             onChange={(e) => setNewRegistryDescription(e.target.value)}
                         />

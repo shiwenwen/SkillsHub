@@ -28,6 +28,7 @@ export const ru: Translations = {
         add: "Добавить",
         about: "О программе",
         scan: "Сканировать",
+        allSources: "Все источники",
     },
 
     nav: {
@@ -83,6 +84,7 @@ export const ru: Translations = {
         fullSyncSuccess: "Sync complete: Collected {collected} , Distributed {distributed}",
         fullSyncFailed: "Sync failed: {error}",
         view: "View",
+        loadFailed: "Ошибка загрузки: {error}",
     },
 
     discover: {
@@ -96,6 +98,10 @@ export const ru: Translations = {
         curatedSkills: "Skills, отобранные сообществом",
         by: "от",
         unknown: "Неизвестно",
+        installBlocked: "Установка заблокирована: Skill \"{skillId}\" обнаружен как высокорисковый.",
+        installFailed: "Ошибка установки: {error}",
+        loadingMore: "Загрузка ещё Skills...",
+        endOfResults: "Конец результатов",
     },
 
     syncDashboard: {
@@ -127,6 +133,14 @@ export const ru: Translations = {
         linkDesc: "Символические ссылки на общий источник. Мгновенные обновления, экономия места.",
         copy: "Копия",
         copyDesc: "Полная копия файлов. Лучшая совместимость, больше хранилища.",
+        pathNotFound: "Путь не найден",
+        notDetectedInStandard: "Не обнаружено в стандартных расположениях",
+        builtIn: "Встроенный",
+        status: "Статус",
+        syncedSkills: "Синхронизированные Skills",
+        pathCount: "{count} путей",
+        relativeFromProjectRoot: "(Относительно корня проекта)",
+        noPathsConfigured: "Для этого инструмента не настроены пути",
     },
 
     security: {
@@ -258,6 +272,19 @@ export const ru: Translations = {
         aboutOpenSourceAction: "Посмотреть код",
         aboutCheckUpdate: "Проверить обновления",
         aboutCopyright: "© 2026 SkillsHub. Все права защищены.",
+        scanBeforeInstallDesc: "Сканировать код перед добавлением в библиотеку",
+        scanBeforeUpdateDesc: "Сканировать код перед обновлением",
+        blockHighRiskDesc: "Автоматически блокировать высокорисковые операции",
+        noSyncHistory: "Нет истории синхронизации",
+        registryName: "Название",
+        registryNamePlaceholder: "my-registry",
+        registryUrl: "Git URL",
+        registryUrlPlaceholder: "https://github.com/user/repo",
+        registryBranch: "Ветка (Необязательно)",
+        registryBranchPlaceholder: "main",
+        registryDescription: "Описание (Необязательно)",
+        registryDescriptionPlaceholder: "Описание...",
+        editCustomTool: "Редактировать пользовательский инструмент",
     },
 
     skillDetail: {
@@ -297,5 +324,12 @@ export const ru: Translations = {
         passed: "Пройдено",
         lastScanned: "Последнее сканирование",
         viewFullReport: "Посмотреть полный отчёт",
+        loadingSkillDetails: "Загрузка деталей Skill...",
+        skillNotFoundDesc: "Skill, который вы ищете, не найден.",
+        issuesDetected: "Обнаружены проблемы",
+        skillSafeToUse: "Этот Skill безопасен для использования согласно текущим правилам безопасности.",
+        potentialIssuesFound: "Обнаружено {count} потенциальных проблем. Уровень риска: {risk}",
+        detailedFindings: "Подробные результаты",
+        copyStrategy: "Копия",
     },
 };

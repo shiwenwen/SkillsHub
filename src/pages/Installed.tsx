@@ -92,7 +92,7 @@ export default function Installed() {
             setPluginSkills(plugins);
         } catch (error) {
             console.error("Failed to load:", error);
-            showToast("error", `加载失败: ${error}`);
+            showToast("error", t.installed.loadFailed.replace("{error}", String(error)));
         }
         setLoading(false);
     }

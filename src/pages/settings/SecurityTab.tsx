@@ -34,7 +34,7 @@ export default function SecurityTab({
                             />
                             <div>
                                 <span className="label-text block font-medium">{t.settings.scanBeforeInstall}</span>
-                                <span className="label-text-alt text-base-content/60">Scan code before adding to library</span>
+                                <span className="label-text-alt text-base-content/60">{t.settings.scanBeforeInstallDesc}</span>
                             </div>
                         </label>
                     </div>
@@ -48,7 +48,7 @@ export default function SecurityTab({
                             />
                             <div>
                                 <span className="label-text block font-medium">{t.settings.scanBeforeUpdate}</span>
-                                <span className="label-text-alt text-base-content/60">Scan code before updating</span>
+                                <span className="label-text-alt text-base-content/60">{t.settings.scanBeforeUpdateDesc}</span>
                             </div>
                         </label>
                     </div>
@@ -62,7 +62,7 @@ export default function SecurityTab({
                             />
                             <div>
                                 <span className="label-text block font-medium text-error">{t.settings.blockHighRisk}</span>
-                                <span className="label-text-alt text-error/60">Automatically block high risk operations</span>
+                                <span className="label-text-alt text-error/60">{t.settings.blockHighRiskDesc}</span>
                             </div>
                         </label>
                     </div>

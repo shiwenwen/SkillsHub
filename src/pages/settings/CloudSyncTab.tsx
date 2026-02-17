@@ -140,7 +140,7 @@ export default function CloudSyncTab({
                             <div className="text-xs text-base-content/50">
                                 {cloudLastSync ?
                                     `${t.settings.lastCloudSync}: ${new Date(Number(cloudLastSync) * 1000).toLocaleString()}` :
-                                    "No sync history"}
+                                    t.settings.noSyncHistory}
                             </div>
                             <Button
                                 variant="primary"

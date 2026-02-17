@@ -266,7 +266,7 @@ export default function SyncDashboard() {
                                 {tool.detected ? (
                                     <>
                                         <div className="text-xs text-base-content/50 font-mono truncate mb-3">
-                                            {tool.skills_dir || 'Path not found'}
+                                            {tool.skills_dir || t.syncDashboard.pathNotFound}
                                         </div>
                                         <div className="flex items-center justify-between text-sm pt-2 border-t border-base-200/50">
                                             <span className="font-medium">
@@ -277,7 +277,7 @@ export default function SyncDashboard() {
                                     </>
                                 ) : (
                                     <div className="text-xs text-base-content/40 mt-2">
-                                        Not detected in standard locations
+                                        {t.syncDashboard.notDetectedInStandard}
                                     </div>
                                 )}
                             </Card>
@@ -407,7 +407,7 @@ export default function SyncDashboard() {
                 <div className="modal modal-open">
                     <div className="modal-box glass-panel max-w-lg">
                         <h3 className="font-bold text-lg mb-6">
-                            {editingTool ? t.settings.customTool || "Edit Custom Tool" : t.settings.addCustomTool}
+                            {editingTool ? t.settings.editCustomTool : t.settings.addCustomTool}
                         </h3>
                         <div className="space-y-4">
                             <div className="form-control">
@@ -494,7 +494,7 @@ export default function SyncDashboard() {
                         <h3 className="font-bold text-xl mb-6 flex items-center gap-2">
                             {selectedTool.name}
                             <Badge variant={selectedTool.type === "custom" ? "primary" : "success"}>
-                                {selectedTool.type === "custom" ? t.settings.customTool : "Built-in"}
+                                {selectedTool.type === "custom" ? t.settings.customTool : t.syncDashboard.builtIn}
                             </Badge>
                         </h3>
 
@@ -503,14 +503,14 @@ export default function SyncDashboard() {
                             {selectedTool.type === "builtin" && (
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="bg-base-200/50 p-3 rounded-xl border border-base-300/50">
-                                        <div className="text-xs text-base-content/50 uppercase font-bold mb-1">Status</div>
+                                        <div className="text-xs text-base-content/50 uppercase font-bold mb-1">{t.syncDashboard.status}</div>
                                         <Badge variant={selectedTool.detected ? "success" : "neutral"} size="sm">
                                             {selectedTool.detected ? t.syncDashboard.active : t.syncDashboard.notFound}
                                         </Badge>
                                     </div>
                                     {selectedTool.detected && selectedTool.skillCount !== undefined && (
                                         <div className="bg-base-200/50 p-3 rounded-xl border border-base-300/50">
-                                            <div className="text-xs text-base-content/50 uppercase font-bold mb-1">Synced Skills</div>
+                                            <div className="text-xs text-base-content/50 uppercase font-bold mb-1">{t.syncDashboard.syncedSkills}</div>
                                             <div className="text-lg font-bold">{selectedTool.skillCount}</div>
                                         </div>
                                     )}
@@ -523,7 +523,7 @@ export default function SyncDashboard() {
                                     <h4 className="font-bold mb-2 flex items-center justify-between">
                                         {t.settings.globalPath}
                                         {selectedTool.globalPaths.length > 1 && (
-                                            <Badge variant="ghost" size="xs">{selectedTool.globalPaths.length} paths</Badge>
+                                            <Badge variant="ghost" size="xs">{t.syncDashboard.pathCount.replace("{count}", String(selectedTool.globalPaths.length))}</Badge>
                                         )}
                                     </h4>
                                     <div className="space-y-2">
@@ -558,7 +558,7 @@ export default function SyncDashboard() {
                                             {selectedTool.projectPath}
                                         </code>
                                         <p className="text-xs text-base-content/40 mt-2">
-                                            (Relative from project root)
+                                            {t.syncDashboard.relativeFromProjectRoot}
                                         </p>
                                     </div>
                                 </div>
@@ -568,7 +568,7 @@ export default function SyncDashboard() {
                             {!selectedTool.globalPath && !selectedTool.projectPath && (
                                 <div className="alert alert-warning shadow-sm">
                                     <AlertTriangle className="w-5 h-5" />
-                                    <span>No paths configured for this tool</span>
+                                    <span>{t.syncDashboard.noPathsConfigured}</span>
                                 </div>
                             )}
                         </div>

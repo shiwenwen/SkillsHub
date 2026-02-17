@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **OpenClaw Adapter**: Removed node_modules installation path from skills scanning and syncing directories, now only scans workspace directory (`~/.openclaw/workspace/skills/`)
 - **Settings Page Refactor**: Split the monolithic Settings page (~1490 lines) into 8 focused sub-components for improved maintainability (`types.ts`, `GeneralTab`, `ToolsTab`, `CloudSyncTab`, `SecurityTab`, `AboutTab`, `AddToolModal`, `AddRegistryModal`)
+- **i18n Full Coverage**: Replaced 40+ hardcoded UI strings across 7 pages/components with proper translation keys; added translations for all 9 supported languages (zh, en, ja, ko, fr, de, es, pt, ru). Extended coverage to SecurityTab, CloudSyncTab, AddRegistryModal, Discover, Installed, SkillDetail, and SyncDashboard with additional keys for descriptions, error messages, and modal labels
 
 ### Fixed
 

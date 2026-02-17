@@ -28,6 +28,7 @@ export const fr: Translations = {
         add: "Ajouter",
         about: "À propos",
         scan: "Scanner",
+        allSources: "Toutes les sources",
     },
 
     nav: {
@@ -83,6 +84,7 @@ export const fr: Translations = {
         fullSyncSuccess: "Sync complete: Collected {collected} , Distributed {distributed}",
         fullSyncFailed: "Sync failed: {error}",
         view: "View",
+        loadFailed: "Échec du chargement : {error}",
     },
 
     discover: {
@@ -96,6 +98,10 @@ export const fr: Translations = {
         curatedSkills: "Skills sélectionnés par la communauté",
         by: "par",
         unknown: "Inconnu",
+        installBlocked: "Installation bloquée : Skill \"{skillId}\" détecté comme à haut risque.",
+        installFailed: "Échec de l'installation : {error}",
+        loadingMore: "Chargement de plus de Skills...",
+        endOfResults: "Fin des résultats",
     },
 
     syncDashboard: {
@@ -127,6 +133,14 @@ export const fr: Translations = {
         linkDesc: "Liens symboliques vers la source partagée. Mises à jour instantanées, économie d'espace.",
         copy: "Copie",
         copyDesc: "Copie complète des fichiers. Meilleure compatibilité, plus de stockage.",
+        pathNotFound: "Chemin non trouvé",
+        notDetectedInStandard: "Non détecté dans les emplacements standard",
+        builtIn: "Intégré",
+        status: "Statut",
+        syncedSkills: "Skills synchronisés",
+        pathCount: "{count} chemins",
+        relativeFromProjectRoot: "(Relatif depuis la racine du projet)",
+        noPathsConfigured: "Aucun chemin configuré pour cet outil",
     },
 
     security: {
@@ -258,6 +272,19 @@ export const fr: Translations = {
         aboutOpenSourceAction: "Voir le code",
         aboutCheckUpdate: "Vérifier les mises à jour",
         aboutCopyright: "© 2026 SkillsHub. Tous droits réservés.",
+        scanBeforeInstallDesc: "Scanner le code avant l'ajout à la bibliothèque",
+        scanBeforeUpdateDesc: "Scanner le code avant la mise à jour",
+        blockHighRiskDesc: "Bloquer automatiquement les opérations à haut risque",
+        noSyncHistory: "Aucun historique de synchronisation",
+        registryName: "Nom",
+        registryNamePlaceholder: "my-registry",
+        registryUrl: "Git URL",
+        registryUrlPlaceholder: "https://github.com/user/repo",
+        registryBranch: "Branche (Optionnel)",
+        registryBranchPlaceholder: "main",
+        registryDescription: "Description (Optionnel)",
+        registryDescriptionPlaceholder: "Description...",
+        editCustomTool: "Modifier l'outil personnalisé",
     },
 
     skillDetail: {
@@ -297,5 +324,12 @@ export const fr: Translations = {
         passed: "Réussi",
         lastScanned: "Dernier scan",
         viewFullReport: "Voir le rapport complet",
+        loadingSkillDetails: "Chargement des détails du Skill...",
+        skillNotFoundDesc: "Le Skill que vous recherchez est introuvable.",
+        issuesDetected: "Problèmes détectés",
+        skillSafeToUse: "Ce Skill peut être utilisé en toute sécurité selon les règles actuelles.",
+        potentialIssuesFound: "{count} problèmes potentiels trouvés. Niveau de risque : {risk}",
+        detailedFindings: "Résultats détaillés",
+        copyStrategy: "Copie",
     },
 };
