@@ -275,6 +275,9 @@ cargo build --release --package skillshub-cli
 
 # Run tests
 cargo test --workspace
+
+# Check i18n key consistency across all locales
+npm run check-i18n
 ```
 
 ### Project Structure
@@ -284,7 +287,7 @@ SkillsHub/
 ├── crates/
 │   ├── skillshub-core/          # Core library (shared by desktop app and CLI)
 │   │   └── src/
-│   │       ├── adapters/        # 19 tool adapters
+│   │       ├── adapters/        # 19 tool adapters (macro-generated)
 │   │       ├── models/          # Data models (Skill, Tool, SyncState, ScanReport)
 │   │       ├── store.rs         # Local Skills storage
 │   │       ├── sync.rs          # Sync engine (Link / Copy)
@@ -307,8 +310,18 @@ SkillsHub/
 │   └── App.tsx                  # Router and app shell
 ├── src-tauri/                   # Tauri backend
 │   └── src/
-│       ├── commands.rs          # 60+ IPC command handlers
+│       ├── commands/            # 60+ IPC command handlers (modularized)
+│       │   ├── skills.rs        # Skill CRUD and update checking
+│       │   ├── sync.rs          # Sync and drift detection
+│       │   ├── security.rs      # Security scanning
+│       │   ├── tools.rs         # Tool detection and custom tools
+│       │   ├── registry.rs      # Registry management
+│       │   ├── plugins.rs       # Plugin scanning
+│       │   ├── cloud.rs         # Cloud sync operations
+│       │   └── config.rs        # App config and utilities
 │       └── lib.rs               # Tauri app setup
+├── scripts/                     # Development scripts
+│   └── check-i18n.ts            # i18n key consistency checker
 ├── Cargo.toml                   # Rust workspace configuration
 ├── package.json                 # Node.js dependencies
 ├── tailwind.config.js           # Tailwind CSS + DaisyUI themes

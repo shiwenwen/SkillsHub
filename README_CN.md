@@ -275,6 +275,9 @@ cargo build --release --package skillshub-cli
 
 # 运行测试
 cargo test --workspace
+
+# 检查所有语言的 i18n 键值一致性
+npm run check-i18n
 ```
 
 ### 项目结构
@@ -284,7 +287,7 @@ SkillsHub/
 ├── crates/
 │   ├── skillshub-core/          # 核心库（桌面应用和 CLI 共用）
 │   │   └── src/
-│   │       ├── adapters/        # 19 种工具适配器
+│   │       ├── adapters/        # 19 种工具适配器（宏生成）
 │   │       ├── models/          # 数据模型（Skill、Tool、SyncState、ScanReport）
 │   │       ├── store.rs         # 本地 Skills 存储
 │   │       ├── sync.rs          # 同步引擎（Link / Copy）
@@ -307,8 +310,18 @@ SkillsHub/
 │   └── App.tsx                  # 路由和应用外壳
 ├── src-tauri/                   # Tauri 后端
 │   └── src/
-│       ├── commands.rs          # 60+ IPC 命令处理器
+│       ├── commands/            # 60+ IPC 命令处理器（模块化）
+│       │   ├── skills.rs        # Skill 增删改查与更新检查
+│       │   ├── sync.rs          # 同步与漂移检测
+│       │   ├── security.rs      # 安全扫描
+│       │   ├── tools.rs         # 工具检测与自定义工具
+│       │   ├── registry.rs      # 注册源管理
+│       │   ├── plugins.rs       # 插件扫描
+│       │   ├── cloud.rs         # 云端同步操作
+│       │   └── config.rs        # 应用配置与工具函数
 │       └── lib.rs               # Tauri 应用初始化
+├── scripts/                     # 开发脚本
+│   └── check-i18n.ts            # i18n 键值一致性检查器
 ├── Cargo.toml                   # Rust 工作空间配置
 ├── package.json                 # Node.js 依赖
 ├── tailwind.config.js           # Tailwind CSS + DaisyUI 主题
