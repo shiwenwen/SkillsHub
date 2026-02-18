@@ -7,43 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-
 ## [1.0.4] - 2026-02-18
 
 ### Added
 
-- **Per-tool Sync Strategy**: Each tool can now have its own sync strategy (Auto/Link/Copy) that overrides the global default, configurable in Settings > Tool Configuration
-- **i18n Consistency Checker**: New `npm run check-i18n` script (`scripts/check-i18n.ts`) validates all 9 locale files have identical key sets, reports missing/extra/untranslated keys
+- **i18n Consistency Checker**: New `npm run check-i18n` script (`scripts/check-i18n.ts`) validates all 9 locale files have identical key sets, reporting missing/extra/untranslated keys
 
 ### Changed
 
-- **Adapter Macro Refactor**: Replaced 16 nearly-identical adapter files (~1000 lines of boilerplate) with a single `define_adapter!` macro, reducing duplication by ~82%. Only OpenClaw and Trae retain manual implementations due to genuinely unique logic
-- **Parallel Registry Search**: `AggregatedRegistry::search()` now queries all registries concurrently using `tokio::task::JoinSet`, significantly improving discovery speed when multiple registries are configured
+- **Adapter Macro Refactor**: Replaced 16 nearly-identical adapter files (~1000 lines of boilerplate) with a single `define_adapter!` macro, reducing duplication by ~82%. Only OpenClaw and Trae retain manual implementations due to unique logic
+- **Parallel Registry Search**: `AggregatedRegistry::search()` now queries all registries concurrently using `tokio::task::JoinSet`, improving discovery speed when multiple registries are configured
 - **Sync Engine Performance**: Replaced O(n) linear scans with O(1) `HashSet`/`HashMap` lookups in `scan_all_tools()` deduplication, `get_hub_skill_ids()` membership checks, and `get_hub_status()` tool-presence lookups
-- **Tauri Commands Modularization**: Split the monolithic `commands.rs` (~1520 lines) into 9 focused modules (`types`, `skills`, `sync`, `security`, `tools`, `registry`, `plugins`, `cloud`, `config`), also extracted a shared `parse_tool_type()` helper to eliminate 3 duplicated match blocks
-- **Frontend Code Splitting**: Page components are now lazy-loaded via `React.lazy()` + `Suspense`, reducing initial bundle size by deferring non-active routes
-- **OpenClaw Adapter**: Removed node_modules installation path from skills scanning and syncing directories, now only scans workspace directory (`~/.openclaw/workspace/skills/`)
-- **Settings Page Refactor**: Split the monolithic Settings page (~1490 lines) into 8 focused sub-components for improved maintainability (`types.ts`, `GeneralTab`, `ToolsTab`, `CloudSyncTab`, `SecurityTab`, `AboutTab`, `AddToolModal`, `AddRegistryModal`)
-- **i18n Full Coverage**: Replaced 40+ hardcoded UI strings across 7 pages/components with proper translation keys; added translations for all 9 supported languages (zh, en, ja, ko, fr, de, es, pt, ru). Extended coverage to SecurityTab, CloudSyncTab, AddRegistryModal, Discover, Installed, SkillDetail, and SyncDashboard with additional keys for descriptions, error messages, and modal labels
-
-### Fixed
-
-- **Plugin Content Hash**: Plugin skills now correctly calculate `content_hash` using directory hashing instead of leaving it empty, enabling proper update detection for plugin-sourced skills
-- **Git Registry Source URL**: Git registry search results now carry the correct repository URL and branch directly from the scanning closure, eliminating a redundant post-processing fixup step
-- **Update Source Registry Tracking**: Update checker now reports which registry a skill update was found in via `get_skill_with_source`, improving update transparency
-
+- **Tauri Commands Modularization**: Split monolithic `commands.rs` (~1520 lines) into focused modules (`types`, `skills`, `sync`, `security`, `tools`, `registry`, `plugins`, `cloud`, `config`), and extracted shared `parse_tool_type()` helper
+- **Frontend Code Splitting**: Page components now lazy-load via `React.lazy()` + `Suspense`, reducing initial bundle size by deferring non-active routes
+- **Documentation**: Updated README project structure to reflect command and adapter refactors
 
 ## [1.0.3] - 2026-02-17
 
 ### Changed
 
-- **Release**: Bumped project version to `1.0.3`
+- **Settings Page Refactor**: Split monolithic Settings page (~1490 lines) into 8 focused sub-components (`types.ts`, `GeneralTab`, `ToolsTab`, `CloudSyncTab`, `SecurityTab`, `AboutTab`, `AddToolModal`, `AddRegistryModal`)
+- **i18n Full Coverage**: Replaced 40+ hardcoded UI strings across 7 pages/components with translation keys; added/updated translations for 9 supported languages (zh, en, ja, ko, fr, de, es, pt, ru)
+
+### Fixed
+
+- **Plugin Content Hash**: Plugin skills now correctly calculate `content_hash` using directory hashing, enabling proper update detection
+- **Git Registry Source URL**: Git registry search results now carry the correct repository URL and branch directly from the scanning closure
+- **Update Source Registry Tracking**: Update checker now reports which registry a skill update was found in via `get_skill_with_source`
 
 ## [1.0.2] - 2026-02-16
 
+### Added
+
+- **Per-tool Sync Strategy**: Each tool can now have its own sync strategy (Auto/Link/Copy) overriding the global default, configurable in Settings > Tool Configuration
+
 ### Changed
 
-- **Release**: Bumped project version to `1.0.2`
+- **OpenClaw Adapter**: Removed node_modules installation path from skills scanning and syncing directories; now scans only workspace skills directory (`~/.openclaw/workspace/skills/`)
 
 ## [1.0.1] - 2026-02-15
 
