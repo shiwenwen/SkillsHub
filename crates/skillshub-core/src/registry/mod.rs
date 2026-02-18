@@ -2,6 +2,7 @@
 
 use std::fs;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -222,9 +223,10 @@ impl RegistryManager {
     }
 }
 
-/// Aggregated registry that combines multiple sources
+/// Aggregated registry that combines multiple sources.
+/// Uses concurrent search across all registries for improved performance.
 pub struct AggregatedRegistry {
-    registries: Vec<Box<dyn RegistryProvider>>,
+    registries: Vec<Arc<dyn RegistryProvider>>,
 }
 
 impl AggregatedRegistry {
@@ -235,13 +237,22 @@ impl AggregatedRegistry {
     }
 
     pub fn add_registry(&mut self, registry: Box<dyn RegistryProvider>) {
-        self.registries.push(registry);
+        self.registries.push(Arc::from(registry));
     }
 
+    /// Search all registries concurrently and merge results
     pub async fn search(&self, query: &SkillQuery) -> Result<Vec<SkillListing>> {
-        let mut results = Vec::new();
+        let mut set = tokio::task::JoinSet::new();
+
         for registry in &self.registries {
-            if let Ok(listings) = registry.search(query).await {
+            let registry = Arc::clone(registry);
+            let query = query.clone();
+            set.spawn(async move { registry.search(&query).await });
+        }
+
+        let mut results = Vec::new();
+        while let Some(join_result) = set.join_next().await {
+            if let Ok(Ok(listings)) = join_result {
                 results.extend(listings);
             }
         }

@@ -1,5 +1,6 @@
 //! Sync Engine - multi-tool synchronization
 
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::Path;
 
@@ -369,7 +370,7 @@ impl SyncEngine {
                 .entry(tool.to_string())
                 .or_insert_with(|| ToolSyncState {
                     tool,
-                    skills: std::collections::HashMap::new(),
+                    skills: HashMap::new(),
                     last_sync: None,
                 });
 
@@ -441,6 +442,8 @@ impl SyncEngine {
     pub fn scan_all_tools(&self) -> Vec<ScannedSkill> {
         let mut all_skills = Vec::new();
         let hub_skills = self.get_hub_skill_ids();
+        // O(1) dedup: (skill_id, tool_type) set
+        let mut seen: HashSet<(String, ToolType)> = HashSet::new();
 
         for adapter in &self.adapters {
             // Use skills_dirs() to scan multiple directories per tool
@@ -456,10 +459,9 @@ impl SyncEngine {
                                     if skill_id.starts_with('.') {
                                         continue;
                                     }
-                                    // Avoid duplicates (same skill from multiple paths)
-                                    if all_skills.iter().any(|s: &ScannedSkill| {
-                                        s.id == skill_id && s.tool == adapter.tool_type()
-                                    }) {
+                                    // O(1) dedup check
+                                    let key = (skill_id.clone(), adapter.tool_type());
+                                    if !seen.insert(key) {
                                         continue;
                                     }
                                     all_skills.push(ScannedSkill {
@@ -480,10 +482,10 @@ impl SyncEngine {
         all_skills
     }
 
-    /// Get list of skill IDs in the hub
-    fn get_hub_skill_ids(&self) -> Vec<String> {
+    /// Get set of skill IDs in the hub (O(1) lookup)
+    fn get_hub_skill_ids(&self) -> HashSet<String> {
         let skills_dir = self.store.skills_dir();
-        let mut ids = Vec::new();
+        let mut ids = HashSet::new();
         if skills_dir.exists() {
             if let Ok(entries) = fs::read_dir(&skills_dir) {
                 for entry in entries.flatten() {
@@ -491,7 +493,7 @@ impl SyncEngine {
                         if let Some(name) = entry.path().file_name() {
                             let id = name.to_string_lossy().to_string();
                             if !id.starts_with('.') {
-                                ids.push(id);
+                                ids.insert(id);
                             }
                         }
                     }
@@ -624,14 +626,22 @@ impl SyncEngine {
         let scanned = self.scan_all_tools();
         let all_tools: Vec<ToolType> = self.adapters.iter().map(|a| a.tool_type()).collect();
 
+        // Build O(1) lookup: skill_id -> [tools where it exists]
+        let mut skill_tools: HashMap<String, Vec<ToolType>> = HashMap::new();
+        for s in &scanned {
+            skill_tools
+                .entry(s.id.clone())
+                .or_default()
+                .push(s.tool);
+        }
+
         hub_skill_ids
             .iter()
             .map(|skill_id| {
-                let synced_to: Vec<ToolType> = scanned
-                    .iter()
-                    .filter(|s| &s.id == skill_id)
-                    .map(|s| s.tool)
-                    .collect();
+                let synced_to = skill_tools
+                    .get(skill_id)
+                    .cloned()
+                    .unwrap_or_default();
 
                 let missing_in: Vec<ToolType> = all_tools
                     .iter()
