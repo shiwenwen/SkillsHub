@@ -29,6 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Git Registry Source URL**: Git registry search results now carry the correct repository URL and branch directly from the scanning closure, eliminating a redundant post-processing fixup step
 - **Update Source Registry Tracking**: Update checker now reports which registry a skill update was found in via `get_skill_with_source`, improving update transparency
 
+## [1.0.4] - 2026-02-18
+
+### Changed
+
+- **Release**: Bumped project version to `1.0.4`
+
 ## [1.0.3] - 2026-02-17
 
 ### Changed
