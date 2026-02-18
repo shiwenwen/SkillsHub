@@ -10,9 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Per-tool Sync Strategy**: Each tool can now have its own sync strategy (Auto/Link/Copy) that overrides the global default, configurable in Settings > Tool Configuration
+- **i18n Consistency Checker**: New `npm run check-i18n` script (`scripts/check-i18n.ts`) validates all 9 locale files have identical key sets, reports missing/extra/untranslated keys
 
 ### Changed
 
+- **Adapter Macro Refactor**: Replaced 16 nearly-identical adapter files (~1000 lines of boilerplate) with a single `define_adapter!` macro, reducing duplication by ~82%. Only OpenClaw and Trae retain manual implementations due to genuinely unique logic
+- **Parallel Registry Search**: `AggregatedRegistry::search()` now queries all registries concurrently using `tokio::task::JoinSet`, significantly improving discovery speed when multiple registries are configured
+- **Sync Engine Performance**: Replaced O(n) linear scans with O(1) `HashSet`/`HashMap` lookups in `scan_all_tools()` deduplication, `get_hub_skill_ids()` membership checks, and `get_hub_status()` tool-presence lookups
+- **Tauri Commands Modularization**: Split the monolithic `commands.rs` (~1520 lines) into 9 focused modules (`types`, `skills`, `sync`, `security`, `tools`, `registry`, `plugins`, `cloud`, `config`), also extracted a shared `parse_tool_type()` helper to eliminate 3 duplicated match blocks
+- **Frontend Code Splitting**: Page components are now lazy-loaded via `React.lazy()` + `Suspense`, reducing initial bundle size by deferring non-active routes
 - **OpenClaw Adapter**: Removed node_modules installation path from skills scanning and syncing directories, now only scans workspace directory (`~/.openclaw/workspace/skills/`)
 - **Settings Page Refactor**: Split the monolithic Settings page (~1490 lines) into 8 focused sub-components for improved maintainability (`types.ts`, `GeneralTab`, `ToolsTab`, `CloudSyncTab`, `SecurityTab`, `AboutTab`, `AddToolModal`, `AddRegistryModal`)
 - **i18n Full Coverage**: Replaced 40+ hardcoded UI strings across 7 pages/components with proper translation keys; added translations for all 9 supported languages (zh, en, ja, ko, fr, de, es, pt, ru). Extended coverage to SecurityTab, CloudSyncTab, AddRegistryModal, Discover, Installed, SkillDetail, and SyncDashboard with additional keys for descriptions, error messages, and modal labels
