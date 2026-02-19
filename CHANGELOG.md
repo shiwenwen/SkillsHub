@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.5] - 2026-02-19
+
+### Added
+
+- **Auto Update**: In-app automatic version update powered by `tauri-plugin-updater`
+  - Check for new versions from GitHub Releases in Settings > About
+  - Download updates with real-time progress bar (size and percentage)
+  - One-click install and restart to apply updates
+  - Full status feedback: checking, up-to-date, available, downloading, ready, error states
+  - Release notes display when a new version is available
+  - i18n support for all 9 languages
+- **CI/CD Updater Artifacts**: Release workflow now generates `latest.json` manifest and signed update bundles via `includeUpdaterJson` and `createUpdaterArtifacts` configuration
+
 ## [1.0.4] - 2026-02-18
 
 ### Added

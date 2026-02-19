@@ -67,6 +67,8 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "SkillsHub ${{ github.ref_name }}"
@@ -74,4 +76,5 @@ jobs:
             See the [CHANGELOG](https://github.com/shiwenwen/SkillsHub/blob/main/CHANGELOG.md) for details.
           releaseDraft: false
           prerelease: false
+          includeUpdaterJson: true
           args: --target ${{ matrix.target }}
