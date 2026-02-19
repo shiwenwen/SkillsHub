@@ -6,7 +6,7 @@
 
 🖥️ Cross-platform desktop app — Install once. Sync everywhere.
 
-[![Version](https://img.shields.io/badge/version-1.0.4-6366f1?style=flat-square)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.0.5-6366f1?style=flat-square)](CHANGELOG.md)
 [![macOS](https://img.shields.io/badge/macOS-000000?style=flat-square&logo=apple&logoColor=white)](https://github.com/shiwenwen/SkillsHub/releases)
 [![Windows](https://img.shields.io/badge/Windows-0078D4?style=flat-square&logo=windows&logoColor=white)](https://github.com/shiwenwen/SkillsHub/releases)
 [![Linux](https://img.shields.io/badge/Linux-FCC624?style=flat-square&logo=linux&logoColor=black)](https://github.com/shiwenwen/SkillsHub/releases)
