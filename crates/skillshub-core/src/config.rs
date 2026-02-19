@@ -57,6 +57,11 @@ pub struct AppConfig {
     #[serde(default = "default_true")]
     pub check_updates_on_startup: bool,
 
+    /// Auto-check update interval in minutes (0 = disabled)
+    /// Supported values: 0, 30, 60, 120, 240, 480
+    #[serde(default = "default_update_interval")]
+    pub auto_check_update_interval: u64,
+
     /// Scan before install
     #[serde(default = "default_true")]
     pub scan_before_install: bool,
@@ -99,6 +104,10 @@ fn default_false() -> bool {
     false
 }
 
+fn default_update_interval() -> u64 {
+    60
+}
+
 fn default_trusted_sources() -> Vec<String> {
     vec![
         "github.com/official-skills".to_string(),
@@ -112,6 +121,7 @@ impl Default for AppConfig {
             default_sync_strategy: SyncStrategy::Auto,
             auto_sync_on_install: true,
             check_updates_on_startup: true,
+            auto_check_update_interval: 60,
             scan_before_install: true,
             scan_before_update: true,
             block_high_risk: true,
@@ -197,6 +207,7 @@ mod tests {
         assert!(matches!(config.default_sync_strategy, SyncStrategy::Auto));
         assert!(config.auto_sync_on_install);
         assert!(config.check_updates_on_startup);
+        assert_eq!(config.auto_check_update_interval, 60);
         assert!(config.scan_before_install);
         assert!(config.scan_before_update);
         assert!(config.block_high_risk);

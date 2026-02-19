@@ -290,6 +290,13 @@ export const en = {
         registryDescription: "Description (Optional)",
         registryDescriptionPlaceholder: "Description...",
         editCustomTool: "Edit Custom Tool",
+        autoCheckUpdateInterval: "Auto-check update interval",
+        autoCheckDisabled: "Disabled",
+        autoCheck30Min: "Every 30 minutes",
+        autoCheck1Hour: "Every 1 hour",
+        autoCheck2Hours: "Every 2 hours",
+        autoCheck4Hours: "Every 4 hours",
+        autoCheck8Hours: "Every 8 hours",
     },
 
     // 技能详情页面

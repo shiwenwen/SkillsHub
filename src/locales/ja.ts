@@ -285,6 +285,13 @@ export const ja: Translations = {
         registryDescription: "説明（任意）",
         registryDescriptionPlaceholder: "説明...",
         editCustomTool: "カスタムツールを編集",
+        autoCheckUpdateInterval: "自動更新チェック間隔",
+        autoCheckDisabled: "無効",
+        autoCheck30Min: "30分ごと",
+        autoCheck1Hour: "1時間ごと",
+        autoCheck2Hours: "2時間ごと",
+        autoCheck4Hours: "4時間ごと",
+        autoCheck8Hours: "8時間ごと",
     },
 
     skillDetail: {

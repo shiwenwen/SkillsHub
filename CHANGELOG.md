@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Auto-Update Checking**: Configurable periodic background update detection for installed Skills
+  - New `auto_check_update_interval` config field (0/30/60/120/240/480 minutes, default: 60)
+  - `UpdateCheckProvider` React Context for global update state sharing across components
+  - Update count badge on the "Installed" navigation item when updates are available
+  - Interval selector in Settings > General tab with 6 options (Disabled / 30min / 1h / 2h / 4h / 8h)
+  - Full i18n support across all 9 languages
+
 ## [1.0.4] - 2026-02-18
 
 ### Added

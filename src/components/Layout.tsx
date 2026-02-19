@@ -15,6 +15,7 @@ import {
 import logoImg from "../assets/logo.png";
 import { useTranslation, useLanguage } from "../i18n";
 import { useTheme, type ThemeMode } from "../theme";
+import { useUpdateCheck } from "../contexts/UpdateCheckContext";
 import { Button } from "./ui/Button";
 
 interface LayoutProps {
@@ -25,7 +26,9 @@ export default function Layout({ children }: LayoutProps) {
     const t = useTranslation();
     const { language, setLanguage } = useLanguage();
     const { themeMode, setThemeMode } = useTheme();
+    const { availableUpdates } = useUpdateCheck();
     const location = useLocation();
+    const updateCount = availableUpdates.length;
 
     const themeOptions: { mode: ThemeMode; icon: typeof Sun; label: string }[] = [
         { mode: "auto", icon: Monitor, label: t.settings.themeAuto },
@@ -60,12 +63,13 @@ export default function Layout({ children }: LayoutProps) {
                     <nav className="hidden md:flex items-center gap-1 mx-4">
                         {navItems.map((item) => {
                             const isActive = location.pathname === item.to;
+                            const showBadge = item.to === "/" && updateCount > 0;
                             return (
                                 <NavLink
                                     key={item.to}
                                     to={item.to}
                                     className={`
-                                        flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300
+                                        relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300
                                         ${isActive
                                             ? "bg-primary/10 text-primary shadow-[0_0_20px_rgba(var(--p),0.3)]"
                                             : "text-base-content/60 hover:text-base-content hover:bg-base-content/5"
@@ -74,6 +78,11 @@ export default function Layout({ children }: LayoutProps) {
                                 >
                                     <item.icon className={`w-4 h-4 ${isActive ? "animate-pulse" : ""}`} />
                                     <span>{item.label}</span>
+                                    {showBadge && (
+                                        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-warning text-warning-content text-[10px] font-bold px-1 shadow-sm animate-bounce">
+                                            {updateCount}
+                                        </span>
+                                    )}
                                 </NavLink>
                             );
                         })}

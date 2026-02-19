@@ -25,6 +25,8 @@ interface GeneralTabProps {
     setAutoSyncOnInstall: (v: boolean) => void;
     checkUpdatesOnStartup: boolean;
     setCheckUpdatesOnStartup: (v: boolean) => void;
+    autoCheckUpdateInterval: number;
+    setAutoCheckUpdateInterval: (v: number) => void;
     storeInfo: StoreInfo | null;
     t: Record<string, any>;
 }
@@ -40,6 +42,8 @@ export default function GeneralTab({
     setAutoSyncOnInstall,
     checkUpdatesOnStartup,
     setCheckUpdatesOnStartup,
+    autoCheckUpdateInterval,
+    setAutoCheckUpdateInterval,
     storeInfo,
     t,
 }: GeneralTabProps) {
@@ -133,6 +137,23 @@ export default function GeneralTab({
                             />
                             <span className="label-text">{t.settings.checkUpdatesOnStartup}</span>
                         </label>
+                    </div>
+                    <div className="form-control">
+                        <label className="label">
+                            <span className="label-text">{t.settings.autoCheckUpdateInterval}</span>
+                        </label>
+                        <select
+                            className="select select-bordered w-full"
+                            value={autoCheckUpdateInterval}
+                            onChange={(e) => setAutoCheckUpdateInterval(Number(e.target.value))}
+                        >
+                            <option value={0}>{t.settings.autoCheckDisabled}</option>
+                            <option value={30}>{t.settings.autoCheck30Min}</option>
+                            <option value={60}>{t.settings.autoCheck1Hour}</option>
+                            <option value={120}>{t.settings.autoCheck2Hours}</option>
+                            <option value={240}>{t.settings.autoCheck4Hours}</option>
+                            <option value={480}>{t.settings.autoCheck8Hours}</option>
+                        </select>
                     </div>
                 </div>
             </Card>

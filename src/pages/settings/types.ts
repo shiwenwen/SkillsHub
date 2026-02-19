@@ -78,6 +78,7 @@ export interface AppConfigPayload {
     default_sync_strategy: string;
     auto_sync_on_install: boolean;
     check_updates_on_startup: boolean;
+    auto_check_update_interval: number;
     scan_before_install: boolean;
     scan_before_update: boolean;
     block_high_risk: boolean;

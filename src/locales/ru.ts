@@ -285,6 +285,13 @@ export const ru: Translations = {
         registryDescription: "Описание (Необязательно)",
         registryDescriptionPlaceholder: "Описание...",
         editCustomTool: "Редактировать пользовательский инструмент",
+        autoCheckUpdateInterval: "Интервал автоматической проверки обновлений",
+        autoCheckDisabled: "Отключено",
+        autoCheck30Min: "Каждые 30 минут",
+        autoCheck1Hour: "Каждый час",
+        autoCheck2Hours: "Каждые 2 часа",
+        autoCheck4Hours: "Каждые 4 часа",
+        autoCheck8Hours: "Каждые 8 часов",
     },
 
     skillDetail: {

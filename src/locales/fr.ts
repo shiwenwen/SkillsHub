@@ -285,6 +285,13 @@ export const fr: Translations = {
         registryDescription: "Description (Optionnel)",
         registryDescriptionPlaceholder: "Description...",
         editCustomTool: "Modifier l'outil personnalisé",
+        autoCheckUpdateInterval: "Intervalle de vérification automatique",
+        autoCheckDisabled: "Désactivé",
+        autoCheck30Min: "Toutes les 30 minutes",
+        autoCheck1Hour: "Toutes les heures",
+        autoCheck2Hours: "Toutes les 2 heures",
+        autoCheck4Hours: "Toutes les 4 heures",
+        autoCheck8Hours: "Toutes les 8 heures",
     },
 
     skillDetail: {

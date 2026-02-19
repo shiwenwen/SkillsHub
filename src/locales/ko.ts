@@ -285,6 +285,13 @@ export const ko: Translations = {
         registryDescription: "설명 (선택사항)",
         registryDescriptionPlaceholder: "설명...",
         editCustomTool: "사용자 정의 도구 편집",
+        autoCheckUpdateInterval: "자동 업데이트 확인 간격",
+        autoCheckDisabled: "비활성화",
+        autoCheck30Min: "30분마다",
+        autoCheck1Hour: "1시간마다",
+        autoCheck2Hours: "2시간마다",
+        autoCheck4Hours: "4시간마다",
+        autoCheck8Hours: "8시간마다",
     },
 
     skillDetail: {

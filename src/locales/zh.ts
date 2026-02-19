@@ -292,6 +292,13 @@ export const zh: Translations = {
         registryDescription: "描述（可选）",
         registryDescriptionPlaceholder: "描述...",
         editCustomTool: "编辑自定义工具",
+        autoCheckUpdateInterval: "自动检查更新间隔",
+        autoCheckDisabled: "已禁用",
+        autoCheck30Min: "每 30 分钟",
+        autoCheck1Hour: "每 1 小时",
+        autoCheck2Hours: "每 2 小时",
+        autoCheck4Hours: "每 4 小时",
+        autoCheck8Hours: "每 8 小时",
     },
 
     // 技能详情页面

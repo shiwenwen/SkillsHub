@@ -12,7 +12,7 @@ import {
     Eye
 } from "lucide-react";
 import { useTranslation, useLanguage } from "../i18n";
-import { useUpdateCheck } from "../hooks/useUpdateCheck";
+import { useUpdateCheck } from "../contexts/UpdateCheckContext";
 import { Card } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";

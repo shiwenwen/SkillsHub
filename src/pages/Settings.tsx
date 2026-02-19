@@ -100,6 +100,7 @@ export default function Settings() {
 
     // Settings State
     const [checkUpdatesOnStartup, setCheckUpdatesOnStartup] = useState(true);
+    const [autoCheckUpdateInterval, setAutoCheckUpdateInterval] = useState(60);
     const [autoSyncOnInstall, setAutoSyncOnInstall] = useState(true);
 
     // Cloud Sync State
@@ -136,6 +137,7 @@ export default function Settings() {
             default_sync_strategy: defaultStrategy,
             auto_sync_on_install: autoSyncOnInstall,
             check_updates_on_startup: checkUpdatesOnStartup,
+            auto_check_update_interval: autoCheckUpdateInterval,
             scan_before_install: scanBeforeInstall,
             scan_before_update: scanBeforeUpdate,
             block_high_risk: blockHighRisk,
@@ -235,6 +237,7 @@ export default function Settings() {
                     default_sync_strategy: string;
                     auto_sync_on_install: boolean;
                     check_updates_on_startup: boolean;
+                    auto_check_update_interval: number;
                     scan_before_install: boolean;
                     scan_before_update: boolean;
                     block_high_risk: boolean;
@@ -253,6 +256,7 @@ export default function Settings() {
                 setToolSyncStrategies(config.tool_sync_strategies || {});
                 setAutoSyncOnInstall(config.auto_sync_on_install);
                 setCheckUpdatesOnStartup(config.check_updates_on_startup);
+                setAutoCheckUpdateInterval(config.auto_check_update_interval ?? 60);
                 setScanBeforeInstall(config.scan_before_install);
                 setScanBeforeUpdate(config.scan_before_update);
                 setBlockHighRisk(config.block_high_risk);
@@ -273,6 +277,7 @@ export default function Settings() {
                         default_sync_strategy: strategy,
                         auto_sync_on_install: config.auto_sync_on_install,
                         check_updates_on_startup: config.check_updates_on_startup,
+                        auto_check_update_interval: config.auto_check_update_interval ?? 60,
                         scan_before_install: config.scan_before_install,
                         scan_before_update: config.scan_before_update,
                         block_high_risk: config.block_high_risk,
@@ -496,6 +501,7 @@ export default function Settings() {
         toolSyncStrategies,
         autoSyncOnInstall,
         checkUpdatesOnStartup,
+        autoCheckUpdateInterval,
         scanBeforeInstall,
         scanBeforeUpdate,
         blockHighRisk,
@@ -664,6 +670,8 @@ export default function Settings() {
                         setAutoSyncOnInstall={setAutoSyncOnInstall}
                         checkUpdatesOnStartup={checkUpdatesOnStartup}
                         setCheckUpdatesOnStartup={setCheckUpdatesOnStartup}
+                        autoCheckUpdateInterval={autoCheckUpdateInterval}
+                        setAutoCheckUpdateInterval={setAutoCheckUpdateInterval}
                         storeInfo={storeInfo}
                         t={t}
                     />
