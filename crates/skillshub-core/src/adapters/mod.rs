@@ -156,6 +156,12 @@ define_adapter!(ClaudeAdapter, ToolType::Claude, "Claude",
     plugins: ".claude/plugins"
 );
 
+define_adapter!(ClineAdapter, ToolType::Cline, "Cline",
+    skills: ".cline/skills",
+    detect: [".cline"],
+    config: ".cline"
+);
+
 define_adapter!(CodeBuddyAdapter, ToolType::CodeBuddy, "CodeBuddy",
     skills: ".codebuddy/skills",
     detect: [".codebuddy"],
@@ -196,6 +202,12 @@ define_adapter!(KimiAdapter, ToolType::Kimi, "Kimi CLI",
     skills: ".kimi/skills",
     detect: [".kimi"],
     config: ".kimi"
+);
+
+define_adapter!(KiroAdapter, ToolType::Kiro, "Kiro",
+    skills: ".kiro/skills",
+    detect: [".kiro"],
+    config: ".kiro"
 );
 
 define_adapter!(OpenCodeAdapter, ToolType::OpenCode, "OpenCode",
@@ -242,6 +254,7 @@ pub fn create_default_adapters() -> Vec<Box<dyn ToolAdapter>> {
         Box::new(AmpAdapter::new()),
         Box::new(AntigravityAdapter::new()),
         Box::new(ClaudeAdapter::new()),
+        Box::new(ClineAdapter::new()),
         Box::new(CodeBuddyAdapter::new()),
         Box::new(CodexAdapter::new()),
         Box::new(CopilotAdapter::new()),
@@ -251,6 +264,7 @@ pub fn create_default_adapters() -> Vec<Box<dyn ToolAdapter>> {
         Box::new(GooseAdapter::new()),
         Box::new(KiloCodeAdapter::new()),
         Box::new(KimiAdapter::new()),
+        Box::new(KiroAdapter::new()),
         Box::new(OpenCodeAdapter::new()),
         Box::new(OpenClawAdapter::new()),
         Box::new(QwenAdapter::new()),

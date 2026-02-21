@@ -25,7 +25,7 @@
 
 SkillsHub is a centralized management platform for **Agent Skills** — the reusable instruction sets that enhance AI coding assistants. It lets you maintain a single collection of Skills and automatically distribute them to every AI coding tool you use.
 
-Instead of manually copying Skill files into each tool's directory, SkillsHub acts as a central hub: install a Skill once, and it syncs to Claude Code, OpenClaw, Cursor, Gemini CLI, and 15+ other tools simultaneously.
+Instead of manually copying Skill files into each tool's directory, SkillsHub acts as a central hub: install a Skill once, and it syncs to Claude Code, OpenClaw, Cursor, Gemini CLI, and 17+ other tools simultaneously.
 
 ### The Problem
 
@@ -53,7 +53,7 @@ Manage all your Skills from a single location. Install, update, uninstall, and o
 
 ### Multi-Tool Sync
 
-Sync Skills to 19 built-in tool adapters with two strategies:
+Sync Skills to 21 built-in tool adapters with two strategies:
 
 - **Link** (recommended) — creates symlinks; instant updates, saves disk space
 - **Copy** — duplicates files; better compatibility for tools that don't support symlinks
@@ -85,10 +85,12 @@ Sync your Skills collection across machines via iCloud Drive, Google Drive, or O
 | Tool            | Skills Path                    | Status       |
 | --------------- | ------------------------------ | ------------ |
 | Claude Code     | `~/.claude/skills`             | Supported ✅ |
+| Cline           | `~/.cline/skills`              | Supported ✅ |
 | OpenClaw        | `~/.openclaw/workspace/skills` | Supported ✅ |
 | Cursor          | `~/.cursor/skills`             | Supported ✅ |
 | Gemini CLI      | `~/.gemini/skills`             | Supported ✅ |
 | GitHub Copilot  | `~/.copilot/skills`            | Supported ✅ |
+| Kiro            | `~/.kiro/skills`               | Supported ✅ |
 | Amp             | `~/.config/agents/skills`      | Supported ✅ |
 | Antigravity     | `~/.gemini/antigravity/skills` | Supported ✅ |
 | CodeBuddy       | `~/.codebuddy/skills`          | Supported ✅ |
@@ -127,7 +129,7 @@ graph TB
         Config["Config Manager<br/>Persistent AppConfig"]
     end
 
-    subgraph Adapters["Tool Adapters (19 built-in + custom)"]
+    subgraph Adapters["Tool Adapters (21 built-in + custom)"]
         direction LR
         A1["Claude Code"]
         A2["OpenClaw"]
@@ -287,7 +289,7 @@ SkillsHub/
 ├── crates/
 │   ├── skillshub-core/          # Core library (shared by desktop app and CLI)
 │   │   └── src/
-│   │       ├── adapters/        # 19 tool adapters (macro-generated)
+│   │       ├── adapters/        # 21 tool adapters (macro-generated)
 │   │       ├── models/          # Data models (Skill, Tool, SyncState, ScanReport)
 │   │       ├── store.rs         # Local Skills storage
 │   │       ├── sync.rs          # Sync engine (Link / Copy)

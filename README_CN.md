@@ -53,7 +53,7 @@ SkillsHub 提供：
 
 ### 多工具同步
 
-支持 19 种内置工具适配器，提供两种同步策略：
+支持 21 种内置工具适配器，提供两种同步策略：
 
 - **Link（推荐）** — 创建符号链接；即时更新，节省磁盘空间
 - **Copy** — 复制完整文件；兼容性更好，适用于不支持符号链接的工具
@@ -85,10 +85,12 @@ SkillsHub 持续监控所有工具的同步状态。当 Skill 文件在 SkillsHu
 | 工具            | Skills 路径                    | 状态      |
 | --------------- | ------------------------------ | --------- |
 | Claude Code     | `~/.claude/skills`             | 已支持 ✅ |
+| Cline           | `~/.cline/skills`              | 已支持 ✅ |
 | OpenClaw        | `~/.openclaw/workspace/skills` | 已支持 ✅ |
 | Cursor          | `~/.cursor/skills`             | 已支持 ✅ |
 | Gemini CLI      | `~/.gemini/skills`             | 已支持 ✅ |
 | GitHub Copilot  | `~/.copilot/skills`            | 已支持 ✅ |
+| Kiro            | `~/.kiro/skills`               | 已支持 ✅ |
 | Amp             | `~/.config/agents/skills`      | 已支持 ✅ |
 | Antigravity     | `~/.gemini/antigravity/skills` | 已支持 ✅ |
 | CodeBuddy       | `~/.codebuddy/skills`          | 已支持 ✅ |
@@ -127,7 +129,7 @@ graph TB
         Config["配置管理<br/>持久化 AppConfig"]
     end
 
-    subgraph Adapters["工具适配器（19 种内置 + 自定义）"]
+    subgraph Adapters["工具适配器（21 种内置 + 自定义）"]
         direction LR
         A1["Claude Code"]
         A2["OpenClaw"]
@@ -287,7 +289,7 @@ SkillsHub/
 ├── crates/
 │   ├── skillshub-core/          # 核心库（桌面应用和 CLI 共用）
 │   │   └── src/
-│   │       ├── adapters/        # 19 种工具适配器（宏生成）
+│   │       ├── adapters/        # 21 种工具适配器（宏生成）
 │   │       ├── models/          # 数据模型（Skill、Tool、SyncState、ScanReport）
 │   │       ├── store.rs         # 本地 Skills 存储
 │   │       ├── sync.rs          # 同步引擎（Link / Copy）

@@ -11,8 +11,10 @@ pub async fn list() -> anyhow::Result<()> {
 
     let tools = [
         (ToolType::Claude, "Claude Code", "~/.claude/skills"),
+        (ToolType::Cline, "Cline", "~/.cline/skills"),
         (ToolType::Cursor, "Cursor IDE", "~/.cursor/skills"),
         (ToolType::Gemini, "Gemini CLI", "~/.gemini/skills"),
+        (ToolType::Kiro, "Kiro", "~/.kiro/skills"),
         (ToolType::OpenCode, "OpenCode", "~/.opencode/skills"),
         (ToolType::Codex, "Codex CLI", "~/.codex/skills"),
     ];

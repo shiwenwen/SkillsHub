@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **New Tool Adapters**: Added Cline and Kiro (AWS) to built-in tool adapters (now 21 total), with full Skill directory detection, sync, and configuration support
+  - Cline: global `~/.cline/skills/`, project `.cline/skills/`
+  - Kiro: global `~/.kiro/skills/`, project `.kiro/skills/`
+
 ## [1.0.5] - 2026-02-19
 
 ### Added
